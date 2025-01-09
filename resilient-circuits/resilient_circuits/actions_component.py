@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
+# pragma pylint: disable=line-too-long
 
 """Circuits component for Action Module subscription and message handling"""
 
@@ -16,18 +17,17 @@ if sys.version_info.major < 3:
 else:
     from collections.abc import Callable
 
-import resilient_circuits.actions_test_component as actions_test_component
 import resilient
 from circuits import BaseComponent, Worker
 from circuits.core.manager import ExceptionWrapper
 from requests.utils import DEFAULT_CA_BUNDLE_PATH
-from resilient_circuits import constants, helpers
 from resilient import ensure_unicode
-from resilient_lib import IntegrationError, RequestsCommon
+from resilient_lib import IntegrationError
 from six import string_types
 from cachetools import TTLCache
 
 import resilient_circuits.actions_test_component as actions_test_component
+from resilient_circuits import constants, helpers
 from resilient_circuits.action_message import (ActionMessage,
                                                ActionMessageBase,
                                                BaseFunctionError,
@@ -459,8 +459,12 @@ class Actions(ResilientComponent):
             rest_client = self.rest_client()
             self.org_id = rest_client.org_id
 
-            list_action_defs = rest_client.get("/actions")["entities"]
-            self.action_defs = dict((int(action["id"]), action) for action in list_action_defs)
+            try:
+                list_action_defs = rest_client.get("/actions", skip_retry=[403]) # 403 = permission denied
+                self.action_defs = dict((int(action["id"]), action) for action in list_action_defs["entities"])
+            except resilient.co3.SimpleHTTPException:
+                self.action_defs = {}
+
         else:
             self.org_id = "*"
 
@@ -471,6 +475,8 @@ class Actions(ResilientComponent):
 
     def action_name(self, action_id):
         """Get the name of an action, from its id"""
+        not_found = {"name": "_unnamed_"}
+
         if action_id is None:
             # Unnamed action, probably triggered from a v28 workflow
             LOG.info("Action: _unnamed_")
@@ -480,12 +486,16 @@ class Actions(ResilientComponent):
             defn = self.action_defs[action_id]
         else:
             LOG.warning("Action %s is unknown.", action_id)
-            # Refresh the list of action definitions
-            list_action_defs = self.rest_client().get("/actions")["entities"]
-            self.action_defs = dict((int(action["id"]),
-                                     action) for action in list_action_defs)
 
-            defn = self.action_defs.get(action_id, {"name": "_unnamed_"})
+            try:
+                # Refresh the list of action definitions
+                list_action_defs = self.rest_client().get("/actions")["entities"]
+                self.action_defs = dict((int(action["id"]),
+                                        action) for action in list_action_defs)
+
+                defn = self.action_defs.get(action_id, not_found)
+            except resilient.co3.SimpleHTTPException:
+                defn = not_found
 
         if defn:
             return defn.get("name", "_unnamed_")
@@ -572,7 +582,8 @@ class Actions(ResilientComponent):
         if not msg_id:
             LOG.error("Received message with no message id. %s", event.frame)
             raise ValueError("Stomp message with no message id received")
-        elif msg_id in self._resilient_ack_delivery_failures or msg_id in self._stomp_ack_delivery_failures:
+
+        if msg_id in self._resilient_ack_delivery_failures or msg_id in self._stomp_ack_delivery_failures:
             # This is a message we have already processed but we failed to acknowledge
             # Don't process it again, just acknowledge it
             LOG.info("Skipping reprocess of message '%s'. Sending saved ack now.", msg_id)
@@ -595,9 +606,7 @@ class Actions(ResilientComponent):
             self.fire(Ack(event.frame))
             self._all_acks.pop(msg_id)
         else:
-            # subscription = self.stomp_component.get_subscription(event.frame)
             LOG.debug("STOMP listener: message for %s", ".".join(queue))
-            # queue_name = subscription.split(".", 2)[2]
 
             LOG.debug("Got Message: %s", event.frame)
             self._current_msgs_processing[msg_id] = event
@@ -615,45 +624,60 @@ class Actions(ResilientComponent):
                         message = message.decode('utf-8', "surrogatepass").encode("utf-16", "surrogatepass").decode("utf-16")
 
                 message = json.loads(message)
-                # Construct a Circuits event with the message, and fire it on the channel
-                if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
-                    # Messages from inbound message destination get fired to inbound_destinations.queue_name channel
-                    channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
-                    event = InboundMessage(source=self,
-                                        queue=queue,
-                                        headers=headers,
-                                        message=message,
-                                        frame=event.frame,
-                                        log_dir=self.logging_directory)
-                elif headers.get("Co3MessagePayload") == constants.REST_REQUEST_DTO:
-                    # Fire all low_code messages on the 'low_code' channel since they will all be processed the same, no matter the queue they come from
-                    channel = constants.LOW_CODE_MSG_DEST_PREFIX
-                    # We want the full connector queue name for the LowCodeMessage so that it matches the functioncomponent._app_function names
-                    queue_name = ".".join(queue)
-                    event = LowCodeMessage(source=self,
-                                        queue_name=queue_name,
-                                        headers=headers,
-                                        message=message,
-                                        frame=event.frame,
-                                        log_dir=self.logging_directory)
-                elif message.get("function"):
-                    channel = "functions." + message["function"]["name"]
-                    event = FunctionMessage(source=self,
+
+                if headers.get(constants.SUBSCRIBE_QUEUE_HEADER) == constants.SUBSCRIBE_DTO:
+                    # New connector queue information - either need to subscribe or unsubscribe
+                    subscribe_queues = message.get("subscribe") if message.get("subscribe") else []
+                    unsubscribe_queues = message.get("unsubscribe") if message.get("unsubscribe") else []
+
+                    LOG.info("Connector queue changes. New: %s Removed: %s", subscribe_queues, unsubscribe_queues)
+                    new_queue_event = Event.create("add_new_queue",
+                                                    new_queues=subscribe_queues,
+                                                    removed_queues=unsubscribe_queues)
+                    self.fire(new_queue_event, "loader")
+                    self.wait(new_queue_event)
+                    # ACK the message to remove from subscription queue
+                    self.fire(Ack(event.frame))
+                else:
+                    # Construct a Circuits event with the message, and fire it on the channel
+                    if queue and queue[0] == constants.INBOUND_MSG_DEST_PREFIX:
+                        # Messages from inbound message destination get fired to inbound_destinations.queue_name channel
+                        channel = u"{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, queue[2])
+                        event = InboundMessage(source=self,
+                                            queue=queue,
                                             headers=headers,
                                             message=message,
                                             frame=event.frame,
                                             log_dir=self.logging_directory)
-                else:
-                    # Action messages get fired on actions.queue_name channel
-                    channel = "{0}.{1}".format("actions", queue[-1])
-                    event = ActionMessage(source=self,
-                                        headers=headers,
-                                        message=message,
-                                        frame=event.frame,
-                                        log_dir=self.logging_directory)
-                LOG.info("Event: %s Channel: %s", event, channel)
+                    elif headers.get(constants.SUBSCRIBE_QUEUE_HEADER) == constants.REST_REQUEST_DTO:
+                        # Fire all low_code messages on the 'low_code' channel since they will all be processed the same, no matter the queue they come from
+                        channel = constants.LOW_CODE_MSG_DEST_PREFIX
+                        # We want the full connector queue name for the LowCodeMessage so that it matches the functioncomponent._app_function names
+                        queue_name = ".".join(queue)
+                        event = LowCodeMessage(source=self,
+                                            queue_name=queue_name,
+                                            headers=headers,
+                                            message=message,
+                                            frame=event.frame,
+                                            log_dir=self.logging_directory)
+                    elif message.get("function"):
+                        channel = "functions." + message["function"]["name"]
+                        event = FunctionMessage(source=self,
+                                                headers=headers,
+                                                message=message,
+                                                frame=event.frame,
+                                                log_dir=self.logging_directory)
+                    else:
+                        # Action messages get fired on actions.queue_name channel
+                        channel = "{0}.{1}".format("actions", queue[-1])
+                        event = ActionMessage(source=self,
+                                            headers=headers,
+                                            message=message,
+                                            frame=event.frame,
+                                            log_dir=self.logging_directory)
+                    LOG.info("Event: %s Channel: %s", event, channel)
 
-                self.fire(event, channel)
+                    self.fire(event, channel)
             except Exception as exc:
                 LOG.exception(exc)
                 if not isinstance(message, dict):
@@ -859,12 +883,12 @@ class Actions(ResilientComponent):
         try:
             rc = self.rest_client()
             LOG.info("Requesting existing queues for existing connectors")
-            results = rc.get(constants.CONNECTORS_ENDPOINT, skip_retry=[500])
-            
+            results = rc.get(constants.CONNECTORS_ENDPOINT, skip_retry=[404, 500])
+
             # pull out list
-            queues_list = results.get("queues")
+            queues_list = results.get("queues", [])
             names = [q.get("queue_name") for q in queues_list]
-            
+
             LOG.debug("Got %s connector queue(s) to subscribe to: %s", len(queues_list), queues_list)
             return names
         except resilient.SimpleHTTPException:
@@ -920,6 +944,20 @@ class Actions(ResilientComponent):
                 self._unsubscribe(queue_name)
             self.listeners[queue_name] = comps
             LOG.debug("Listeners: %s", self.listeners)
+
+    @handler("SubscribeLowCode")
+    def subscribe_low_code(self, event, destination):
+        """This function handles new queues added during processing when new
+            connectors are added. A new listener will be added for that queue. 
+
+        :param event: event that triggered this function when a new subscription message is received 
+        :type event: object
+        :param low_code_queue: queue to listen on
+        :type low_code_queue: str
+        :return: None
+        :rtype: None
+        """
+        return self._subscribe(destination)
 
     def _subscribe(self, queue_name):
         """Actually subscribe the STOMP queue.  Note: this use client-ack, not auto-ack"""

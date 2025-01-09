@@ -249,7 +249,7 @@ class SOARStompListener(stomp.ConnectionListener):
             LOG.warning("Messaging service is up but authentication service is not. Disconnect to retry...")
 
     def on_message(self, frame):
-        LOG.debug("STOMP received message from destination: '%s'", frame.headers.get("reply-to"))
+        LOG.debug("STOMP received message from destination: '%s'", frame.headers.get("reply-to") or frame.headers.get("subscription"))
         self.component.fire(Message(frame))
 
     def on_disconnected(self):

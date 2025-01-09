@@ -1,19 +1,23 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
+# pragma pylint: disable=line-too-long
 
 """Dynamic component loader"""
 
 import os
 import sys
 import logging
-import traceback
 import pkg_resources
 from circuits import Loader, Event
 from circuits.core.handlers import handler
+from resilient_circuits.stomp_events import SubscribeLowCode, Unsubscribe
 from resilient_circuits import constants, helpers
+from threading import Lock
 
 LOG = logging.getLogger(__name__)
 
+# lock used to serials new low code connector messages
+LOW_CODE_REGISTRATION_LOCK = Lock()
 
 class load(Event):
     """yes"""
@@ -30,15 +34,16 @@ class load_all_success(Event):
     pass
 
 
-def safe_but_noisy_import(name):
+def safe_but_noisy_import(cname):
     modules = sys.modules.copy()
     try:
-        if name in sys.modules:
+        if cname in sys.modules:
             LOG.debug("Name exists in modules")
-            return reload(sys.modules[name])
-        else:
-            LOG.debug("Name does not exist in modules")
-            return __import__(name, globals(), locals(), [""])
+            # TODO reload not found
+            return reload(sys.modules[cname])
+
+        LOG.debug("Name does not exist in modules")
+        return __import__(cname, globals(), locals(), [""])
     except Exception as exc:
         for name in sys.modules.copy():
             if name not in modules:
@@ -49,7 +54,7 @@ def safe_but_noisy_import(name):
 class ComponentLoader(Loader):
     """A component to automatically load from the componentsdir directory"""
 
-    def __init__(self, opts, connector_queues=[]):
+    def __init__(self, opts, connector_queues=None):
         """Initialize the loader"""
 
         """ connector_queues is list of additional connector queues to subscribe to"""
@@ -64,13 +69,8 @@ class ComponentLoader(Loader):
         self.pending_components = []
         self.finished = False
 
-        # Load all installed components
-        installed_components = self.discover_installed_components("resilient.circuits.components", connector_queues)
-        bg_installed_components = self.discover_installed_components("resilient.circuits.background", connector_queues)
-        installed_components.extend(bg_installed_components)
-
-        if installed_components:
-            self._register_components(installed_components)
+        self.connector_queues = connector_queues if connector_queues else []
+        self.register_components(self.connector_queues, [])
 
         if self.path:
             # Load all components from the components directory
@@ -90,23 +90,11 @@ class ComponentLoader(Loader):
             self.finished = True
             self.fire(load_all_success())
 
-    def discover_installed_components(self, entry_points, new_queues=[]):
-        """
-        :param entry_points: string reference to the entry points to load
-        :param new_queues: list of new low code queues to subscribe to. This is useful for connector queues which
-                            we will get info on from /connectors/queues endpoint or from a main subscription
-                            queue for low code
-        :type new_queues: list[str]
-        """
+    def discover_installed_components(self, entry_points):
         entry_points = pkg_resources.iter_entry_points(entry_points)
-
         ep = None
         try:
             return_list = []
-
-            # get low code queues names
-            low_code_queue_names = self.get_all_lc_queues(new_queues)
-
             # Loop entry points
             for ep in entry_points:
                 if ep.name not in self.noload:
@@ -138,16 +126,48 @@ class ComponentLoader(Loader):
                                 ih[1].channel = new_channel
                                 ih[1].names = new_names
 
-                    # handle all low code handlers
-                    for lc_handler in helpers.get_handlers(cmp_class, handler_type=constants.LOW_CODE_HANDLER_VAR):
-                        self.update_low_code_handlers(lc_handler, low_code_queue_names)
-
                     return_list.append(cmp_class)
             return return_list
 
         except ImportError as e:
             LOG.error("Failed to load '%s' from '%s'", ep, ep.dist)
             raise e
+
+    def register_components(self, new_queues, removed_queues, changed_connectors=False):
+        """find all the installed apps and register the component classes to handle messages
+
+        :param new_queues: list of additional queues to include for the low_code app
+        :type new_queues: list
+        :param removed_queues: list of additional queues to remove from the low_code app
+        :type removed_queues: list
+        :param changed_connectors: True to called when the subscription queue posts 
+          changes to low code connectors
+        :type changed_connectors: bool
+        """
+        # this needs to be single threaded as multiple change requests can come through circuits
+        with LOW_CODE_REGISTRATION_LOCK:
+            # Load all installed components
+            installed_components = self.discover_installed_components("resilient.circuits.components")
+            bg_installed_components = self.discover_installed_components("resilient.circuits.background")
+            self.connector_queues = self.lc_assign_queues(bg_installed_components, new_queues, removed_queues)
+            # combine lists for registration
+            installed_components.extend(bg_installed_components)
+
+            # clear any existing registrations
+            for component in list(self.components):
+                self.unregisterChild(component)
+
+            if installed_components:
+                self._register_components(installed_components)
+
+            if changed_connectors:
+                # start the STOMP listeners for these new queues
+                for queue in new_queues:
+                   self.fire(SubscribeLowCode(queue))
+
+                # stop the STOMP listeners for these removed queues
+                for destination in removed_queues:
+                    self.fire(Unsubscribe(destination))
 
     def _register_components(self, component_list):
         """ register all installed components and ones from componentsdir """
@@ -162,6 +182,60 @@ class ComponentLoader(Loader):
                 self.fire(load_all_failure())
                 return False
         return True
+
+    def lc_assign_queues(self,
+                         cmp_class_list,
+                         new_queues,
+                         removed_queues,
+                         handler_type=constants.LOW_CODE_HANDLER_VAR):
+        """for a list of app components, assign low_code queues to those components
+             which are used by the low_code app
+
+        :param cmp_class_list: list of potential components for handler assignment
+        :type cmp_class_list: list
+        :param new_queues: list of queues to assign to components
+        :type new_queues: list
+        :param new_queues: list of queues to remove from the components
+        :type new_queues: list
+        :param handler_type: type of component to filter on
+        :type handler_type: str
+        :return: new set of queues associated with the low code connector
+        :rtype: set
+        """
+        # get low code queues names
+        subscription_queue = self.lc_get_subscription_queue()
+
+        if subscription_queue:
+            low_code_queue_names = new_queues + [subscription_queue] # remove duplicates
+        else:
+            low_code_queue_names = new_queues
+
+        # add in existing queues
+        low_code_queue_names = self.connector_queues + low_code_queue_names
+
+        # get difference of existing/new queues with queues to retain
+        set_low_code_queue_names = set(low_code_queue_names) - set(removed_queues)
+
+        LOG.debug("New set of queues for low code connectors: %s", set_low_code_queue_names)
+
+        for cmp_class in cmp_class_list:
+            # handle all low code handlers
+            for lc_handler in helpers.get_handlers(cmp_class, handler_type=handler_type):
+                self.lc_update_handlers(lc_handler, tuple(set_low_code_queue_names))
+
+        return list(set_low_code_queue_names)
+
+    @handler("add_new_queue", channel="loader")
+    def event_add_new_queues(self, new_queues, removed_queues):
+        """ when a subscription message is received and new low code queues are created or removed,
+                make the changes to the low code app component
+
+        :param new_queues: list of new queues
+        :type new_queues: list
+        :param removed_queues: list of queues to remove
+        :type removed_queues: list
+        """
+        self.register_components(new_queues, removed_queues, changed_connectors=True)
 
     @handler("exception", channel="loader")
     def exception(self, event, *args, **kwargs):
@@ -182,39 +256,36 @@ class ComponentLoader(Loader):
         if cname in sys.modules:
             LOG.info("Loaded and registered component '%s'", cname)
             self.pending_components.remove(cname)
-            if self.pending_components == []:
+            if not self.pending_components:
                 self.finished = True
                 self.fire(load_all_success())
         else:
             LOG.error("Failed to load component '%s'", cname)
-            safe_but_noisy_import(cname)
+            # this logic is broken as the reload function is undefined
+            #safe_but_noisy_import(cname)
             self.fire(load_all_failure())
 
-    def get_all_lc_queues(self, lc_new_queues):
+    def lc_get_subscription_queue(self):
         """
-        Put all the low code connector queues together. As of now, this may come from app.config or from a subscription queue method.
-
-        :returns: tuple with the names of the queues to add to the low code handler
+            Get the subscription queue.
+            The subscription queue publishes new/removed connector queues
+            :return subscription queue name
+            :rtype: str
         """
-        # TODO: low code queues might change depending on how we decide to consume the low code queue names
-        # get all the low code queues from app.config (LIKELY TO CHANGE)
-        low_code_queues = self.opts.get(constants.LOW_CODE_QUEUES_LIST_APP_CONFIG, "")
-        lc_names_from_config = tuple(low_code_queues.split(",")) if low_code_queues else ()
 
-        # Any new connector queues that were discovered from the main subscription queue; we need it as a tuple to add to the handler
-        lc_new_queues = tuple(lc_new_queues) if lc_new_queues else ()
+        # the subscription queue is an environment variable
+        subscription_queue = os.environ.get(constants.ENVVAR_LOWCODE_SUBSCRIPTION_QUEUE)
+        LOG.info("low code subscription queue: %s", subscription_queue)
 
-        return tuple(set(lc_names_from_config + lc_new_queues)) # remove duplicates
+        return subscription_queue
 
-    def update_low_code_handlers(self, lc_handler, lc_queues):
+    def lc_update_handlers(self, lc_handler, lc_queues):
         """ Update the queue names associated with the low code handler
 
         :param lc_handler: Low Code Handler
-        :type lc_handler: 
-        :param lc_names_from_config: low code queue names that are stored in constants.LOW_CODE_QUEUES_LIST_APP_CONFIG
-        :type lc_names_from_config: tuple
-        :param lc_new_queues: 
-        :type lc_new_queues: tuple
+        :type lc_handler: object
+        :param lc_queues: new queues to add to low code handlers
+        :type lc_queues: tuple
         """
         if sys.version_info.major < 3:
             # Handle PY < 3
@@ -224,14 +295,15 @@ class ComponentLoader(Loader):
             lc_handler_obj = lc_handler[1]
 
         # extend '.names' tuple with any additional queue names from the config
-        lc_names_from_handler = lc_handler_obj.names or ()
-        lc_names = lc_names_from_handler
-        lc_names = lc_names + lc_queues
-        lc_handler_obj.names = tuple(set(lc_names)) # remove duplicates
+        lc_names = lc_handler_obj.names or ()
+
+        LOG.info("Adding new queues: %s with existing queues: %s to handler: %s", lc_queues, lc_names, lc_handler)
+
+        lc_handler_obj.names = tuple(set(lc_names + lc_queues)) # remove duplicates
 
         # if no names provided we need to disable the handler otherwise it will listen on all queues
         # this is for a case where a low code handler exists in the components that are registered
         # but there are no low code queues to listen to
-        if not lc_names:
-            LOG.debug("Low code handler for function '%s' in module '%s' was loaded but had no queues to subscribe to. Disabling handler...", lc_handler_obj.__name__, lc_handler_obj.__module__)
+        if not lc_handler_obj.names:
+            LOG.warning("Low code handler for function '%s' in module '%s' was loaded but had no queues to subscribe to. Disabling handler...", lc_handler_obj.__name__, lc_handler_obj.__module__)
             lc_handler_obj.handler = False

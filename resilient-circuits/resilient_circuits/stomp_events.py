@@ -118,6 +118,10 @@ class Subscribe(StompEvent):
         super(Subscribe, self).__init__(destination=destination, additional_headers=additional_headers, **kwargs)
         self.destination = destination
 
+class SubscribeLowCode(StompEvent):
+    def __init__(self, destination, **kwargs):
+        super(SubscribeLowCode, self).__init__(destination=destination, **kwargs)
+        self.destination = destination
 
 class Unsubscribe(StompEvent):
     def __init__(self, destination):
