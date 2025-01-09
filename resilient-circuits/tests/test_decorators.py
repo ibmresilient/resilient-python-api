@@ -109,7 +109,7 @@ class TestLowCodeFunctionDecorator:
         assert mock_result_obj.success is True
         assert mock_result_obj.reason is None
 
-        mock_results = mock_result_obj.content
+        mock_results = mock_result_obj.value
         assert "malware" in mock_results 
 
     def test_low_code_app_mock_handles_Exception(self, circuits_app):
