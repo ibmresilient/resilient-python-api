@@ -28,7 +28,7 @@ class LowCodeMockComponent(AppFunctionComponent):
         fn_msg = self.get_fn_msg()
 
         yield self.status_message(u"Function name: {0}".format(fn_msg.get("function", {}).get("name", "Unknown")))
-        yield LowCodeResult('{"malware": True}')  # TODO
+        yield LowCodeResult({"status_code": 200, "content": {"malware": True}})  # TODO
 
     @low_code_function(mock_constants.MOCK_LOW_CODE_APP_FN_NAME_EX)
     def _app_function_mock_raise_exception(self, low_code_request):

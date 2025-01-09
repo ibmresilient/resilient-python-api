@@ -110,7 +110,7 @@ class TestLowCodeFunctionDecorator:
         assert mock_result_obj.reason is None
 
         mock_results = mock_result_obj.value
-        assert "malware" in mock_results 
+        assert mock_results["malware"] is True
 
     def test_low_code_app_mock_handles_Exception(self, circuits_app):
         LowCodeMockComponent(opts=mock_constants.MOCK_OPTS).register(circuits_app.app.component_loader)
