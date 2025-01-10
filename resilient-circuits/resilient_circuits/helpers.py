@@ -82,6 +82,7 @@ def get_handlers(component, handler_type="inbound_handler"):
 
     for m in methods:
         this_method = getattr(component, m)
+        # for low_code, the decorator sets the 'low_code_handler' attribute
         is_handler = getattr(this_method, handler_type, False)
 
         if is_handler:

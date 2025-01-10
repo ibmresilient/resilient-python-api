@@ -148,6 +148,7 @@ class ComponentLoader(Loader):
         with LOW_CODE_REGISTRATION_LOCK:
             # Load all installed components
             installed_components = self.discover_installed_components("resilient.circuits.components")
+            # background components are both low_code app and pollers (future)
             bg_installed_components = self.discover_installed_components("resilient.circuits.background")
             self.connector_queues = self.lc_assign_queues(bg_installed_components, new_queues, removed_queues)
             # combine lists for registration
@@ -216,12 +217,17 @@ class ComponentLoader(Loader):
         # get difference of existing/new queues with queues to retain
         set_low_code_queue_names = set(low_code_queue_names) - set(removed_queues)
 
-        LOG.debug("New set of queues for low code connectors: %s", set_low_code_queue_names)
-
+        handlers_set = False
         for cmp_class in cmp_class_list:
-            # handle all low code handlers
+            # handle all low code handlers - this will apply only to the low_code app 
             for lc_handler in helpers.get_handlers(cmp_class, handler_type=handler_type):
                 self.lc_update_handlers(lc_handler, tuple(set_low_code_queue_names))
+                handlers_set = True
+
+        if handlers_set:
+            LOG.debug("New set of queues for low_code connectors: %s", set_low_code_queue_names)
+        else:
+            LOG.info("No low_code handlers found for connectors: %s", set_low_code_queue_names)
 
         return list(set_low_code_queue_names)
 

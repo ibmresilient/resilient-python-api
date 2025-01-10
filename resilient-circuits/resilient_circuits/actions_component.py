@@ -865,6 +865,7 @@ class Actions(ResilientComponent):
                 queue_name = channel.split(".", 1)[-1]
                 LOG.info("'%s.%s' low code handler registered to '%s'", type(component).__module__, type(component).__name__, queue_name)
             else:
+                LOG.warning("Channel: %s not associated with any handler", channel)
                 continue
 
             if queue_name in self.listeners:
