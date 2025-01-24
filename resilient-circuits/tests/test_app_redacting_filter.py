@@ -2,13 +2,12 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
-
 import logging
+import pytest
 import sys
 
-import pytest
 from resilient_circuits import constants
-from resilient_circuits.app import RedactingFilter
+from resilient_circuits.filters import RedactingFilter
 
 
 @pytest.mark.skipif(sys.version_info.major < 3, reason="requires python 3")

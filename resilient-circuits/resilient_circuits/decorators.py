@@ -18,9 +18,11 @@ from resilient_circuits.action_message import (FunctionError_,
                                                FunctionResult, LowCodeResult,
                                                StatusMessage,
                                                StatusMessageEvent)
+from resilient_circuits.filters import RedactingFilter
 from resilient_lib import LowCodePayload, ResultPayload, validate_fields
 
 LOG = logging.getLogger(__name__)
+LOG.addFilter(RedactingFilter())
 
 # for convenience we alias the circuits 'handler'
 handler = circuits.core.handlers.handler
