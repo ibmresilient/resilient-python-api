@@ -10,6 +10,7 @@ import threading
 from resilient_circuits import (ResilientComponent, StatusMessage, constants,
                                 handler)
 from resilient_circuits.app_argument_parser import AppArgumentParser
+from resilient_circuits.filters import RedactingFilter
 from resilient_lib import (RequestsCommon, RequestsCommonWithoutSession,
                            str_to_bool, validate_fields)
 
@@ -81,6 +82,7 @@ class AppFunctionComponent(ResilientComponent):
         self._local_storage = threading.local()
 
         self.LOG = logging.getLogger(__name__)
+        self.LOG.addFilter(RedactingFilter())
 
         super(AppFunctionComponent, self).__init__(opts)
 
