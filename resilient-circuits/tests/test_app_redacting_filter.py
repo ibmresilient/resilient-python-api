@@ -18,12 +18,13 @@ def test_clears_sensitive_info(caplog):
 
     data = {
         "seems_good": "found",
-        "secret": "will be removed"
+        "secret": "will be removed",
+        "API_KEY": "be to removed"
     }
 
     logger.info(data)
 
-    assert "'seems_good': 'found', 'secret': '***'" in caplog.text
+    assert "'seems_good': 'found', 'secret': '***', 'API_KEY': '***'" in caplog.text
     assert "will be removed" not in caplog.text
 
 @pytest.mark.skipif(sys.version_info.major < 3, reason="requires python 3")

@@ -27,7 +27,7 @@ class RedactingFilter(logging.Filter):
             )              # end first capturing group
             (.*?)          # capture the problematic content (lazy capture up until end quotation mark)
             ([\'\"])       # capturing group to end the regex match
-        """.format(pattern), re.X)
+        """.format(pattern), re.X | re.I)
 
     def filter(self, record):
         try:
