@@ -9,7 +9,7 @@ import pkg_resources
 PACKAGE_NAME = "resilient-circuits"
 
 # list compiled from ideas in https://stackoverflow.com/a/43369417
-PASSWORD_PATTERNS = ['token', 'pass', 'secret', 'pin', 'key', 'session', 'connection', 'jwt']
+PASSWORD_PATTERNS = ['token', 'pass', 'secret', 'pin', 'key', 'session', 'connection', 'jwt', 'authorization']
 
 INBOUND_MSG_DEST_PREFIX = "inbound_destinations"
 
