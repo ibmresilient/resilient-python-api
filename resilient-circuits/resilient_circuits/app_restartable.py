@@ -8,8 +8,9 @@ from __future__ import print_function
 
 import logging
 import os
-
+import hashlib
 import filelock
+
 from circuits import Event, Timer
 from resilient_circuits.app import (App, AppArgumentParser,
                                     RotatingFileHandler, constants, get_lock,
@@ -39,15 +40,20 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
         super(ConfigFileUpdateHandler, self).__init__()
         self.app = app
         self.max_reload_time = 30
+        self.config_file_hash = self.get_config_file_hash()
 
     @classmethod
     def set_patterns(cls, config_file):
         cls.patterns = ["*" + os.path.basename(config_file), ]
 
-    def on_modified(self, event):
-        """ For 'FileModifiedEvent' events, initiate reload of data from config file and restart components.  """
+    def on_closed(self, event):
+        """ For 'FileClosedEvent' events, initiate reload of data from config file and restart components.  """
 
-        self.reload_config()
+        # Only trigger a reload if a write has occurred before a close i.e. the config file hash value has changed.
+        new_config_file_hash = self.get_config_file_hash()
+        if new_config_file_hash != self.config_file_hash:
+            self.config_file_hash = new_config_file_hash
+            self.reload_config()
 
     def on_created(self, event):
         """ For 'FileCreatedEvent' events, initiate reload of data from config file and restart components.
@@ -119,6 +125,16 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
                     handler.maxBytes = log_max_bytes
                 break # break the loop as we only needed the RotatingFileHandler
 
+    def get_config_file_hash(self) -> str:
+        """Generate a sha256 hash value for contents of app.config
+
+        :return: Sha256 hash value of app.config file.
+        :rtype: str
+        """
+        with open(self.app.config_file, 'rb', buffering=0) as f:
+            return hashlib.file_digest(f, 'sha256').hexdigest()
+
+
 # Main component for our application
 class AppRestartable(App):
     """Our main app component, which sets up the Resilient services and other components"""
@@ -133,6 +149,7 @@ class AppRestartable(App):
         """Initialize the configuration file watchdog"""
         # Monitor the configuration file, using a Watchdog observer daemon.
         LOG.info("Monitoring config file for changes.")
+
         ConfigFileUpdateHandler.set_patterns(self.config_file)
         event_handler = ConfigFileUpdateHandler(self)
         self.observer = Observer()
