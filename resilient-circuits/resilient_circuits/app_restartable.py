@@ -41,19 +41,30 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
         self.app = app
         self.max_reload_time = 30
         self.config_file_hash = self.get_config_file_hash()
+        self.app_config_file_events = []
 
     @classmethod
     def set_patterns(cls, config_file):
         cls.patterns = ["*" + os.path.basename(config_file), ]
 
+
+    def on_any_event(self, event):
+        """ For 'FileSystemEvent' events capture the most recent events in a list. """
+
+        self.app_config_file_events.append(event.event_type)
+        # Truncate list keeping 2 most recent file events.
+        self.app_config_file_events = self.app_config_file_events[-2:]
+
     def on_closed(self, event):
         """ For 'FileClosedEvent' events, initiate reload of data from config file and restart components.  """
 
-        # Only trigger a reload if a write has occurred before a close i.e. the config file hash value has changed.
-        new_config_file_hash = self.get_config_file_hash()
-        if new_config_file_hash != self.config_file_hash:
-            self.config_file_hash = new_config_file_hash
-            self.reload_config()
+        # Only trigger a reload if a "closed" event has occurred after a "modified" event.
+        if self.app_config_file_events ==  ["modified", "closed"]:
+            # Only trigger a reload if the config file hash value has changed.
+            new_config_file_hash = self.get_config_file_hash()
+            if new_config_file_hash != self.config_file_hash:
+                self.config_file_hash = new_config_file_hash
+                self.reload_config()
 
     def on_created(self, event):
         """ For 'FileCreatedEvent' events, initiate reload of data from config file and restart components.
