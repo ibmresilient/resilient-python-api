@@ -11,8 +11,8 @@ import pytest
 from mock import MagicMock, patch
 from resilient_circuits.app_restartable import ConfigFileUpdateHandler
 
-
-def test_reload_config_not_already_loading():
+@patch('resilient_circuits.app_restartable.ConfigFileUpdateHandler.get_config_file_hash', return_value=MagicMock())
+def test_reload_config_not_already_loading(get_config_file_hash_mock):
     magic_app = MagicMock()
     config_update_handler = ConfigFileUpdateHandler(magic_app)
     with patch("resilient_circuits.app_restartable.AppArgumentParser.parse_args") as mock_parse_args:
@@ -22,7 +22,8 @@ def test_reload_config_not_already_loading():
         config_update_handler.reload_config()
         assert config_update_handler.app.reloading
 
-def test_reload_config_is_already_loading():
+@patch('resilient_circuits.app_restartable.ConfigFileUpdateHandler.get_config_file_hash', return_value=MagicMock())
+def test_reload_config_is_already_loading(get_config_file_hash_mock):
     magic_app = MagicMock()
     config_update_handler = ConfigFileUpdateHandler(magic_app)
     with patch("resilient_circuits.app_restartable.AppArgumentParser.parse_args") as mock_parse_args:
@@ -31,8 +32,8 @@ def test_reload_config_is_already_loading():
         config_update_handler.reload_config()
         assert config_update_handler.app.reloading
 
-
-def test_reset_loglevel():
+@patch('resilient_circuits.app_restartable.ConfigFileUpdateHandler.get_config_file_hash', return_value=MagicMock())
+def test_reset_loglevel(get_config_file_hash_mock):
     config_update_handler = ConfigFileUpdateHandler(MagicMock())
     assert logging.getLevelName(logging.getLogger().level) == "DEBUG" # NOTE: this always work locally, but when run in Tox, this is the log level here
 
