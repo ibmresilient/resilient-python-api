@@ -142,8 +142,17 @@ class ConfigFileUpdateHandler(PatternMatchingEventHandler):
         :return: Sha256 hash value of app.config file.
         :rtype: str
         """
-        with open(self.app.config_file, 'rb', buffering=0) as f:
-            return hashlib.file_digest(f, 'sha256').hexdigest()
+        sha256 = hashlib.sha256()
+
+        with open(self.app.config_file, 'rb') as appconfig_f:
+            while True:
+                # File read in chunks of default hash block size.
+                chunk = appconfig_f.read(sha256.block_size)
+                if not chunk:
+                    break
+                sha256.update(chunk)
+
+        return sha256.hexdigest()
 
 
 # Main component for our application
