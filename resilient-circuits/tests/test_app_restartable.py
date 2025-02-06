@@ -40,13 +40,6 @@ def test_reset_loglevel():
     config_update_handler.reset_loglevel(opts)
     assert logging.getLevelName(logging.getLogger().level) == "INFO"
 
-def test_reset_loglevel():
-    config_update_handler = ConfigFileUpdateHandler(MagicMock())
-    assert logging.getLevelName(logging.getLogger().level) == "DEBUG" # NOTE: this always work locally, but when run in Tox, this is the log level here
-
-    opts = {"loglevel": "INFO"}
-    config_update_handler.reset_loglevel(opts)
-    assert logging.getLevelName(logging.getLogger().level) == "INFO"
 
 @pytest.mark.parametrize("app_config_data, hash", [
     ("Test data 1", "f6804dad29083da6a0a6308580507d4fe06ba469c92a4cdb5cde6420aaff57d8"),
