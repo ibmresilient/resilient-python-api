@@ -34,7 +34,7 @@ class RedactingFilter(logging.Filter):
             if record.args:
                 record.args = tuple(self.redact_regex.sub(r"\1***\3", str(arg)) for arg in record.args)
             else:
-                record.msg = self.redact_regex.sub(r"\1***\3", record.msg)
+                record.msg = self.redact_regex.sub(r"\1***\3", str(record.msg))
             # The stomp.py library we use can leak passwords in the frame logs in certain situations.
             # We can remove those by checking for the "sending frame" log message
             # and then rendering the message to check if the passcode value is included.
