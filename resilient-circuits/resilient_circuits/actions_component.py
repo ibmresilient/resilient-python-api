@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2025. All Rights Reserved.
 # pragma pylint: disable=line-too-long
 
 """Circuits component for Action Module subscription and message handling"""
@@ -827,7 +827,7 @@ class Actions(ResilientComponent):
                 channels.update(set(names))
             elif comp_handler.channel:
                 # normal functions will just state their queue name in the 'channel' they listen on
-                channels.update(comp_handler.channel.split(","))
+                channels.update([channel.strip() for channel in comp_handler.channel.split(",")])
         for channel in channels:
             if str(channel).startswith("actions."):
                 # Action module handler, channel "actions.xx" subscribes to "xx"

@@ -31,13 +31,10 @@ class RedactingFilter(logging.Filter):
 
     def filter(self, record):
         try:
-            # Best effort regex filter pattern to redact password logging.
-            if PY3: # struggles to convert unicode dicts in PY2 -- so PY3 only
-                record.msg = str(record.msg)
-            if isinstance(record.msg, string_types):
-                # keep first and third capturing groups, but replace inner group with "***"
-                record.msg = self.redact_regex.sub(r"\1***\3", record.getMessage())
-
+            if record.args:
+                record.args = tuple(self.redact_regex.sub(r"\1***\3", str(arg)) for arg in record.args)
+            else:
+                record.msg = self.redact_regex.sub(r"\1***\3", record.msg)
             # The stomp.py library we use can leak passwords in the frame logs in certain situations.
             # We can remove those by checking for the "sending frame" log message
             # and then rendering the message to check if the passcode value is included.
@@ -45,7 +42,7 @@ class RedactingFilter(logging.Filter):
             if "sending frame:" in record.msg:
                 if "passcode" in record.getMessage():
                     return False
-        except Exception:
+        except Exception as err:
             return True
 
         return True
