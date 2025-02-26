@@ -884,7 +884,7 @@ class Actions(ResilientComponent):
         try:
             rc = self.rest_client()
             LOG.info("Requesting existing queues for existing connectors")
-            results = rc.get(constants.CONNECTORS_ENDPOINT, skip_retry=[404, 500])
+            results = rc.get(constants.CONNECTORS_ENDPOINT, skip_retry=[403, 404, 500])
 
             # pull out list
             queues_list = results.get("queues", [])
