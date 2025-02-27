@@ -1213,7 +1213,7 @@ class Actions(ResilientComponent):
             # Retries not applicable, probably using a mocked appliance
             return
         if not self.stomp_component.connected:
-            LOG.debug("Skipping retry of any failed messages because STOMP connection is down")
+            LOG.warning("Skipping retry of any failed messages because STOMP connection is down")
             return
 
         to_retry = {key: value for key, value in self._stomp_ack_delivery_failures.items()

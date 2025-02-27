@@ -698,7 +698,7 @@ class SimpleClient(co3base.BaseClient):
         _raise_if_error(response)
         return json.loads(response.text)
 
-    def get_put(self, uri, apply_func, co3_context_token=None, timeout=None):
+    def get_put(self, uri, apply_func, co3_context_token=None, timeout=None, skip_retry=[]):
         """
         Safely performs an update operation by a GET, calls your ``apply_func`` callback, then PUT
         with the updated value.  If the put call returns a ``409`` error, these steps are retried.
@@ -718,6 +718,8 @@ class SimpleClient(co3base.BaseClient):
         :type co3_context_token: str
         :param timeout: Optional timeout (seconds).
         :type timeout: int
+        :param skip_retry: list of HTTP responses to skip throwing an exception
+        :type skip_retry: list
         :return: A dictionary or list with the value returned by the PUT operation.
         :rtype: dict | list
         :raises SimpleHTTPException: if an HTTP exception occurs.
@@ -725,7 +727,7 @@ class SimpleClient(co3base.BaseClient):
         # Call BaseClient get_put. Convert exception if there is any
         res = None
         try:
-            res = super(SimpleClient, self).get_put(uri, apply_func, co3_context_token, timeout)
+            res = super(SimpleClient, self).get_put(uri, apply_func, co3_context_token, timeout, skip_retry=skip_retry)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return res

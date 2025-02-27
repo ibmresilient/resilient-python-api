@@ -136,3 +136,16 @@ def fx_reset_environmental_variables():
     yield
 
     os.environ = current_env
+
+@pytest.fixture()
+def fx_config_file(tmp_path_factory):
+    """
+    Before: Create a temporary app.config file
+    After: Remove temporary file
+
+    Used in tests for app restartable reload
+    """
+    app_config = tmp_path_factory.mktemp("store") / "app.config"
+    yield app_config
+    print("Removing temporary config file...")
+    os.remove(app_config)

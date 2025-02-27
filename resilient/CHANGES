@@ -1,3 +1,9 @@
+**2025-02: version 51.0.5.0**
+* No changes
+
+**2024-12: version 51.0.4.0**
+* Bug fix when using get_put with skip_retry 
+
 **2024-07: version 51.0.2.2**
 * Update dependency version of setuptools version to 70.3.x to address CVE-2024-6345
 
