@@ -26,38 +26,35 @@ class load(Event):
 
 class load_all_failure(Event):
     """Event indicating that a component failed to load."""
-    pass
-
 
 class load_all_success(Event):
     """Event indicating that all components were loaded."""
-    pass
 
 
-def safe_but_noisy_import(cname):
-    modules = sys.modules.copy()
-    try:
-        if cname in sys.modules:
-            LOG.debug("Name exists in modules")
-            # TODO reload not found
-            return reload(sys.modules[cname])
+# def safe_but_noisy_import(cname):
+#     modules = sys.modules.copy()
+#     try:
+#         if cname in sys.modules:
+#             LOG.debug("Name exists in modules")
+#             # TODO reload not found
+#             return reload(sys.modules[cname])
 
-        LOG.debug("Name does not exist in modules")
-        return __import__(cname, globals(), locals(), [""])
-    except Exception as exc:
-        for name in sys.modules.copy():
-            if name not in modules:
-                del sys.modules[name]
-        LOG.exception(exc)
+#         LOG.debug("Name does not exist in modules")
+#         return __import__(cname, globals(), locals(), [""])
+#     except Exception as exc:
+#         for name in sys.modules.copy():
+#             if name not in modules:
+#                 del sys.modules[name]
+#         LOG.exception(exc)
 
 
 class ComponentLoader(Loader):
     """A component to automatically load from the componentsdir directory"""
 
     def __init__(self, opts, connector_queues=None):
-        """Initialize the loader"""
-
-        """ connector_queues is list of additional connector queues to subscribe to"""
+        """Initialize the loader
+            connector_queues are a list of additional connector queues to subscribe to
+        """
 
         self.opts = opts
         # Path where components should be found
@@ -95,43 +92,52 @@ class ComponentLoader(Loader):
         ep = None
         try:
             return_list = []
-            # Loop entry points
-            for ep in entry_points:
-                if ep.name not in self.noload:
+            # Loop entry points, not part of noload
+            for ep in (ep_test for ep_test in entry_points if ep_test.name not in self.noload):
+                # Load the component class
+                cmp_class = ep.load()
 
-                    # Load the component class
-                    cmp_class = ep.load()
+                # Get the class' __module__ name
+                # Note: the name used for the app.config section of this app should be the same as the __module__
+                cmp_module_name = cmp_class.__module__.split(".")[0]
 
-                    # Get the class' __module__ name
-                    # Note: the name used for the app.config section of this app should be the same as the __module__
-                    cmp_module_name = cmp_class.__module__.split(".")[0]
+                # If an INBOUND_MSG_APP_CONFIG_Q_NAME is defined in the app.config in the section for this app, use it
+                custom_q_name = self.opts.get(cmp_module_name, {}).get(constants.INBOUND_MSG_APP_CONFIG_Q_NAME, "")
 
-                    # If an INBOUND_MSG_APP_CONFIG_Q_NAME is defined in the app.config in the section for this app, use it
-                    custom_q_name = self.opts.get(cmp_module_name, {}).get(constants.INBOUND_MSG_APP_CONFIG_Q_NAME, "")
+                if custom_q_name:
+                    self.update_inbound_handlers(custom_q_name, cmp_class)
 
-                    if custom_q_name:
-                        # Get the inbound_handlers in this component and overwrite their 'channel' and 'names' attributes
-                        inbound_handlers = helpers.get_handlers(cmp_class, handler_type="inbound_handler")
-                        for ih in inbound_handlers:
-
-                            new_channel = "{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, custom_q_name)
-                            new_names = (custom_q_name, )
-
-                            if sys.version_info.major < 3:
-                                # Handle PY < 3
-                                ih[1].__func__.channel = new_channel
-                                ih[1].__func__.names = new_names
-                            else:
-                                # Handle PY >= 3 specific imports
-                                ih[1].channel = new_channel
-                                ih[1].names = new_names
-
-                    return_list.append(cmp_class)
+                return_list.append(cmp_class)
             return return_list
 
         except ImportError as e:
             LOG.error("Failed to load '%s' from '%s'", ep, ep.dist)
             raise e
+
+    def update_inbound_handlers(self, custom_q_name: str, cmp_class: object) -> None:
+        """For inbound_handlers, overwrite their 'channel' and 'names' attributes
+
+        :param custom_q_name: name of custom queue for low code
+        :type custom_q_name: str
+        :param cmp_class: _description_
+        :type cmp_class: object
+        """
+
+        # Get the inbound_handlers in this component and overwrite their 'channel' and 'names' attributes
+        inbound_handlers = helpers.get_handlers(cmp_class, handler_type="inbound_handler")
+        for ih in inbound_handlers:
+
+            new_channel = "{0}.{1}".format(constants.INBOUND_MSG_DEST_PREFIX, custom_q_name)
+            new_names = (custom_q_name, )
+
+            if sys.version_info.major < 3:
+                # Handle PY < 3
+                ih[1].__func__.channel = new_channel
+                ih[1].__func__.names = new_names
+            else:
+                # Handle PY >= 3 specific imports
+                ih[1].channel = new_channel
+                ih[1].names = new_names
 
     def register_components(self, new_queues, removed_queues, changed_connectors=False):
         """find all the installed apps and register the component classes to handle messages
@@ -140,7 +146,7 @@ class ComponentLoader(Loader):
         :type new_queues: list
         :param removed_queues: list of additional queues to remove from the low_code app
         :type removed_queues: list
-        :param changed_connectors: True to called when the subscription queue posts 
+        :param changed_connectors: True to called when the subscription queue posts
           changes to low code connectors
         :type changed_connectors: bool
         """
@@ -164,7 +170,7 @@ class ComponentLoader(Loader):
             if changed_connectors:
                 # start the STOMP listeners for these new queues
                 for queue in new_queues:
-                   self.fire(SubscribeLowCode(queue))
+                    self.fire(SubscribeLowCode(queue))
 
                 # stop the STOMP listeners for these removed queues
                 for destination in removed_queues:
@@ -219,7 +225,7 @@ class ComponentLoader(Loader):
 
         handlers_set = False
         for cmp_class in cmp_class_list:
-            # handle all low code handlers - this will apply only to the low_code app 
+            # handle all low code handlers - this will apply only to the low_code app
             for lc_handler in helpers.get_handlers(cmp_class, handler_type=handler_type):
                 self.lc_update_handlers(lc_handler, tuple(set_low_code_queue_names))
                 handlers_set = True

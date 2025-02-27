@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
+# pragma pylint: disable=line-too-long
 
 """Test Server component for injecting test Action Module messages"""
 
@@ -100,7 +101,7 @@ class SubmitTestLowCodeApp(Event):
                         "email":"john3@email.com",
                         "phone":"12345",
                         "lastName":"Doe",
-                        "password":"12345",
+                        "password":"12345", #NOSONAR
                         "username":"theUser",
                         "firstName":"James",
                         "userStatus":1
@@ -248,9 +249,9 @@ class ResilientTestActions(Component):
         except Exception as e:
             LOG.exception("Failed to SubmitTestInboundApp <message_id: %s>", msg_id)
             raise e
-    
+
     @handler("SubmitTestLowCodeApp")
-    def _submit_low_code_message(self, event, queue_name, msg_id, message, channel="*"):
+    def _submit_low_code_message(self, event, queue_name, msg_id, message):
         try:
             message_id = "ID:resilient-54199-{msg_id}-6:2:12:1:1".format(msg_id=msg_id)
             # TODO: might change depending on queue name
@@ -272,7 +273,7 @@ class ResilientTestActions(Component):
                         "message-id": message_id,
                         "Co3ContextToken": "dummy",
                         "subscription": "stomp-{queue}".format(queue=queue)}
-            
+
             try:
                 # convert message to JSON
                 if not isinstance(message, dict):
@@ -315,24 +316,24 @@ class ResilientTestActions(Component):
                 # Store what we have so far and wait for more
                 self.messages_in_progress[sock] = msg_size, partial_msg
                 return
-            else:
-                # Complete message, parse out msg_id, queue, and msg
-                msg_id = struct.unpack('>I', partial_msg[:4])[0]
-                data = partial_msg[4:msg_size]
-                remainder = partial_msg[msg_size:]
-                data = data.strip().decode('utf-8')
-                if ' ' not in data or len(data) < 2:
-                    # Bad Command
-                    msg = ("<action %d>: " % msg_id) + self.usage()
-                    self.fire_message(sock, msg)
-                else:
-                    queue, message = data.split(' ', 1)
-                    self.actions_sent[msg_id] = sock
-                    self.fire(SubmitTestAction(queue, msg_id, message))
 
-                if remainder:
-                    # Process remainder
-                    self.process_data(sock, remainder)
+            # Complete message, parse out msg_id, queue, and msg
+            msg_id = struct.unpack('>I', partial_msg[:4])[0]
+            data = partial_msg[4:msg_size]
+            remainder = partial_msg[msg_size:]
+            data = data.strip().decode('utf-8')
+            if ' ' not in data or len(data) < 2:
+                # Bad Command
+                msg = ("<action %d>: " % msg_id) + self.usage()
+                self.fire_message(sock, msg)
+            else:
+                queue, message = data.split(' ', 1)
+                self.actions_sent[msg_id] = sock
+                self.fire(SubmitTestAction(queue, msg_id, message))
+
+            if remainder:
+                # Process remainder
+                self.process_data(sock, remainder)
         except Exception as e:
             LOG.exception("Action Failed<action %d>", msg_id)
             msg = "Action Failed<action %d>: %s" % (msg_id, str(e))
@@ -360,11 +361,11 @@ class ResilientTestActions(Component):
                                                     str(Exception))
             self.fire_message(sock, msg)
             raise status
-        else:
-            status = status + "\n"
-            msg = "Action Completed<action %d>: %s" % (event.test_msg_id,
-                                                       status)
-            self.fire_message(sock, msg)
+
+        status = status + "\n"
+        msg = "Action Completed<action %d>: %s" % (event.test_msg_id,
+                                                    status)
+        self.fire_message(sock, msg)
 
     def fire_message(self, sock, message):
         """ Prefix message with length before firing"""

@@ -390,7 +390,7 @@ class Actions(ResilientComponent):
 
     def __init__(self, opts):
         super(Actions, self).__init__(opts)
-        self.listeners = dict()
+        self.listeners = {}
         self._proxy_args = {}
 
         # messages and acks that failed to send over stomp connection
@@ -398,7 +398,7 @@ class Actions(ResilientComponent):
         self._resilient_ack_delivery_failures = {}
         self._current_msgs_processing = {}
         # create a TTL cache with 1 hour to live and max size 1000 to store all acks sent
-        # this is CRUCIAL for any acks that might fail without proper failure propogating
+        # this is CRUCIAL for any acks that might fail without proper failure propagating
         # to the client; in this case, the message will still be in the queue
         # and we'll pick it up and compare it against this cache. When we determine
         # that we've already attempted to ack it and failed, we'll try again
@@ -413,7 +413,7 @@ class Actions(ResilientComponent):
         # we'll refer to them later when dispatching
         self.reconnect_stomp = True
         self.org_id = None
-        self.action_defs = dict()
+        self.action_defs = {}
         self.stomp_component = None
         self.logging_directory = None
         self.subscribe_headers = None
@@ -745,7 +745,7 @@ class Actions(ResilientComponent):
         try:
             ca_certs = None
             context = ssl.create_default_context(cafile=cafile)
-            context.check_hostname = True if cafile else False
+            context.check_hostname = bool(cafile)
             context.verify_mode = ssl.CERT_REQUIRED if cafile else ssl.CERT_NONE
         except AttributeError as err:
             # Likely an older ssl version w/out true ssl context

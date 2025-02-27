@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
+# pragma pylint: disable=line-too-long
 
 """Circuits component for Action Module subscription and message handling"""
 
