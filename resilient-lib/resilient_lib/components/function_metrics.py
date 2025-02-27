@@ -7,6 +7,7 @@ import platform
 import pkg_resources  # part of setuptools
 
 METRICS_VERSION = "1.0"
+LOW_CODE_METRICS_VERSION = "2.0"
 
 class FunctionMetrics:
     """
@@ -18,7 +19,7 @@ class FunctionMetrics:
         """ build out the final metrics data structure """
         self.end_time = datetime.now()
 
-        ttl_time = self.end_time - self.start_time
+        total_time = self.end_time - self.start_time
 
         try:
             # get information about the package we're running
@@ -27,21 +28,36 @@ class FunctionMetrics:
             pkg = MissingPkg()
 
         return {
-            "version": METRICS_VERSION,
+            "version": self.version,
             "package": pkg.project_name,
             "package_version": pkg.version,
             "host": platform.node(),
-            "execution_time_ms": int(ttl_time.total_seconds() * 1000),
+            "execution_time_ms": int(total_time.total_seconds() * 1000),
             "timestamp": self.end_time.strftime("%Y-%m-%d %H:%M:%S")
         }
 
     def __init__(self, func):
-        self.start_time = datetime.now()
         self.func = func
+        self.start_time = datetime.now()
+        self.end_time = None
+        self.version = METRICS_VERSION
 
+
+class LowCodeMetrics(FunctionMetrics):
+
+    def __init__(self, func):
+        super(LowCodeMetrics, self).__init__(func)
+        self.version = LOW_CODE_METRICS_VERSION
+
+    def finish(self):
+        metrics = super(LowCodeMetrics, self).finish()
+        del metrics["timestamp"] # LowCodeMetrics does not support timestamp in DTO
+        return metrics
 
 class MissingPkg:
     """ mock package use when the package name provided isn't found """
     project_name = "unknown"
     version = "unknown"
 
+    def __str__(self):
+        return "{0} {1}".format(self.project_name, self.version)

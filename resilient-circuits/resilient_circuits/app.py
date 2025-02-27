@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# pragma pylint: disable=line-too-long
 
 """Action Module server
 
@@ -14,64 +15,20 @@ from __future__ import print_function
 
 import logging
 from logging.handlers import RotatingFileHandler
-from six import string_types, PY3
-import re
 import os
 import filelock
 from circuits import Manager, BaseComponent, Component, Debugger, Loader
 from resilient import get_config_file
 from resilient import constants as resilient_constants
 from resilient_circuits import constants, helpers
+from resilient_circuits.actions_component import Actions, ResilientComponent
 from resilient_circuits.app_argument_parser import AppArgumentParser
 from resilient_circuits.component_loader import ComponentLoader
-from resilient_circuits.actions_component import Actions, ResilientComponent
-
+from resilient_circuits.filters import RedactingFilter
 
 application = None
 logging_initialized = False
 
-
-class RedactingFilter(logging.Filter):
-    """ Redacting logging filter to prevent Resilient circuits sensitive password values from being logged.
-
-    """
-    def __init__(self):
-        super(RedactingFilter, self).__init__()
-
-    def filter(self, record):
-        try:
-            # Best effort regex filter pattern to redact password logging.
-            if PY3: # struggles to convert unicode dicts in PY2 -- so PY3 only
-                record.msg = str(record.msg)
-            if isinstance(record.msg, string_types):
-                pattern = "|".join(constants.PASSWORD_PATTERNS)
-                # see https://regex101.com/r/ssoH91 for detailed test
-                # this is the more performant version where only one regex is checked
-                regex = re.compile(r"""
-                    ((?:{0})       # start capturing group for password pattern from constants.PASSWORD_PATTERNS
-                    \w*?[\'\"]?    # match any word characters (lazy) and zero or one quotation marks
-                    \W*?u?[\'\"]   # match any non-word characters (lazy) up until exactly one quotation mark
-                                   # and potentially a u'' situation for PY27
-                                   # (this quotation mark indicates the beginning of the secret value)
-                    )              # end first capturing group
-                    (.*?)          # capture the problematic content (lazy capture up until end quotation mark)
-                    ([\'\"])       # capturing group to end the regex match
-                """.format(pattern), re.X)
-
-                # keep first and third capturing groups, but replace inner group with "***"
-                record.msg = regex.sub(r"\1***\3", record.msg)
-
-            # The stomp.py library we use can leak passwords in the frame logs in certain situations.
-            # We can remove those by checking for the "sending frame" log message
-            # and then rendering the message to check if the passcode value is included.
-            # If so, then return False thus skipping this log record
-            if "sending frame:" in record.msg:
-                if "passcode" in record.getMessage():
-                    return False
-        except Exception:
-            return True
-
-        return True
 
 
 # Main component for our application
@@ -117,6 +74,9 @@ class App(Component):
         # Make all components aware that we are in selftest mode
         ResilientComponent.IS_SELFTEST = self.IS_SELFTEST
 
+        # any additional queues to subscribe to as received by IBM SOAR /connectors/queues endpoint
+        connector_queue_names = []
+
         # Connect to events from Action Module.
         # Note: this must be done before components are loaded, because it uses
         # each component's "channel" to initiate subscription to the message queue.
@@ -129,6 +89,7 @@ class App(Component):
             self.action_component = loader.load(filename)
         else:
             self.action_component = Actions(self.opts)
+            connector_queue_names = self.action_component.get_connector_queues()
         self.action_component.register(self)
 
         # Register a `loader` to dynamically load
@@ -137,7 +98,7 @@ class App(Component):
             LOG.info("Components auto-load directory: %s",
                      self.opts["componentsdir"] or "(none)")
             if not self.component_loader:
-                self.component_loader = ComponentLoader(self.opts)
+                self.component_loader = ComponentLoader(self.opts, connector_queue_names)
             else:
                 LOG.info("Updating and re-registering ComponentLoader")
                 self.component_loader.opts = self.opts

@@ -6,6 +6,7 @@ import unittest
 
 import pytest
 import requests
+from requests.exceptions import HTTPError
 import requests_mock
 from parameterized import parameterized
 from resilient_lib import (IntegrationError, RequestsCommon,

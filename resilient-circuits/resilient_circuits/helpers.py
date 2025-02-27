@@ -82,6 +82,7 @@ def get_handlers(component, handler_type="inbound_handler"):
 
     for m in methods:
         this_method = getattr(component, m)
+        # for low_code, the decorator sets the 'low_code_handler' attribute
         is_handler = getattr(this_method, handler_type, False)
 
         if is_handler:
@@ -286,7 +287,7 @@ def get_queue(destination):
         # split on periods to get the type, org_id, and queue name
         # use maxsplit=2 to only split on the first two periods,
         # as the third item might be a queue_name with a period in it
-        # note in PY2 maxsplit is a positional arg so we don't label it here for compatiblity
+        # note in PY2 maxsplit is a positional arg so we don't label it here for compatibility
         q = destination_str.split(".", 2)
 
         assert len(q) == 3

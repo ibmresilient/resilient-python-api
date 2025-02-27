@@ -20,7 +20,7 @@ class TestComponentLoader:
         cmp_loader_opts["componentsdir"] = mock_paths.SHARED_MOCK_DATA_DIR
 
         cmp_loader = ComponentLoader(cmp_loader_opts)
-        installed_cmps = cmp_loader.discover_installed_components()
+        installed_cmps = cmp_loader.discover_installed_components("resilient.circuits.components")
 
         assert len(installed_cmps) > 0
 
@@ -43,7 +43,7 @@ class TestComponentLoader:
         cmp_loader_opts["mock_component"][constants.INBOUND_MSG_APP_CONFIG_Q_NAME] = custom_q_name
 
         cmp_loader = ComponentLoader(cmp_loader_opts)
-        installed_cmps = cmp_loader.discover_installed_components()
+        installed_cmps = cmp_loader.discover_installed_components("resilient.circuits.components")
 
         assert len(installed_cmps) > 0
 

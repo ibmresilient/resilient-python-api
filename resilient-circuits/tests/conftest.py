@@ -48,6 +48,9 @@ def fx_simple_client():
     mock_actions_uri = "{0}/rest/orgs/{1}/actions".format(simple_client.base_url, simple_client.org_id)
     requests_adapter.register_uri('GET', mock_actions_uri, status_code=200, json={"entities": []})
 
+    mock_actions_uri = "{0}/rest/orgs/{1}/connectors/queues".format(simple_client.base_url, simple_client.org_id)
+    requests_adapter.register_uri('GET', mock_actions_uri, status_code=200, json={"queues": []})
+
     yield (simple_client, requests_adapter)
 
 

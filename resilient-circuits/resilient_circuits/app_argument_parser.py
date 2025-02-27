@@ -79,6 +79,8 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
 
         default_selftest_timeout = self.getopt(self.DEFAULT_APP_SECTION, constants.APP_CONFIG_SELFTEST_TIMEOUT) or constants.DEFAULT_SELFTEST_TIMEOUT_VALUE
 
+        default_low_code_queues = self.getopt(self.DEFAULT_APP_SECTION, constants.LOW_CODE_QUEUES_LIST_APP_CONFIG) or None
+
         self._unset_temp_logger()
 
         self.add_argument("--stomp-host",
@@ -128,7 +130,7 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           help="Directory for log files")
         self.add_argument("--loglevel",
                           type=str,
-                          default=default_log_level,
+                          default=os.environ.get("LOGLEVEL", default_log_level),
                           help="Log level")
         self.add_argument("--logfile",
                           type=str,
@@ -192,6 +194,9 @@ class AppArgumentParser(keyring_arguments.ArgumentParser):
                           type=int,
                           default=default_selftest_timeout,
                           help=("Selftest timeout. Defaults to {0}".format(default_selftest_timeout)))
+        self.add_argument("--{0}".format(constants.LOW_CODE_QUEUES_LIST_APP_CONFIG),
+                          type=str,
+                          default=default_low_code_queues)
 
     def parse_args(self, args=None, namespace=None, ALLOW_UNRECOGNIZED=False):
         """Parse commandline arguments and construct an opts dictionary"""
