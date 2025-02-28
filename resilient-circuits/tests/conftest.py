@@ -48,6 +48,9 @@ def fx_simple_client():
     mock_actions_uri = "{0}/rest/orgs/{1}/actions".format(simple_client.base_url, simple_client.org_id)
     requests_adapter.register_uri('GET', mock_actions_uri, status_code=200, json={"entities": []})
 
+    mock_actions_uri = "{0}/rest/orgs/{1}/connectors/queues".format(simple_client.base_url, simple_client.org_id)
+    requests_adapter.register_uri('GET', mock_actions_uri, status_code=200, json={"queues": []})
+
     yield (simple_client, requests_adapter)
 
 
@@ -133,3 +136,16 @@ def fx_reset_environmental_variables():
     yield
 
     os.environ = current_env
+
+@pytest.fixture()
+def fx_config_file(tmp_path_factory):
+    """
+    Before: Create a temporary app.config file
+    After: Remove temporary file
+
+    Used in tests for app restartable reload
+    """
+    app_config = tmp_path_factory.mktemp("store") / "app.config"
+    yield app_config
+    print("Removing temporary config file...")
+    os.remove(app_config)

@@ -3,7 +3,7 @@
 # pragma pylint: disable=unused-argument, no-self-use
 
 import json
-from .function_metrics import FunctionMetrics
+from .function_metrics import FunctionMetrics, LowCodeMetrics
 
 PAYLOAD_VERSION = "1.0"
 
@@ -26,7 +26,8 @@ class ResultPayload:
         :param pkgname: package name to capture stats on which package is being used
         :param kwargs: input parameters for this function
         """
-        self.fm = FunctionMetrics(pkgname)
+        self.metrics = FunctionMetrics(pkgname)
+        self.fm = self.metrics # for backward compatibility, but using `.metrics` going forward
         self.payload = {
             "version": version,
             "success": None,
@@ -45,15 +46,76 @@ class ResultPayload:
         :param reason: comment fields when success=False
         :return: completed payload in json
         """
-        self.payload['success'] = success
-        self.payload['reason'] = reason
-        self.payload['content'] = content
-        self.payload['metrics'] = self.fm.finish()
+        self.payload["success"] = success
+        self.payload["reason"] = reason
+        self.payload["content"] = content
+        self.payload["metrics"] = self.metrics.finish()
 
         if float(self.payload.get("version", 2.0)) < 2.0:
             try:
-                self.payload['raw'] = json.dumps(content)
+                self.payload["raw"] = ""
             except:
                 pass
+
+        return self.payload
+
+class LowCodePayload(ResultPayload):
+    """
+    Low code payload. Very similar to function ResultPayload
+
+    Payload schema :
+
+    .. code-block::
+
+        request_originator:
+          "$ref": "#/components/schemas/RequestOriginatorDTO"
+        version:
+          type: string
+        status_code:
+          type: integer
+          format: int32
+          description: "Rest API invocation http status code."
+        success:
+          type: boolean
+          description: "Rest API invocation is successful or not."
+        content:
+          type: string
+          description: "The rest api response content value."
+        content_type:
+          type: string
+          description: "The rest api response content type. e.g., application/json"
+        reason:
+          type: string
+          description: "The reason if the rest api invocation is failed."
+        metrics:
+          "$ref": "#/components/schemas/ResponseMetricsDTO"
+
+    """
+
+    def __init__(self, pkgname, version, **kwargs):
+        self.metrics = LowCodeMetrics(pkgname)
+        self.payload = {
+            "request_originator": kwargs.get("request_originator"),
+            "version": version
+        }
+
+    def done(self, success, content, status_code=None, reason=None, content_type=None):
+        """
+        The low code function is complete. If unsuccessful, give a reason.
+        Set the success value, content, and reason (if success=False).
+        Also build the payload object and finish measuring the metrics.
+
+        :param success: True|False
+        :param content: string of json result to pass back
+        :param reason: comment fields when success=False
+        :param content_type: request_payload.response_content_type result
+        :return: completed payload in json
+        """
+        self.payload["success"] = success
+        self.payload["reason"] = reason
+        self.payload["status_code"] = status_code
+        self.payload["content"] = content
+        self.payload["content_type"] = content_type
+        self.payload["metrics"] = self.metrics.finish()
 
         return self.payload

@@ -9,7 +9,7 @@ import pkg_resources
 PACKAGE_NAME = "resilient-circuits"
 
 # list compiled from ideas in https://stackoverflow.com/a/43369417
-PASSWORD_PATTERNS = ['token', 'pass', 'secret', 'pin', 'key', 'session', 'connection', 'jwt']
+PASSWORD_PATTERNS = ['token', 'pass', 'secret', 'pin', 'key', 'session', 'connection', 'jwt', 'authorization']
 
 INBOUND_MSG_DEST_PREFIX = "inbound_destinations"
 
@@ -59,11 +59,25 @@ EXIT_REST_SSL_ERROR = 23            # REST: SSL Error (Invalid Certificate Error
 EXIT_REST_ORG_ERROR = 24            # REST: Organization Membership Error
 EXIT_REST_INVALID_PW = 25           # REST: Invalid Username or Password
 EXIT_STOMP_ERROR = 30               # STOMP: Generic connection error
-EXIT_STOMP_UNAUTHORIZED_CONN = 31   # STOMP: Not authorized to instansiate STOMP connection
+EXIT_STOMP_UNAUTHORIZED_CONN = 31   # STOMP: Not authorized to instantiate STOMP connection
 EXIT_STOMP_UNAUTHORIZED_Q = 32      # STOMP: Not authorized to read from queue
 EXIT_STOMP_Q_TIMEOUT = 33           # STOMP: Timed out trying to see if resilient-circuits is subscribed to a message destination
 EXIT_STOMP_HEARTBEAT_TIMEOUT = 34   # STOMP: The delta of the current HeartbeatTimeout event and the first HeartbeatTimeout event is greater than the 'heartbeat_timeout_threshold'
 
 # STOMP connection constants
 STOMP_MAX_CONNECTION_ERRORS = 1     # default number of errors when heartbeat is lost
+
+# LOW CODE constants
+LOW_CODE_PAYLOAD_VERSION = 1.0
+LOW_CODE_MSG_DEST_PREFIX = "low_code"
+LOW_CODE_QUEUES_LIST_APP_CONFIG = "low_code_queues_list"
+LOW_CODE_HANDLER_VAR = "low_code_handler"
 STOMP_RECONNECT_INITIAL_DELAY = 20
+CONNECTORS_QUEUE_PREFIX = "connectors"
+REST_REQUEST_DTO = "RestAPIExecutionEventDTO"
+
+SUBSCRIBE_QUEUE_HEADER = "Co3MessagePayload" #"SubscribeDTO"
+SUBSCRIBE_DTO = "ConnectorSubscriptionUpdateDTO"
+
+CONNECTORS_ENDPOINT = "/connectors/queues"
+ENVVAR_LOWCODE_SUBSCRIPTION_QUEUE = "LOWCODE_SUBSCRIPTION_QUEUE"

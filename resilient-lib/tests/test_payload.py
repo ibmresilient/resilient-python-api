@@ -26,7 +26,6 @@ class TestFunctionMetrics(unittest.TestCase):
         self.assertTrue(result['success'])
         self.assertEqual(result['reason'], None)
         self.assertEqual(result['content']["result1"], "value1")
-        self.assertEqual(result['raw'], result_dumps)
         self.assertIsNotNone(result.get('metrics'))
         self.assertEqual(result.get('metrics')['package'], pgkname)
         self.assertIsNotNone(result.get('inputs'))

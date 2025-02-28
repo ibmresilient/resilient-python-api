@@ -6,11 +6,11 @@
 
 import logging
 import threading
-from collections import namedtuple
 
 from resilient_circuits import (ResilientComponent, StatusMessage, constants,
                                 handler)
 from resilient_circuits.app_argument_parser import AppArgumentParser
+from resilient_circuits.filters import RedactingFilter
 from resilient_lib import (RequestsCommon, RequestsCommonWithoutSession,
                            str_to_bool, validate_fields)
 
@@ -22,10 +22,10 @@ class AppFunctionComponent(ResilientComponent):
     in the package's ``components`` directory
 
     Each :class:`AppFunctionComponent`, gets loaded into the ``resilient-circuits`` framework
-    and listens for messages on it's ``Message Destination``
+    and listens for messages on its ``Message Destination``
     """
 
-    def __init__(self, opts, package_name, required_app_configs=[]):
+    def __init__(self, opts, package_name, required_app_configs=None):
         """
         Sets and exposes 4 properties:
             #. **self.PACKAGE_NAME**: the name of this App, the parameter passed in
@@ -56,10 +56,10 @@ class AppFunctionComponent(ResilientComponent):
 
         self.PACKAGE_NAME = package_name
 
-        self._required_app_configs = required_app_configs
+        self._required_app_configs = required_app_configs if required_app_configs else []
 
         # Validate app_configs and get dictionary as result
-        self._app_configs_as_dict = validate_fields(required_app_configs, opts.get(package_name, {}))
+        self._app_configs_as_dict = validate_fields(self._required_app_configs, opts.get(package_name, {}))
 
         # This variable also is used to get the app.configs
         self.options = self._app_configs_as_dict
@@ -82,6 +82,7 @@ class AppFunctionComponent(ResilientComponent):
         self._local_storage = threading.local()
 
         self.LOG = logging.getLogger(__name__)
+        self.LOG.addFilter(RedactingFilter())
 
         super(AppFunctionComponent, self).__init__(opts)
 

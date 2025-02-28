@@ -381,7 +381,7 @@ class RequestsCommon(object):
         except Exception as err:
             msg = str(err)
             LOG.error(msg)
-            raise IntegrationError(msg)
+            raise IntegrationError("Retry limit exceeded") from err
 
     # Create alias for execute_call_v2
     execute_call_v2 = execute
@@ -467,6 +467,7 @@ class RequestsCommon(object):
             msg = str(err)
             log and log.error(msg)
             raise IntegrationError(msg)
+
 
 class RequestsCommonWithoutSession(RequestsCommon):
     """
