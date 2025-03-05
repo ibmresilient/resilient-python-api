@@ -7,6 +7,16 @@
 ###############
 BRANCHES_TO_SYNC=$1
 
+DO_NOT_SYNC=(
+'.github'
+'travis-scripts'
+'.pre-commit-config.yaml'
+'.secrets.baseline'
+'.travis.yml'
+'.whitesource'
+'sonar-project.properties'
+)
+
 cd $TRAVIS_BUILD_DIR
 
 ###############
@@ -30,6 +40,11 @@ sync_branch() {
     cd "$source_branch-dir"
     git checkout $source_branch
     git fetch && git pull
+
+    # clear files we don't want to sync
+    for item in "${DO_NOT_SYNC[@]}"; do
+        rm -f -R $item
+    done
     git push https://$GH_TOKEN_PUBLIC@github.com:/ibmresilient/resilient-python-api.git $source_branch:$target_branch
 
     cd $TRAVIS_BUILD_DIR
