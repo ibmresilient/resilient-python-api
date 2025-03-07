@@ -22,7 +22,7 @@ stages:
   - name: release to quay
     if: tag =~ ^release\/pypi\/.+ OR ( type = cron AND branch = master )
   - name: sync public repo
-    if: tag =~ ^release\/pypi\/.+
+    if: tag =~ ^release\/pypi\/.+ OR ( commit_message =~ \[sync\] AND branch = master )
 
 env:
   global:

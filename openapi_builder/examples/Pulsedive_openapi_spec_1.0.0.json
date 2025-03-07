@@ -1027,7 +1027,7 @@
                                             "a": "45.55.106.210",
                                             "txt": [
                                                 "v=spf1 include:_spf.google.com ~all",
-                                                "google-site-verification=GXa0HAqM2mVw***",
+                                                "google-site-verification=GXa0HAqM2mVw***"
                                             ],
                                             "rname": "hostmaster@pulsedive.com",
                                             "soa": "ns1.digitalocean.com. hostmaster.pulsedive.com. 1735689781 10800 3600 604800 1800"
