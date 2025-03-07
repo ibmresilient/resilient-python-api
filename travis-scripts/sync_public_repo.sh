@@ -42,10 +42,10 @@ sync_branch() {
     git fetch && git pull
 
     # clear files we don't want to sync
-    #for item in "${DO_NOT_SYNC[@]}"; do
-    #    rm -f -R $item
-    #done
-    git push https://$GH_TOKEN_PUBLIC@github.com:/ibmresilient/resilient-python-api.git $source_branch:$target_branch
+    for item in "${DO_NOT_SYNC[@]}"; do
+        rm -f -R $item
+    done
+    git push -f https://$GH_TOKEN_PUBLIC@github.com:/ibmresilient/resilient-python-api.git $source_branch:$target_branch
 
     cd $TRAVIS_BUILD_DIR
 }
