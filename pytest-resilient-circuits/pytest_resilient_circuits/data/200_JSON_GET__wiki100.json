@@ -1,0 +1,26 @@
+{
+    "id": 1,
+    "title": "parent1",
+    "children": [],
+    "text": "something\nline2\nline3\nelsesomthing",
+    "creator": {
+      "id": 3,
+      "type": "user",
+      "name": "a@example.com",
+      "display_name": "Resilient Sysadmin"
+    },
+    "create_date": 1605476650790,
+    "last_modified_time": 1605476650790,
+    "last_modified_by": {
+      "id": 3,
+      "type": "user",
+      "name": "a@example.com",
+      "display_name": "Resilient Sysadmin"
+    },
+    "mentioned_widgets": [],
+    "perms": {
+      "update": true,
+      "delete": true
+    },
+    "parent": null
+}

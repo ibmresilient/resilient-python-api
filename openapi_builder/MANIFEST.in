@@ -1,0 +1,4 @@
+include src/openapi_builder/*
+include src/openapi_builder/components/data/*
+recursive-exclude src/openapi_builder/__pycache__ *
+exclude examples

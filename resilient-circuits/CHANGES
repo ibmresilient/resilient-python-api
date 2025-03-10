@@ -1,0 +1,391 @@
+**2025-02: version 51.0.5.0**
+* Changes for low code functionality. No additional changes for normal function use.
+
+**2024-12: version 51.0.4.0**
+* Updated STOMP package version
+
+**2024-07: version 51.0.2.2**
+* Update dependency version of setuptools version to 70.3.x to address CVE-2024-6345
+
+**2024-07: version 51.0.2.1**
+
+* All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12. To continue using
+  SOAR libraries on earlier versions of Python, use v52.0.2.0.974
+* Replace underlying stomp library (previously ``stompest``) with modern library ``stomp.py``
+* Remove stomp configuration option ``stomp_params``. This is no longer supported with the new ``stomp.py`` library
+* Fix for secret substitution when value starts with "^" but is not intended to be substituted
+
+**2024-05: version 51.0.2.0**
+
+* Added official support for Python 3.12
+* There is a known issue with running ``resilient-circuits`` as a service on Windows in Python 3.12. This is not a
+  problem with ``resilient-circuits``, however, the development team will continue to monitor this for a time when
+  Windows does support Python 3.12 services. Until then, please use Python 3.11 or 3.9 on Windows for integration servers
+
+**2024-04: version 51.0.1.1**
+
+* Updated selftest to better handle connection issues when running in App Host
+* Modified ``stomp_prefetch_limit`` configuration option to default to the same value as ``num_workers``.
+  The prefetch limit can still be manually adjusted by changing ``stomp_prefetch_limit`` in the ``[resilient]``
+  section of app.config if you desire the prefetch and workers to have different values
+* Inbound app decorator now expects headers as the second parameter for the decorated function. This is intended
+  for better debugging with more inbound message information passed to the handler
+
+**2024-02: version 51.0.1.0**
+
+* All SOAR Python libraries now officially support Python 3.11
+* Selftest now outputs ``pip`` environment details to better debug failing tests by quickly seeing the dependency versions
+* ``resilient_circuits.rest_helper.get_resilient_client`` now uses a cache rather than a global variable to store
+  previously fetched clients. This is an improvement for threaded applications using this logic to store multiple
+  client objects for different instances
+
+**2023-11: version 51.0.0.0**
+
+* Added support for new SOAR v.r.m.f version scheme. If running an app on ``resilient-circuits<51.0.0.0``,
+  the incorrect version of the SOAR server may be displayed if connecting to a SOAR server with
+  version greater than or equal to 51.x. Please consider upgrading ``resilient-circuits`` to the
+  latest version as soon as you can. A gentle reminder that SOAR python libraries versioning
+  is independent of SOAR server versions and any version of circuits works with any version of SOAR
+  (i.e. ``resilient-circuits==v51.0.0.0`` will work fine with SOAR v48.0.0). It is always recommended
+  that you use the latest version of all SOAR Python Libraries
+* Removed obfuscation of "id" in logs and made general improvements of log obfuscation to better
+  target sensitive information while leaving important information in the logs
+
+**2023-10: version 50.1**
+
+* Allow for ``.`` character in message queue names and improved logging around queues not found on startup
+* Merged external `PR <https://github.com/ibmresilient/resilient-python-api/pull/27>`_ to improve
+  support for multiple circuits services running in Windows
+
+**2023-08: version 50.0**
+
+* Added support for app secrets in function inputs. Use the syntax similar to using app secrets in app.config
+  by referencing app secrets in text within a function input. Example:
+
+  .. code-block::
+
+      inputs.fn_my_fn_input_1 = "$SECRET_FROM_APP_HOST_PROTECTED_SECRETS"
+      inputs.fn_my_fn_input_2 = "Here we can insert our ${SECRET_FROM_APP_HOST} in the middle of the string"
+      inputs.fn_my_fn_input_3 = "^SECRET_FROM_PAM"
+
+
+**2023-07: version 49.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2023-05: version 49.0**
+
+* Improved logging on restarts
+* Improved obfuscation of sensitive information from app.config in logs
+* Added ability to disable persistent sessions for ``resilient-lib.RequestsCommon`` in app functions using new optional ``rc_use_persistent_sessions`` configuration parameter
+* Added ``resilient-app-config-plugins`` as a new package to manage third party credentials within SOAR apps
+
+**2023-04: version 48.1**
+
+* Better log handling for errors upon restart
+* Added new configs for log rotation. ``log_max_bytes`` sets the maximum bytes per log file; defaults to ``10000000``.
+  ``log_backup_count`` sets the maximum number of log files to keep as backups while files rotate; defaults to ``10``
+* Improved log filtering for sensitive values
+
+**2023-02: version 48.0**
+
+* Include ``threadName`` in the app logs
+* Display SOAR server version in startup logs. Note: for CP4S this displays the underlying SOAR version, not the platform version
+* Updated project to use ``pyproject.toml`` and ``setup.cfg`` metadata files. Build backend continues to use ``setuptools``.
+  Instead of directly invoking setup.py to get a sdist or wheel, use ``build`` as a build frontend:
+
+  .. code-block:: bash
+
+      pip install build
+      python -m build
+
+**2022-12: version 47.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2022-11: version 47.0**
+
+* Updated default ``num_workers`` value to **25** if not set and default value in template app.config file to **50**
+
+**2022-08: version 46.0**
+
+* The ``FunctionResult`` in an ``AppFunctionComponent`` now supports a ``custom_results`` kwarg. If set to ``True`` the
+  dictionary of results sent to SOAR will be exactly as passed and not contain our default payload. We **do not recommend this**
+  however in some cases it may be necessary
+* Enhanced the :func:`resilient_circuits.is_this_a_selftest() <resilient_circuits.helpers.is_this_a_selftest>` method
+  to check if a Component has been instantiated in a resilient-circuits instance running ``selftest``. Example:
+
+  .. code-block::
+
+    from resilient_circuits.helpers import is_this_a_selftest
+
+    if is_this_a_selftest(self):
+        # Do nothing...
+
+* Added a new configuration setting to app.config, called ``heartbeat_timeout_threshold``. It is a value in seconds between the current ``HeartbeatTimeout`` event and the first ``HeartbeatTimeout`` event. If the time is greater than the ``heartbeat_timeout_threshold``, the resilient-circuits process stops.
+
+**2022-07: version 45.1**
+
+* Bug fix to avoid ``@app_function`` Components firing on all channels leading to Functions being invoked multiple times
+
+**2022-05: version 45.0**
+
+* Added new config ``trap_exception`` and if set to ``True`` a Function's exception will be ignored with the error sent as a Status Message
+  and a default payload returned like below, allowing the Workflow or Playbook to continue
+
+  .. code-block::
+
+    {
+      "success": False,
+      "reason": "Error message"
+    }
+* Added a custom header for all requests from ``resilient-circuits`` that will include the current version of the library: ``Resilient-Circuits-Version: 45.0.0``
+* Better handling of errors if an app's ``selftest`` is unimplemented
+
+**2022-04: version 44.1**
+
+* Move Jinja template management functions to ``resilient-lib`` while
+  keeping backward compatibility here
+
+**2022-02: version 44.0**
+
+* Ensure ``tests/`` is not included in packaged code
+* Bump ``Jinja2`` to ``~=3.0`` for Python ``>=3.6``
+* Officially support ``Python 3.9``
+
+**2022-01: version 43.1**
+
+* Bug fix for ``selftest``
+
+**2021-11: version 43.0**
+
+* Formatted Sphinx documentation and hosted it at https://ibm.biz/soar-python-docs
+
+**2021-11: version 42.3**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-10: version 42.2**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-08: version 42.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-08: version 42.0**
+
+* Added support for ``HTTP_PROXY``, ``HTTPS_PROXY`` and ``NO_PROXY`` environmental variables. See the App Host Deployment Guide for details.
+* Enhancement to ``selftest`` to also check connection back to SOAR platform.
+* Added ``selftest_timeout`` to app.config file. It sets the value in seconds for ``selftest`` to wait for a response from the SOAR platform.
+* Bug fixes.
+
+**2021-06: version 41.1**
+
+* Increase ``num_workers`` limit to 500
+
+**2021-05: version 41.0**
+
+* Deprecate ``test`` command
+* Remove deprecated commands ``clone``, ``extract`` and ``extract``
+* Increase ``num_workers`` limit to 100
+* Added dependency of ``resilient-lib``
+* Bug fixes
+* Handle new app_function decorator
+
+**2021-03: version 40.2**
+
+* Bug fix for to use ``setuptools_scm < 6.0.0`` for Python 2.7 environments
+
+**2021-03: version 40.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-02: version 40.0**
+
+* Remove need for calling ``/message_destinations`` endpoint
+* Added ``--print-env`` flag to ``selftest`` command to print the environment when the test runs
+* Python version and installed packages printed out to log at start of ``resilient-circuits run``
+* ``[integrations]`` section added by default when app.config file first created with ``resilient-circuits config -c``
+* Bug fixes
+
+**2020-12-08: version 39.0**
+
+* ``resilient-circuits`` now only loads the functions that are pip installed and/or are in the components directory
+* Added ``num_workers`` as an app config which specifies how many functions you can run in parallel within the range 1-50 inclusive. It defaults to 10.
+* ``selftest`` now has an exit code of 1 if it fails
+* exits circuits on ``Not connected event``
+
+**2020-08-05: version 38.0**
+
+* Exposed timeouts and tuning parameters to API and STOMP timeouts
+
+**2020-07-15: version 37.2**
+
+* Sorted output for ``list`` command.
+* Bug fixes.
+
+**2020-04-15: version 37**
+
+* Deprecated ``codegen`` and ``extract`` command-line arguments. See ``resilient-sdk`` for moved functionality.
+
+**2020-04-15: version 36.2.dev**
+
+* Deprecated ``codegen`` and ``extract`` command-line arguments. See ``resilient-sdk`` for moved functionality.
+
+**2020-01-16: version 35.0.195**
+
+* Moved ``ImportDefinition`` to ``resilient`` package
+* Fixed handling of ``APP_CONFIG_FILE`` in different contexts
+* Changed ``resilient`` dependency to be ``>=35``
+* Fixed ``resilient-circuits run -r``
+* Fixed dependency issue for ``watchdog``
+
+**2019-10-07 version 34.0.194**
+
+* Updated exception handling. Introduced ``BaseFunctionError`` class, ability to hide trace, and include messages.
+* Fix `cafile=false` throwing `AttributeError`
+* Fix a bug when Python component's ``package_name == function_name``
+
+**2019-08-02: version 33.0.189**
+
+* Added support for API key and API key secret, now able to authenticate
+  using API keys instead of email/password.
+* Other minor bug fixes.
+
+**2019-07-03: version 32.0.186**
+
+*  Fix for deprecated log warnings.
+*  Other minor bug fixes.
+
+**2019-04-12: version 32.0.140**
+
+*  Fix for exposed Resilient passwords in ``resilient-circuits`` log when run in DEBUG mode.
+*  ``codegen`` creates ``setup.py`` files which will programmatically compute function component entry points.
+*  Added WorkflowStatus class.
+*  Running ``codegen``, ``codegen --reload``, and ``extract`` now automatically creates export files in Resilient to run against. Manually export no longer needed.
+*  ``extract`` will now extract all data associated with playbooks including Tasks, Scripts, and custom Artifact Types.
+*  Support for activemq hosted externally (ISC).
+*  Improvements to ``resilient-lib``.
+*  Other minor bug fixes/improvements.
+
+**2019-03-06: version 32.0.126**
+
+* Removed ``selftest`` from function template
+* Improvements to ``resilient-lib``
+
+**2019-01-15: version 32.0**
+
+* Fixed an issue with ``resilient-circuits extract``
+
+**2018-12-05: version 31.0**
+
+* Add ``resilient-circuits selftest`` command to call ``selftest`` functions for every package and prints their return state
+* Add ``resilient-circuits clone`` Clone Resilient workflows
+* Add ``resilient-circuits codegen --reload`` command to reload existing package
+* Add ``resilient-circuits extract`` command to extract customization data into a single file
+* Added support for specifying lists of packages to run ``config/customize/selftest`` against
+* Added ``extract`` improvements
+* Jinja template improvements
+* Bug Fixes
+
+**2018-04-15: version 30.0**
+
+* Add ``@function`` decorator to implement workflow functions
+* Add ``resilient-circuits test`` command to replace res-action-test
+* Add ``resilient-circuits codegen`` command to generate boilerplate functions and installable packages
+* Add ``resilient-circuits customize`` command to import customizations from installed packages
+* Fix an issue with keyring values outside the [resilient] config section
+* Fix various issues with ``pytest-resilient-circuits`` mocks and fixtures
+* Update action message log format for greater readability
+* Update ``resilient-circuits list`` to show packages with no components
+* Add ``-v`` flag to ``resilient-circuits list``
+
+**2018-02-22: version 29.1.0**
+
+* Fix an issue with performance receiving STOMP messages
+
+**2017-12-12: version 29.0.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2017-12-01: version 29.0.0**
+
+* New package versions: Published under the MIT open-source license.
+* New package versions: Published to pypi.
+* change default JINJA autoescape for safety
+
+**2017-09-01: version 28.2.1**
+
+* change license to MIT
+* Add 'docs' for autogenerated package documentation
+
+**2017-08-24: version 28.1.**
+
+* fix a problem with python3 handling unicode surrogate pairs (e.g. emoji) in action messages
+* add 'idna' and 'punycode' JINJA filters for domain encoding
+* add '--config-file' commandline argument
+* fix various performance and reliability issues
+
+**2017-06-22: version 28.0.33**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2017-06-14: version 28.0.30**
+
+* Change the STOMP protocol implementation from 'stomp.py' to 'stompest' library,
+  with a significant refactoring, for better reliability and maintainability.
+* Add support for STOMP connections via proxy server.
+* Add a dependency on 'stompest' and 'pysocks' packages
+* Remove old 'stomp.py'-based examples
+* Name unnamed actions, e.g. those initiated from v28 workflow, as '_unnamed_'
+* Defer subscribing to queues until all components have loaded
+* Fix a problem with international characters in 'get_action_field_label()'
+* Fix a problem with international characters in status messages and exceptions
+* Change to the 'app_restartable' functionality to remove a memory leak and streamline.
+  Instead of fully unloading and reloading components on configuration file changes,
+  components are instead sent a 'reload' event.
+* Update the file_lookup example to handle the reload event
+
+**2017-04-27: version 27.1.22**
+
+* Remove 'dist', instead releases are available on https://github.com/Co3Systems/co3-api/releases
+* Build numbering to track the 'co3' module; depend where version is >= major.minor
+* Config entry 'stomp_cafile' to support using different TLS certificates for STOMP and REST
+* Bugfix in 'app_restartable' configuration file handling
+
+**2017-04-21: version 27.1.13**
+
+* Various updates for reliability
+* New support for packaged installable application components
+* New 'resilient-circuits' utility executable to configure and run applications
+* Make 'components' directory optional
+* Updated configuration file locations ($APP_CONFIG_FILE or ./app.config or ~/.resilient/app.config)
+* Log the servername at startup
+
+**2017-02-17: version 27.0.0**
+
+* Licensing change to "IBM Resilient"
+* Add documentation for reading configuration values from keystore with 'key=^VALUE' syntax
+* Add an option for reading configuration values from the environment with 'key=$VALUE' syntax
+* Add '@debounce()' decorator for event handler functions
+* Add '--noload' option to skip loading specific components
+* Load components in a deterministic order (alphabetically)
+* Better handle connecting to Resilient without Action Module enabled
+* Better consistency with REST API in TLS certificate verification
+
+**2016-08-10: version 26.0.3**
+
+* Add requirements.txt for easier offline downloading of Python dependencies
+
+**2016-08-10: version 26.0.2**
+
+* Fix issue when unsubscribing from STOMP queues
+
+**2016-08-01: version 26.0.1**
+
+* Allow override of password prompting
+* Allow blank config values
+* Fix an issue with 'app-restartable' updating too often
+* Fix an issue with events for non-string channel ids
+* Fix an issue with loading some action components

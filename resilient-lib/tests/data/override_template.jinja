@@ -1,0 +1,4 @@
+{
+    "entryDN": "{{ attributes.entryDN }}",
+    "createTimestamp": {{ attributes.createTimestamp | soar_datetimeformat(date_format="%Y-%m-%d %H:%M:%S", split_at="+") }}
+}

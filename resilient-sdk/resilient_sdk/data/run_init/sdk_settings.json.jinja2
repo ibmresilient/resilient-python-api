@@ -1,0 +1,32 @@
+{
+    "validate": {
+        "tox-args": {
+            "resilient_email": "test@example.org",
+            "resilient_password": "pwd_from_json_in_settings",
+            "resilient_host": "example.org",
+            "resilient_org": "example org from settings",
+            "m": "not livetest"
+        },
+        "pylint": [
+            "--enable=E,F"
+        ],
+        "bandit": [
+            "-ll"
+        ]
+    },
+    "docgen": {
+        "supported_app": {{ supported_app }}
+    },
+    "codegen": {
+        "setup": {
+            "license": "{{ license }}",
+            "author": "{{ author }}",
+            "author_email": "{{ author_email }}",
+            "url": "{{ url }}",
+            "long_description": "{{ long_description }}"
+        },
+        "copyright": "{{ copyright }}",
+
+        "license_content": "{{ license_content }}"
+    }
+}

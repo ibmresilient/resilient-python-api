@@ -1,0 +1,134 @@
+# -*- coding: utf-8 -*-
+{% if copyright %}
+# {{ copyright }}
+{% endif %}
+# Generated with resilient-sdk v{{ sdk_version }}
+
+"""Generate the SOAR customizations required for {{package_name}}"""
+
+import base64
+import os
+import io
+try:
+    from resilient import ImportDefinition
+except ImportError:
+    # Support Apps running on resilient-circuits < v35.0.195
+    from resilient_circuits.util import ImportDefinition
+
+RES_FILE = "data/export.res"
+
+
+def codegen_reload_data():
+    """
+    Parameters required reload codegen for the {{package_name}} package
+    """
+    return {
+        "package": u"{{package_name}}",
+        "message_destinations": {% if not message_destinations %}[],{% else %}[
+            {% for o in message_destinations|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
+
+        "functions": {% if not functions %}[],{% else %}[
+            {% for o in functions|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
+
+        "workflows": {% if not workflows %}[],{% else %}[
+            {% for o in workflows|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
+
+        "actions": {% if not rules %}[],{% else %}[
+            {% for o in rules|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
+
+        "incident_fields": {% if not fields %}[],{% else %}[
+            {% for o in fields|sort(attribute="x_api_name") %}            u"{{o.name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
+
+        "incident_artifact_types": {% if not artifact_types %}[],{% else %}[
+            {% for o in artifact_types|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
+
+        "incident_types": {% if not incident_types %}[],{% else %}[
+            {% for o in incident_types|sort(attribute="name") %}            u"{{o.name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
+
+        "datatables": {% if not datatables %}[],{% else %}[
+            {% for o in datatables|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
+
+        "automatic_tasks": {% if not tasks %}[],{% else %}[
+            {% for o in tasks|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
+
+        "scripts": {% if not scripts %}[],{% else %}[
+            {% for o in scripts|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ],{% endif %}
+
+        "playbooks": {% if not playbooks %}[],{% else %}[
+            {% for o in playbooks|sort(attribute="x_api_name") %}            u"{{o.x_api_name}}"{{ "," if not loop.last }}{{"\n"}}{% endfor %}
+        ]{% endif %}
+
+    }
+
+
+def customization_data(client=None):
+    """
+    Returns a Generator of ImportDefinitions (Customizations).
+    Install them using `resilient-circuits customize`
+
+    IBM SOAR Platform Version: {{export_data.server_version.version}}
+
+    Contents:
+    {% if message_destinations %}    - Message Destinations:
+    {% for o in message_destinations|sort(attribute="x_api_name") %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if functions %}    - Functions:
+    {% for o in functions|sort(attribute="x_api_name") %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if workflows %}    - Workflows:
+    {% for o in workflows|sort(attribute="x_api_name") %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if playbooks %}    - Playbooks:
+    {% for o in playbooks|sort(attribute="x_api_name") %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if rules %}    - Rules:
+    {% for o in rules|sort(attribute="x_api_name") %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if fields %}    - Incident Fields:
+    {% for o in fields|sort(attribute="x_api_name") %}        - {{o.name}}
+    {% endfor %}
+    {% endif %}
+    {% if artifact_types %}    - Custom Artifact Types:
+    {% for o in artifact_types|sort(attribute="x_api_name") %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if datatables %}    - Data Tables:
+    {% for o in datatables|sort(attribute="x_api_name") %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if phases %}    - Phases:
+    {% for o in phases|sort(attribute="x_api_name") %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if tasks %}    - Tasks:
+    {% for o in tasks|sort(attribute="x_api_name") %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    {% if scripts %}    - Scripts:
+    {% for o in scripts|sort(attribute="x_api_name") %}        - {{o.x_api_name}}
+    {% endfor %}
+    {% endif %}
+    """
+
+    res_file = os.path.join(os.path.dirname(__file__), RES_FILE)
+    if not os.path.isfile(res_file):
+        raise FileNotFoundError("{} not found".format(RES_FILE))
+
+    with io.open(res_file, mode='rt') as f:
+        b64_data = base64.b64encode(f.read().encode('utf-8'))
+        yield ImportDefinition(b64_data)
