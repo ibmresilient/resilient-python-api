@@ -1,0 +1,25 @@
+{
+  "id": 27,
+  "cells": {
+    "column_1_api_name": {
+      "id": {
+        "id": {},
+        "name": "..."
+      },
+      "row_id": 12345,
+      "value": 1
+    },
+    "column_2_api_name": {
+      "id": {
+        "id": {},
+        "name": "..."
+      },
+      "row_id": 67890,
+      "value": 2
+    }
+  },
+  "actions": [],
+  "playbooks": [],
+  "version": 1
+}
+

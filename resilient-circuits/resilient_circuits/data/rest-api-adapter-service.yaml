@@ -1,0 +1,346 @@
+---
+openapi: 3.0.1
+info:
+  title: "Rest API OpenAPI definition"
+  description: "The Rest API Adapter service. It accepts all required parameters as
+    JSON payload, transforms and invokes any Rest API"
+  version: v1
+servers:
+  - url: http://localhost:8090
+paths:
+  "/v1/event":
+    post:
+      tags:
+        - rest-api-adapter-controller
+        - rest-api-request
+      operationId: acceptEvent
+      description: "Accepts the Rest API execution event and submits the request to execute asynchronously."
+      parameters:
+        - name: Ce-Id
+          in: header
+          description: "CloudEvent Id"
+          required: true
+          schema:
+            type: string
+        - name: Ce-specversion
+          in: header
+          description: "CloudEvent Specification version"
+          required: true
+          schema:
+            type: string
+        - name: Ce-Type
+          in: header
+          description: "CloudEvent Type"
+          required: true
+          schema:
+            type: string
+            default: rest-api-invocation
+        - name: Ce-Source
+          in: header
+          description: "CloudEvent Source"
+          required: true
+          schema:
+            type: string
+            default: cases-application/playbook/function
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RestAPIExecutionEventDTO"
+      responses:
+        '201':
+          description: default response
+  "/v1/eventresponse":
+    post:
+      tags:
+        - rest-api-adapter-controller
+        - rest-api-response
+      operationId: sink
+      description: Accepts the Rest API Execution Response event and submits the request to execute asynchronously.
+      parameters:
+        - name: Ce-Id
+          in: header
+          description: "CloudEvent Id"
+          required: true
+          schema:
+            type: string
+        - name: Ce-specversion
+          in: header
+          description: "CloudEvent Specification version"
+          required: true
+          schema:
+            type: string
+        - name: Ce-Type
+          in: header
+          description: "CloudEvent Type"
+          required: true
+          schema:
+            type: string
+            default: rest-api-response
+        - name: Ce-Source
+          in: header
+          description: "CloudEvent Source"
+          required: true
+          schema:
+            type: string
+            default: knative/eventing/rest-api-adapter
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RestAPIExecutionEventResponseDTO"
+      responses:
+        '201':
+          description: "default response"
+  "/v1/invoke":
+    post:
+      tags:
+        - rest-api-request
+      operationId: invoke
+      description: "Accepts the Rest API request and executes synchronously."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RestAPIRequestDTO"
+      responses:
+        '200':
+          description: The Rest API response.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/RestAPIResponseDTO"
+components:
+  schemas:
+    RequestOriginatorDTO:
+      type: object
+      description: "Contains the information about originator of the rest api request and callback/acknowledgement details."
+      properties:
+        correlation_id:
+          type: string
+          description: "This is used to identify/correlate the playbook function instance and process the returned results."
+        function_programmatic_name:
+          type: string
+          description: "The playbook function programmatic name. This is used to identify the playbook function and process the returned results."
+        playbook_programmatic_name:
+          type: string
+          description: "The playbook programmatic name. This is used to identify the playbook."
+        org_id:
+          type: integer
+          format: int32
+          description: "The internal ID of the Organization."
+        account_uuid:
+          type: string
+          description: "The UUID of the Account/Organization."
+        object_id:
+          type: integer
+          format: int32
+          description: "The internal ID of the Object such as incident, task, artifact,etc.,"
+        object_type:
+          type: string
+          description: "The type of the object"
+          enum:
+            - incident
+            - task
+            - artifact
+            - datatable
+            - note
+            - milestone
+            - attachment
+        parent_object_id:
+          type: integer
+          format: int32
+          description: "The internal ID of the parent Object such as Incident."
+        playbook_id:
+          type: integer
+          format: int32
+          description: "Internal ID of the playbook."
+        playbook_instance_id:
+          type: integer
+          format: int32
+          description: "Internal ID of the playbook instance."
+      required:
+        - correlation_id
+        - org_id
+    ResponseAcknowledgmentDTO:
+      type: object
+      description: "Details of the response acknowledgment"
+      properties:
+        ack_url:
+          type: string
+          description: "The URL for posting the Rest API response acknowledgement."
+        ack_security:
+          "$ref": "#/components/schemas/RestAPISecurityDTO"
+        knative_broker_url:
+          type: string
+          description: "The Knative broker url. This is required only if Rest API response is sent to the broker."
+      required:
+        - ack_url
+        - ack_security
+    RestAPIExecutionEventResponseDTO:
+      type: object
+      properties:
+        response_payload:
+          "$ref": "#/components/schemas/RestAPIResponseDTO"
+        response_acknowledgment:
+          "$ref": "#/components/schemas/ResponseAcknowledgmentDTO"
+    RestAPIResponseDTO:
+      type: object
+      properties:
+        request_originator:
+          "$ref": "#/components/schemas/RequestOriginatorDTO"
+        version:
+          type: string
+        status_code:
+          type: integer
+          format: int32
+          description: "Rest API invocation http status code."
+        success:
+          type: boolean
+          description: "Rest API invocation is successful or not."
+        content:
+          type: string
+          description: "The rest api response content value."
+        content_type:
+          type: string
+          description: "The rest api response content type. e.g., application/json"
+        reason:
+          type: string
+          description: "The reason if the rest api invocation is failed."
+        metrics:
+          "$ref": "#/components/schemas/ResponseMetricsDTO"
+    ResponseMetricsDTO:
+      type: object
+      description: "The optional details about the Rest API execution/response."
+      properties:
+        version:
+          type: string
+          description: "The response data version."
+        package:
+          type: string
+          description: "The connector package name."
+        package_version:
+          type: string
+          description: "The connector package version."
+        host:
+          type: string
+        execution_time_ms:
+          type: integer
+          format: int32
+          description: "The time taken to complete the execution of the Rest API"
+    RestAPISecurityDTO:
+      type: object
+      properties:
+        scheme:
+          type: string
+          description: "Type of the security scheme. Valid values: basic, apiKey, authToken and bearer"
+          enum:
+            - basic
+            - apiKey
+            - bearer
+            - authToken
+        api_key_param_name:
+          type: string
+          description: "Name of the API key."
+        api_key:
+          type: string
+          description: "The API Key value."
+        api_key_in:
+          type: string
+          description: "Where to include the api key details in the http request."
+          enum:
+            - query
+            - header
+            - cookie
+        api_key_secret:
+          type: string
+          description: "The API key secret value."
+        auth_token:
+          type: string
+          description: "The auth token value. This is used to generate the CP4S JWT token for a given application id."
+        app_id_token:
+          type: string
+          description: "The CP4S application ID."
+        generate_bearer_token:
+          type: boolean
+          description: "Should generate bearer jwt token."
+        auth_token_auth_url:
+          type: string
+          description: "The endpoint/URL for obtaining the auth token/bearer token."
+        auth_token_payload:
+          type: string
+          description: "The JSON payload for obtaining the auth token/bearer token."
+        auth_token_property_name:
+          type: string
+          description: "The property name for reading the token from the generated/response."
+    RestAPIExecutionEventDTO:
+      type: object
+      description: "Rest API request details that include the request originator, request parameters and response callback/acknowledgement details."
+      properties:
+        request_originator:
+          "$ref": "#/components/schemas/RequestOriginatorDTO"
+        request_payload:
+          "$ref": "#/components/schemas/RestAPIRequestDTO"
+        response_acknowledgment:
+          "$ref": "#/components/schemas/ResponseAcknowledgmentDTO"
+      required:
+        - request_originator
+        - request_payload
+    RestAPIRequestDTO:
+      type: object
+      description: "Contains the information required to invoke the rest api."
+      properties:
+        server_url:
+          type: string
+          description: "The target rest api server url value"
+        method:
+          type: string
+          description: "The http request method. It accepts all standard HTTP methods."
+          default: GET
+          enum:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+        request_body:
+          type: string
+          description: "The request body contents."
+        request_content_type:
+          type: string
+          description: "The request body content type. It defaults to 'application/json' if value is not specified."
+          default: application/json
+        response_content_type:
+          type: string
+          description: "The response content type. It defaults to 'application/json' if value is not specified."
+          default: application/json
+        query_params:
+          type: object
+          description: "The map of request query parameters. These values are appended to the base/target uri."
+          additionalProperties:
+            type: string
+        path_params:
+          type: object
+          description: "The map of request path parameters. These values are substituted in the base/target uri."
+          additionalProperties:
+            type: string
+        headers:
+          type: object
+          description: "The map of request headers. These value are passed to the rest service as http headers."
+          additionalProperties:
+            type: string
+        cookies:
+          type: object
+          description: "The map of request cookies. These value are passed to the rest service as http cookies."
+          additionalProperties:
+            type: string
+        custom_params:
+          type: object
+          description: "The map of custom params if any. These value are used for any custom processing/configurations."
+          additionalProperties:
+            type: object
+        security:
+          "$ref": "#/components/schemas/RestAPISecurityDTO"
+      required:
+        - server_url
+        - security

@@ -1,0 +1,298 @@
+**2025-02: version 51.0.5.0**
+* No changes
+
+**2024-07: version 51.0.2.2**
+* Update dependency version of setuptools version to 70.3.x to address CVE-2024-6345
+
+**2024-07: version 51.0.2.1**
+
+* All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12. To continue using
+  SOAR libraries on earlier versions of Python, use v52.0.2.0.974
+* Improvements for docgen with poller apps
+* Added ``yum update`` to Dockerfile template
+
+**2024-05: version 51.0.2.0**
+
+* Added official support for Python 3.12
+* Improved the ``docgen`` command for export files to eliminate duplicate objects
+* The ``gather-results`` feature of the ``codegen`` command now clears out sensitive host values
+* The ``validate`` command now checks apps for any playbooks which are dependent on SOAR objects
+  that might not have been included in during the ``codegen`` process. Developers should still be
+  sure to test their apps in a staging environments to ensure that all objects are properly packaged
+
+**2024-04: version 51.0.1.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2024-02: version 51.0.1.0**
+
+* All SOAR Python libraries now officially support Python 3.11
+* The ``init`` command now includes an option to create an ``app.config`` file:
+
+  .. code-block:: bash
+
+    $ resilient-sdk init -c /my_path/app.config
+
+* The ``init`` command option to create an ``.sdk_settings.json`` file has changed to be ``--settings``:
+
+  .. code-block:: bash
+
+    $ resilient-sdk init --settings /my_path/.sdk_settings.json
+
+* Added new ``list`` command to list objects available to use in other resilient-sdk commands.
+  The command supports all common SOAR objects and can be used with regex filters to filter
+  list results.
+
+  Example:
+
+  .. code-block:: bash
+
+    $ resilient-sdk list -f # to list all functions
+
+
+  .. code-block:: bash
+
+    $ resilient-sk list -pb .*my_pb --codegen-format # to list all playbooks that end with my_pb in codegen-format
+
+* The ``codegen`` command uses a new Dockerfile template which takes advantage of the new ``soarapps-base-docker-image``.
+  It is recommended that you update your apps to use this new template. To bring in the new template, simply rename the current
+  ``Dockerfile`` to ``Dockerfile.bak`` so that your changes are not lost. Then run ``resilient-sdk codegen --reload``.
+  You will notice the new Dockerfile which you can now use to build container images for your apps. The base image has both 3.11
+  and 3.9 versions to work off of. We recommend you build your apps with 3.11 to take advantage of the latest Python features
+
+**2023-12: version 51.0.0.1**
+
+* Bug fix to support Keyring with resilient-sdk commands that use app.config to connect to SOAR.
+  This has been broken since v49.0.0. Please upgrade to v51.0.0.1 to continue using SDK with Keyring.
+
+**2023-11: version 51.0.0.0**
+
+* Added support for new SOAR v.r.m.f version scheme. This takes effect with the release of v51.0.0.0 of
+  SOAR and v51.0.0.0 of ``resilient-sdk``. To run SDK commands against SOAR v51.0.0.0 or greater,
+  you must update to the latest SDK. It is important to be up to date with ``resilient-sdk`` when
+  working with SOAR. You will know if you're version of the SDK is out of date by the warning message
+  output when running commands. If you don't see this message you are up to date
+* The ``docgen`` command now supports export files and directories of exports, including Playbooks. Use
+  ``-e`` or ``--exportfile`` followed by a list of .res or .resz files or a directory with .res or .resz
+  files. For example, to generate one README for a playbook export, a .res export and a directory of exports:
+
+  .. code-block::
+
+    $ resilient-sdk docgen -e My_Playbook.resz export.res ../Downloads/all_exports -o MyPB_export_and_all_exports.md
+
+* Added more examples of using the SDK in the API documentation at https://ibm.biz/soar-python-docs
+
+**2023-10: version 50.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2023-08: version 50.0**
+
+* The ``docgen`` command now fully supports Playbooks, including function script examples
+  and extended details for each Playbook including activation conditions
+* The ``codegen`` command better supports Playbooks and Subplaybooks in the markdown files created.
+  Specifically, support was added for function inputs, activation conditions, and subplaybook
+  details for each playbook generate. Subplaybooks are still also described in a separate markdown
+  file for full details
+* The ``init`` command now includes a setting to set copyright in ``.sdk_settings.json`` file.
+  ``codegen`` will now automatically read this setting and set the copyright at the top of each Python file generated.
+  The setting for ``copyright`` lives in the ``codegen`` section of the settings file and can be formatted
+  with the current year by placing ``{0}`` in the location which you wish to include the year. Example:
+
+  .. code-block::
+
+      // .sdk_settings.json:
+      {
+        "codegen": {
+            "copyright": "(c) Copyright My Inc. {0}. All Rights Reserved."
+        }
+      }
+
+**2023-07: version 49.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2023-05: version 49.0**
+
+* Added support to create markdown files for Playbooks as they would have been created with Workflows.
+  Includes automatic detection of global scripts in ``codegen`` when exporting playbooks. Expanded support for
+  playbooks with ``docgen`` will be included in a future release
+
+**2023-04: version 48.1**
+
+* Added new ``init`` functionality to the SDK
+* Added ``--settings`` option for ``codegen``, ``docgen``, and ``validate``
+* Bug fixes for ``validate``
+
+**2023-02: version 48.0**
+
+* ``clone`` command fixed when cloning subplaybooks with multiple input fields
+* ``resilient-sdk`` version is now added as a comment to all files generated or updated by the SDK
+* Added new ``--poller`` flag to ``docgen`` to support documentation for poller-based apps generated
+  with ``resilient-sdk codegen [...] --poller``, including automatically formatting the poller template file contents
+  into the README file
+* Updated ``validate`` markdown report to include total issue counts
+* ``validate`` automatically checks the Python version of all scripts from SOAR included in your app
+  ``validate`` will fail if any Playbook or Workflow scripts are written in Python 2
+* Default ``apikey_permissions.txt`` file generated by ``codegen`` updated to include latest available API permissions
+* ``package`` now supports blank lines in ``apikey_permissions.txt``
+* Updated project to use ``pyproject.toml`` and ``setup.cfg`` metadata files. Build backend continues to use ``setuptools``.
+  Instead of directly invoking setup.py to get a sdist or wheel, use ``build`` as a build frontend:
+
+  .. code-block:: bash
+
+      pip install build
+      python -m build
+
+**2022-12: version 47.1**
+
+* ``clone``, ``extract``, and ``package`` commands fixed to avoid clearing out overrides for disabled Tasks in SOAR
+* Poller Jinja templates for ``codegen --poller`` updated to reference "cases" rather than "incidents"
+
+**2022-11: version 47.0**
+
+* Added support to ``extract`` command for sub-playbooks. They are treated like normal Playbooks so no
+  further command line args are required. Just ensure you include all other customizations in your
+  command. For example:
+
+  .. code-block::
+
+    $ resilient-sdk extract --playbook my_sub_playbook --function fn_in_sub_playbook
+
+* ``codegen`` template updates with Python 3 syntax
+* Added new ``--poller`` flag to ``codegen``. This allows for creating poller-based apps
+  which generates a ``lib`` directory in the package and a ``poller`` directory each with
+  items needed to create a poller-based app.
+* ``docgen`` template updated with references to Edge Gateway (formerly App Host)
+* Added support for activation fields in manually activated playbooks in the ``clone`` command
+
+
+**2022-08: version 46.0**
+
+* Check to see if the current installed version of the ``resilient-sdk`` is the latest
+  available version on PyPi
+* Slight enhancements to the ``codegen`` template
+* ``validate`` updates:
+
+  * Ensure the base image of in an App's Dockerfile is valid
+  * Further checks of ``setup.py`` file
+  * Validate that all App's dependencies are using the ``~=`` syntax
+
+**2022-07: version 45.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2022-05: version 45.0**
+
+* Added new option ``--draft-playbook`` to the ``clone`` command that if specified with the ``--playbook`` option
+  will clone the Playbook into a **Draft** state, allowing you to change it's Activation Type
+* ``codegen`` and ``extract`` now exclude the ``creator`` from the generated ``export.res`` file
+* Minor updates to templates produced with ``codegen``
+
+**2022-04: version 44.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2022-02: version 44.0**
+
+* Added support to ``codegen``, ``docgen``, ``package``, ``extract`` and ``clone`` for Playbooks
+* Bump ``Jinja2`` to ``~=3.0`` for Python ``>=3.6``
+* Officially support ``Python 3.9``
+
+**2022-01: version 43.1**
+
+* Added new ``validate`` functionality to the SDK
+* Added `genson 1.2 dependency <https://pypi.org/project/genson/>`_ to generate JSON schemas
+* ``codegen`` now produces ``output_json_example.json`` and ``output_json_schema.json`` files for each function in the ``payload_samples`` directory to aid with building **Playbooks**
+* ``codegen`` has a new argument ``--gather-results`` which will scan an ``app.log`` file to get the results for the ``output_json_example.json`` file
+* When ``docgen`` is now ran, it will look for an ``output_json_example.json`` file for each function and use that for the ``README.md`` Function Output Examples
+* Added ``global-exclude *.bak`` to the MANIFEST.in file in the ``codegen`` template so ``.bak`` files are not included when packaged
+
+**2021-11: version 43.0**
+
+* Added examples to ``codegen`` template
+* Formatted Sphinx documentation and hosted it at https://ibm.biz/soar-python-docs
+* A packaged App will now include additional files with additions to the MANIFEST.in file
+
+**2021-11: version 42.3**
+
+* Enforce unix style line endings (``\n``) when writing files
+* ``codegen`` to include ``apikey_permissions.txt`` in MANIFEST.in file
+
+**2021-10: version 42.2**
+
+* Bug fix for ``clone`` to support Python 2.7
+* Ability to use different app.config file per command using ``-c`` flag
+
+**2021-08: version 42.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-08: version 42.0**
+
+* ``codegen`` now generates a template for App's to be developed to run in a Python >= 3.6 environment.
+* Bug fixes.
+* Support for collecting incident types in ``codegen`` and extract. See the command line parameters ``-i`` and ``--incidenttype``.
+
+**2021-06: version 41.1**
+
+* To address a security vulnerability, the Dockerfile ``codegen`` template now assigns user 1001 to the non-root group 1001. User 1001 is used to run a container.
+* Added a new Atomic Function template generated with ``codegen``, which is a condensed version of our Original Function template. It includes comments on best practices.
+
+**2021-05: version 41.0**
+
+* List all setup.py ``"install_requires"`` dependencies in ``docgen`` README template
+* Bug fixes
+
+**2021-03: version 40.2**
+
+* Bug fix for to use ``setuptools_scm < 6.0.0`` for Python 2.7 environments
+
+**2021-03: version 40.1**
+
+* Adjust ``entrypoint.sh`` template to ensure ``resilient-circuits`` is restarted when a fatal error occurs when running on App Host
+* Added timestamp to logs on App Host
+
+**2021-02: version 40.0**
+
+* The function template that is produced when you run ``codegen`` now includes references to the resilient-lib library.
+* When the var RES_SDK_DEV is set, ``codegen`` now creates the payload_samples directory with JSON examples for the Resilient UI and mock results for a "mock server".
+* Added ``--no-samples`` flag to ``package`` and when set do not look for the payload_samples directory or try add them to the export.res file.
+* Added ``--image-hash`` flag to ``package`` to specify the SHA256 of an image that the app.zip refers to.
+
+**2020-10: version 39.0**
+
+* The ``docgen`` command creates a single README and updated the README to include information on App Hosts.
+* Added the Resilient platform version to the customize.py template.
+* The ``package`` command replaces tags on Resilient objects in export.res instead of extending them.
+* Added environmental variable RES_SDK_DEV.
+* Added ``--set-version`` argument to the dev command.
+* Added ``display_name`` attribute to the setup.py file.
+* The ``codegen``, ``codegen --reload`` and ``dev --set-version`` commands create a /util/data/export.res file that contains the import definition which was previously base64 encoded text in customize.py.
+* Before running the ``codegen --reload`` on packages created with Resilient SDK < 39.0.0, ensure the MANIFEST.in file includes the line: recursive-include <package_name>/util *
+* The ``codegen`` and ``package`` commands return errors if the package name contains uppercase characters.
+* Added a ``clone`` command to clone an Action Object.
+
+**2020-07: version 37.2**
+
+* Updates to Dockerfile template
+* Support for newest export formats
+* Bug fixes.
+
+**2020-05: version 37.0**
+
+* Package created. Using 37 as original version
+* Added support for API key permissions in app.json using permissions file.
+* Added support for new apphost config section.
+* Customization and config properties files now extracted from setup.py.
+* Rename ``app:package`` command to ``package``.
+* Bug fixes.
+
+**2020-04: version 36.2.dev**
+
+* Package dev version created. Using 36.2 as original version
+* Added support for API key permissions in app.json using permissions file.
+* Added support for new apphost config section.
+* Customization and config properties files now extracted from setup.py.
+* Rename ``app:package`` command to ``package``.
+* Bug fixes.

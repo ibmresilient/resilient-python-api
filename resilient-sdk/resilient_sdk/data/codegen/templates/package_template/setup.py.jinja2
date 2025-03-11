@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+{% if copyright %}
+# {{ copyright }}
+{% endif %}
+# Generated with resilient-sdk v{{ sdk_version }}
+
+from setuptools import setup, find_packages
+import glob
+import ntpath
+
+
+def get_module_name(module_path):
+    """
+    Return the module name of the module path
+    """
+    return ntpath.split(module_path)[1].split(".")[0]
+
+
+def snake_to_camel(word):
+    """
+    Convert a word from snake_case to CamelCase
+    """
+    return ''.join(x.capitalize() or '_' for x in word.split('_'))
+
+
+setup(
+    name="{{package_name}}",
+    display_name="<<display name of your app here>>",
+    version="1.0.0",
+    license="{{license}}",
+    author="{{author}}",
+    author_email="{{author_email}}",
+    url="{{url}}",
+    description="<<{{change_me_str}}>>Enter a short description of the App",
+    long_description="""{{long_description}}""",
+    install_requires=[
+        "resilient-circuits>={{resilient_libraries_version}}"
+    ],
+    python_requires='>=3.6',
+    packages=find_packages(),
+    include_package_data=True,
+    platforms="any",
+    classifiers=[
+        "Programming Language :: Python",
+    ],
+    entry_points={
+        "resilient.circuits.components": [
+            # When setup.py is executed, loop through the .py files in the components directory and create the entry points.
+            "{}FunctionComponent = {{package_name}}.components.{}:FunctionComponent".format(snake_to_camel(get_module_name(filename)), get_module_name(filename)) for filename in glob.glob("./{{package_name}}/components/[a-zA-Z]*.py")
+        ]
+        {% if poller_flag %}
+        + [
+            "PollerComponent = {{package_name}}.poller.poller:PollerComponent"
+          ]
+        {% endif %}
+        ,
+        "resilient.circuits.configsection": ["gen_config = {{package_name}}.util.config:config_section_data"],
+        "resilient.circuits.customize": ["customize = {{package_name}}.util.customize:customization_data"],
+        "resilient.circuits.selftest": ["selftest = {{package_name}}.util.selftest:selftest_function"]
+    }
+)

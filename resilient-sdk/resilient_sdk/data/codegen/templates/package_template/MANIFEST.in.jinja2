@@ -1,0 +1,17 @@
+include README.md
+include Dockerfile
+include apikey_permissions.txt
+recursive-include {{package_name}}/util *
+{% if poller_flag %}
+recursive-include {{package_name}}/lib *
+recursive-include {{package_name}}/poller *
+{% endif %}
+include {{package_name}}/LICENSE
+include doc/*.md
+include doc/screenshots/*
+include icons/*.png
+recursive-include payload_samples/*/ *.json
+include tox.ini
+recursive-include tests/ *
+
+global-exclude *.bak

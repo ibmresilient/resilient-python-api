@@ -1,0 +1,257 @@
+[
+    {
+        "id": 4,
+        "name": "incident",
+        "description": null,
+        "type": 8,
+        "uuid": "b779a99a-2638-4503-99a7-8c94c3547761",
+        "content": [
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "header",
+                "field_type": null,
+                "content": "Summary",
+                "predefined_uuid": "de187582-422a-46f0-889d-9e191b871ece",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "field",
+                "field_type": "incident",
+                "content": "id",
+                "predefined_uuid": "bf882c37-e398-475c-a8aa-68770d9aeec2",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "field",
+                "field_type": "incident",
+                "content": "phase_id",
+                "predefined_uuid": "10cb781c-4f3b-4863-8231-f7ad39559054",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "field",
+                "field_type": "incident",
+                "content": "severity_code",
+                "predefined_uuid": "f2d4fad2-ced4-4622-b8cb-138abebc07d9",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "field",
+                "field_type": "incident",
+                "content": "create_date",
+                "predefined_uuid": "d1c7159b-c341-4703-93eb-d4b8f2c4c449",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "field",
+                "field_type": "incident",
+                "content": "start_date",
+                "predefined_uuid": "92fa8409-05e7-4db6-8637-d4e11d853b6f",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "field",
+                "field_type": "incident",
+                "content": "discovered_date",
+                "predefined_uuid": "3ee4756e-8058-4425-aec2-b3fdb744c4be",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "field",
+                "field_type": "incident",
+                "content": "determined_date",
+                "predefined_uuid": "21a51482-2200-45f2-9969-7d52c14a8d01",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "field",
+                "field_type": "incident",
+                "content": "data_compromised",
+                "predefined_uuid": "31d28bb2-df53-4df1-bd02-3ead04c35ff8",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "field",
+                "field_type": "incident",
+                "content": "incident_type_ids",
+                "predefined_uuid": "5f715f1f-c9f4-4674-bde8-9bc12409a2b8",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "header",
+                "field_type": null,
+                "content": "People",
+                "predefined_uuid": "4d5b3e80-4b61-418f-aba9-bedc0a4daeb9",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "field",
+                "field_type": "incident",
+                "content": "creator_id",
+                "predefined_uuid": "7c17c740-e5d6-4672-b386-4653b6551b53",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "field",
+                "field_type": "incident",
+                "content": "owner_id",
+                "predefined_uuid": "9bbc5761-0f45-4eb2-87b8-d6cb6dda0de2",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "field",
+                "field_type": "incident",
+                "content": "members",
+                "predefined_uuid": "b3e8664a-4681-4f26-a119-d424b5fe8f9c",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "header",
+                "field_type": null,
+                "content": "Related Incidents",
+                "predefined_uuid": "13b7043f-3093-4048-9bb8-228e7f244232",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "view",
+                "field_type": null,
+                "content": "incident:related:list",
+                "predefined_uuid": "72d449ee-8ce7-4776-b0d4-078f24cb7f7c",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "header",
+                "field_type": null,
+                "content": "Attachments",
+                "predefined_uuid": "f51ac133-022a-411b-889c-dd200d292d56",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "view",
+                "field_type": null,
+                "content": "attachment:list",
+                "predefined_uuid": "8793bb58-53e7-483f-bed6-919d12e641b4",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "header",
+                "field_type": null,
+                "content": "Newsfeed",
+                "predefined_uuid": "8ff7ba3f-7c5e-4bb8-80fe-2fdd1f499e2e",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [],
+                "show_if": null,
+                "element": "view",
+                "field_type": null,
+                "content": "timeline:show",
+                "predefined_uuid": "fbd29157-105f-4638-9d99-04205926889e",
+                "show_link_header": false
+            },
+            {
+                "step_label": null,
+                "fields": [
+                    {
+                        "step_label": null,
+                        "show_if": null,
+                        "element": "header",
+                        "field_type": null,
+                        "content": "Summary",
+                        "show_link_header": false
+                    },
+                    {
+                        "step_label": null,
+                        "show_if": null,
+                        "element": "html",
+                        "field_type": null,
+                        "content": "<b>Parent Incident</b>",
+                        "show_link_header": false
+                    },
+                    {
+                        "step_label": null,
+                        "show_if": null,
+                        "element": "field",
+                        "field_type": "incident",
+                        "content": "id",
+                        "show_link_header": false
+                    }
+                ],
+                "show_if": [
+                    {
+                        "condition": "equals",
+                        "field": "incident.city",
+                        "value": "test"
+                    }
+                ],
+                "element": "section",
+                "field_type": null,
+                "show_link_header": false
+            }
+        ],
+        "owner_id": null,
+        "perms": {
+            "delete": true,
+            "edit": true,
+            "edit_permissions": true
+        },
+        "public": true
+    }
+]

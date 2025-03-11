@@ -1,0 +1,11 @@
+# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+
+[build-system]
+requires = [
+    "setuptools ~= 70.3.0;  python_version >= '3.9'",
+    "setuptools_scm[toml] >= 6.0; python_version>='3.0'"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+root = "../"

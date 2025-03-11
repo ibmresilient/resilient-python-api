@@ -1,0 +1,80 @@
+[resilient]
+# Basic service connection
+host=resilient
+port=443
+
+# Use (api_key_id, api_key_secret)
+api_key_id=ApiKeyId
+api_key_secret=ApiKeySecret
+# Or (email, password)
+#email=api_user@example.com
+#password=MyPassword
+
+org=My Org
+
+# Number of attempts to retry when connecting to SOAR. Use 0 or -1 for unlimited retries. Defaults to 0.
+#max_connection_retries=10
+
+# Max number of times to retry a request to SOAR before exiting. Defaults to 5.
+#request_max_retries=5
+
+# Number of seconds to wait between retries. Defaults to 2.
+#request_retry_delay=2
+
+# Multiplier applied to delay between retry attempts. Defaults to 2.
+#request_retry_backoff=2
+
+# CP4S
+# Actions Module connection
+# Use stomp_url when configuring an environment for CP4S
+#stomp_host=<CP4S stomp URL>
+#stomp_port=443
+#resource_prefix=/api/respond
+
+#stomp_timeout=120
+
+# Directory containing additional components to load
+# componentsdir=components
+# Existing directory to write logs to, or set with $APP_LOG_DIR
+logdir=/tmp
+logfile=app.log
+loglevel=INFO
+# Optional override the default values for maximum bytes per log file
+# and maximum backup count. These default to 10000000 and 10
+# respectively.
+# Setting log_max_bytes to 0 is unlimited.
+# Setting log_backup_count to 0 means no backups will be used.
+# NOTE: if either log_max_bytes or log_backup_count are zero,
+# the log file will never roll over and will continue to grow
+#log_max_bytes=10000000
+#log_backup_count=10
+
+# The number of Functions to run concurrently (within the range: 1 <= 2000)
+num_workers=50
+
+# Timeout value in seconds for selftest to wait for a response from SOAR
+selftest_timeout=10
+
+# If set to True a Function's exception will be ignored with the error sent as a Status Message
+# and a default payload returned with 'success=False', allowing the Workflow or Playbook to continue
+trap_exception=False
+
+# If your Resilient server uses a self-signed TLS certificate, or some
+# other certificate that is not automatically trusted by your machine,
+# you need to explicitly tell the Python scripts that it should be trusted.
+# If you don't want to use a cert you can set cafile=false.
+# To explicitly trust a site, download its certificate to a file, e.g:
+#    mkdir -p ~/.resilient
+#    openssl s_client -connect resilient.example.com:443 -showcerts < /dev/null 2> /dev/null | openssl x509 -outform PEM > ~/.resilient/cert.cer
+# then specify the file (remove the '#' from the line below):
+#cafile=~/.resilient/cert.cer
+
+[integrations]
+# Use this section to configure options for all Apps that use resilient-lib within this environment
+
+# Proxy settings
+#http_proxy=http://example.com:3000
+#https_proxy=https://example.com:3000
+
+# Global setting for API call timeouts, 30 seconds is the current default
+#timeout=30

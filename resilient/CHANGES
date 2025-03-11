@@ -1,0 +1,293 @@
+**2025-02: version 51.0.5.0**
+* No changes
+
+**2024-12: version 51.0.4.0**
+* Bug fix when using get_put with skip_retry 
+
+**2024-07: version 51.0.2.2**
+* Update dependency version of setuptools version to 70.3.x to address CVE-2024-6345
+
+**2024-07: version 51.0.2.1**
+
+* All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12. To continue using
+  SOAR libraries on earlier versions of Python, use v52.0.2.0.974
+* Fix for secret substitution when value starts with "^" but is not intended to be substituted
+
+**2024-05: version 51.0.2.0**
+
+* Added official support for Python 3.12
+
+**2024-04: version 51.0.1.1**
+
+* Updated ``jwcrypto`` dependency requirement to ``~= 1.5.6`` (for Python 3.9 and 3.11) to address CVE-2024-28102
+  Note that Python 3.6 and Python 2.7 are no longer receiving security updates and should be moved away from immediately.
+  See previous release below for details on our support for Python 3.11
+
+**2024-02: version 51.0.1.0**
+
+* All SOAR Python libraries now officially support Python 3.11
+* All SOAR Python libraries are now published in a docker container format on Quay.io.
+  This is to better support our apps build process to include the latest SOAR libraries
+  in the base image. This also allows us to better control the OS and Python dependencies
+  that appear in the eventual app container. To take advantage of this new image in your app
+  see the SDK :ref:`SDK Changes`. The new base image is hosted on quay.io. The default Python
+  version is 3.11 and the image can be pulled manually with:
+
+  .. code-block:: bash
+
+    $ docker pull quay.io/ibmresilient/soarapps-base-docker-image:latest # latest libraries with Python 3.11
+    $ docker pull quay.io/ibmresilient/soarapps-base-docker-image:python-39 # latest libraries with Python 3.9
+
+* Updated ``jwcrypto`` dependency requirement to ``~= 1.5.2`` (for Python 3.9 and 3.11) to address CVE-2023-6681
+* Pinned ``jwcrypto`` to ``== 1.5.1`` for Python 3.6 since ``1.5.2`` is no longer 3.6 compatible
+
+**2023-11: version 51.0.0.0**
+
+* Changed the version of ``resilient`` (and all other SOAR Python libraries) to match the new v.r.m.f
+  scheme that SOAR v51.0.0.0 introduced
+
+**2023-10: version 50.1**
+
+* Improved options for skipping retry with certain exit codes received by REST methods in :class:`SimpleClient <resilient.co3.SimpleClient>`
+* :class:`resilient.RetryHTTPException <resilient.co3base.RetryHTTPException>` now inherits from :class:`resilient.BasicHTTPException <resilient.co3base.BasicHTTPException>`
+  for improved error handling
+* Bug fix for :class:`resilient.app_config.AppConfigManager <resilient.app_config.AppConfigManager>` when using Jinja2 to render values from app.config.
+  This fix is only applicable to Python 3 and cannot be fixed in Python 2
+* Improved obfuscation of potential secrets in logs
+
+**2023-08: version 50.0**
+
+* Adding a deprecation warning for use of Email and Password for authentication.
+  This is still supported but will become unsupported in the future. Any integration servers using
+  email and password to authenticate should consider moving to API Keys as soon as possible
+
+**2023-07: version 49.1**
+
+* Bug fix for protected secrets which ended in ``$}``
+
+**2023-05: version 49.0**
+
+* Added logic to skip retry logic for failed API calls in :class:`resilient.SimpleClient.post() <resilient.co3.SimpleClient.post>`, :class:`resilient.SimpleClient.put() <resilient.co3.SimpleClient.put>` and :class:`resilient.SimpleClient.get_put() <resilient.co3.SimpleClient.get_put>`
+* Added ``resilient-app-config-plugins`` as a new package to manage third party credentials within SOAR apps
+
+**2023-05: version 48.2**
+
+* Update version of requests-toolbelt to v1.0 to support urllib3 v2.0
+
+**2023-04: version 48.1**
+
+* REST client updated to use ``include_permissions=false`` by default when authenticating to ``/rest/session`` endpoint.
+  This will give improved performance for SOAR instances with large organizations.
+
+**2023-02: version 48.0**
+
+* Updated project to use ``pyproject.toml`` and ``setup.cfg`` metadata files. Build backend continues to use ``setuptools``.
+  Instead of directly invoking setup.py to get a sdist or wheel, use ``build`` as a build frontend:
+
+  .. code-block:: bash
+
+      pip install build
+      python -m build
+
+**2022-12: version 47.1**
+
+* Support for custom headers when using :class:`resilient.SimpleClient.post() <resilient.co3.SimpleClient.post>` and :class:`resilient.SimpleClient.put() <resilient.co3.SimpleClient.put>`
+
+**2022-11: version 47.0**
+
+* Added more general retry logic to our ``get``, ``post`` and ``delete`` request methods. All of which
+  can be configured by specifying any of the following parameters in the :class:`SimpleClient <resilient.co3.SimpleClient>`
+  class
+
+  * **max_connection_retries** - Number of attempts to retry when connecting to SOAR.
+    Use ``-1`` for unlimited retries. Defaults to ``-1``.
+  * **request_max_retries** - Max number of times to retry a request to SOAR
+    before exiting. Defaults to ``5``.
+  * **request_retry_delay** - Number of seconds to wait between retries.
+    Defaults to ``2``.
+  * **request_retry_backoff** - Multiplier applied to delay between retry attempts.
+    Defaults to ``2``.
+
+* Now support **Protected Secrets**. If running on the Edge Gateway (formally App Host) and there are encrypted secrets
+  in `JSON Web Key <https://www.ietf.org/rfc/rfc7517.txt>`_ format, in the ``/etc/secrets`` directory, we will use the ``jwe``
+  and ``jwk`` libraries in `jwcrypto <https://pypi.org/project/jwcrypto/>`_ to decrypt the secret and make it available in your app
+
+**2022-08: version 46.0**
+
+* Added some retry logic to :func:`resilient.SimpleClient.post_attachment() <resilient.co3.SimpleClient.post_attachment>`.
+  If a response code of ``409`` is received we retry adding the attachment
+
+**2022-07: version 45.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2022-05: version 45.0**
+
+* The ``org`` config can now specify any of the organization's
+  ``cloud_account``, ``uuid`` or ``name``
+* Removed the ``User-Agent`` header for all requests
+* Added a custom header for all requests that will include the current version of the library: ``Resilient-Module-Version: 45.0.0``
+* The optional ``client_auth_cert`` and ``client_auth_key`` app.config parameters
+  have been added to specify the respective paths to client side certificates and
+  client side certificate private keys
+
+**2022-04: version 44.1**
+
+* Better logging of an ``Unauthorized`` request with API Keys and exits with a code of ``21``
+* Added optional ``get_response_object`` argument to :class:`resilient.SimpleClient.get() <resilient.co3.SimpleClient.get>`
+  that if ``True``, returns entire response object
+
+**2022-02: version 44.0**
+
+* Ensure ``tests/`` is not included in packaged code
+* Added ``is_uri_absolute`` argument to :class:`resilient.SimpleClient.get() <resilient.co3.SimpleClient.get>`
+  that if ``True``, does not insert ``/org/{org_id}`` into the uri
+* Officially support ``Python 3.9``
+
+**2022-01: version 43.1**
+
+* Ability to globally check if ``unrecognized arguments`` are allowed
+
+**2021-11: version 43.0**
+
+* Formatted Sphinx documentation and hosted it at https://ibm.biz/soar-python-docs
+
+**2021-11: version 42.3**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-10: version 42.2**
+
+* Bug fix for ``pip >= 21.3``
+
+**2021-08: version 42.1**
+
+* Bug fix removing pinned ``urllib3`` dependency
+
+**2021-08: version 42.0**
+
+* Added support for ``HTTP_PROXY``, ``HTTPS_PROXY`` and ``NO_PROXY`` environmental variables. See the App Host Deployment Guide for details.
+* Add new ``User-Agent: soar-app-1.0`` header for API calls to SOAR platform.
+* Bug fixes.
+
+**2021-06: version 41.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-05: version 41.0**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-03: version 40.2**
+
+* Bug fix for to use ``setuptools_scm < 6.0.0`` for Python 2.7 environments
+
+**2021-03: version 40.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-02: version 40.0**
+
+* Bump minimum ``requests`` version to 2.25.0
+
+**2020-07-15: version 37.2**
+
+* Bug fix for proxy in python 3.
+
+**2020-01-16: version 35.0.195**
+
+* Moved ImportDefinition from ``resilient-circuits``
+* Added --resilient-mock parameter
+
+**2019-08-02: version 33.0.189**
+
+* Minor bug fixes.
+
+**2019-07-03: version 32.0.186**
+
+*  Fix for deprecated log warnings
+*  Other minor bug fixes
+
+**2019-04-12: version 32.0.140**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2019-03-06: version 32.0.126**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2019-01-15: version 32.0**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2018-12-05: version 31.0**
+
+* Bug Fixes
+
+**2018-04-15: version 30.0**
+
+* Fix an issue with keyring values outside the ``[resilient]`` config section
+
+**2018-02-22: version 29.1.0**
+
+* Fix an issue with performance receiving STOMP messages
+
+**2017-12-12: version 29.0.1**
+
+* Fix an issue with backward compatibility between ``co3`` and ``resilient`` package names
+
+**2017-12-01: version 29.0.0**
+
+* Refactoring base class to support minimal environments
+
+**2017-09-01: version 28.2.1**
+
+* rename ``co3`` package to ``resilient``
+     .. note::
+          note The module ``co3`` is retained for backward compatibility, and most applications will still work
+          using ``import co3`` after this change.  Applications that import from submodules (``import co3.co3.xxx``)
+          must be changed to import from ``resilient`` instead.
+
+**2017-08-24: version 28.1.**
+
+* add ``patch`` method to ``SimpleClient`` for efficient field-level updates
+
+**2017-06-22: version 28.0.33**
+
+* disable the ConfigParser ``%`` interpolation feature
+
+**2017-06-14: version 28.0.30**
+
+* Add get_const() to get the ConstREST endpoint
+* Add search() to post to the SearchExREST endpoint (only for v28+ servers)
+     (Note: there is no method to call the deprecated ``searchREST`` endpoint from earlier versions)
+* Fix proxy support, adding config options: proxy_host, proxy_port, proxy_user, proxy_password
+* Remove ``stomp.py`` dependency, ``resilient_circuits`` now uses stompest library
+* New ``res-keyring`` command-line utility to store secrets in the keyring
+* Move the keyring and env argument parser from ``resilient_circuits`` into co3,
+     so all config files can make use of ``^xxx`` (keyring) and ``$xxx`` (environment) values
+* Add a dependency on ``keyring`` package
+
+**2017-04-27: version 27.1.22**
+
+* Remove ``dist``, instead releases are available on https://github.com/Co3Systems/co3-api/releases
+* Minor modifications to automated build numbering
+
+**2017-04-21: version 27.1.13**
+
+* Remember the available orgs that the user can log in to
+* Add ``post_artifact_file`` method to support posting file (binary) artifacts
+* Add ``cached_get`` method and ``--cache-ttl`` commandline option
+* Add ``get_client`` helper function to properly construct a SimpleClient from options
+* For Debian OS, specify exact version of the ``keyring`` dependency
+* Use configuration file ($APP_CONFIG_FILE or ./app.config or ~/.resilient/app.config) for utility scripts
+* Move the utility scripts ``gadget`` and ``finfo`` into the co3 module, installed as executables
+* Add support for tests
+
+**2017-02-17: version 27.0.0**
+
+* Support UTF8 strings in co3 module
+* Support UTF8 characters in configuration files
+* Add optional ``timeout`` parameter to REST calls
+* Add ``NoChange`` to optimize get/put
+* Fix ``post_attachment()`` to guess MIME-type based on the filename

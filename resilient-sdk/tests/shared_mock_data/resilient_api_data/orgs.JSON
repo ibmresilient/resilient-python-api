@@ -1,0 +1,51 @@
+{
+    "actions_framework_enabled": true, 
+    "users": {
+        "3": {
+            "roles": {
+                "observer": false, 
+                "master_administrator": true, 
+                "administrator": false, 
+                "create_incs": true
+            }, 
+            "title": null, 
+            "locked": false, 
+            "is_external": false, 
+            "cell": null, 
+            "lname": "Three", 
+            "phone": null, 
+            "id": 3, 
+            "fname": "User", 
+            "last_login": 1476711664869, 
+            "status": "A", 
+            "enabled": true, 
+            "email": "someone@example.com", 
+            "notes": null, 
+            "org_id": 202, 
+            "group_ids": []
+        }, 
+        "2": {
+            "roles": {
+                "observer": false, 
+                "master_administrator": true, 
+                "administrator": false, 
+                "create_incs": true
+            }, 
+            "title": null, 
+            "locked": false, 
+            "is_external": false, 
+            "cell": null, 
+            "lname": "Engine", 
+            "phone": null, 
+            "id": 2, 
+            "fname": "Orchestration", 
+            "last_login": 1475614308048, 
+            "status": "A", 
+            "enabled": true, 
+            "email": "integrations@example.com", 
+            "notes": null, 
+            "org_id": 202, 
+            "group_ids": []
+        }
+    }
+}

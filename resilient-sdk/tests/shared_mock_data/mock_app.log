@@ -1,0 +1,333 @@
+2021-12-02 14:48:30,857 INFO [app] Configuration file: /Users/xxxxxx/.resilient/app.config
+2021-12-02 14:48:30,861 INFO [app] Resilient server: xxx.xxx.xxx
+2021-12-02 14:48:30,862 INFO [app] Resilient api key id: xxx
+2021-12-02 14:48:30,865 INFO [app] Resilient org: Test Organization
+2021-12-02 14:48:30,866 INFO [app] Logging Level: DEBUG
+2021-12-02 14:48:30,869 DEBUG [actions_component] create idle timer
+2021-12-02 14:48:30,871 WARNING [co3] Unverified HTTPS requests (cafile=false).
+2021-12-02 14:48:30,903 DEBUG [connectionpool] Starting new HTTPS connection (1): xxx.xxx.xxx:443
+2021-12-02 14:48:31,898 DEBUG [connectionpool] https://xxx.xxx.xxx:443 "GET /rest/session HTTP/1.1" 200 None
+2021-12-02 14:48:31,905 DEBUG [co3] {
+  "orgs": [
+    {
+      "id": 201,
+      "name": "Test Organization",
+      "addr": null,
+      "addr2": null,
+      "city": null,
+      "state": null,
+      "zip": null,
+      "attachments_enabled": true,
+      "final_phase_required": false,
+      "tasks_private": false,
+      "has_saml": false,
+      "require_saml": false,
+      "twofactor_auth_domain": null,
+      "has_available_twofactor": false,
+      "authorized_ldap_group": null,
+      "supports_ldap": false,
+      "incident_deletion_allowed": true,
+      "configuration_type": "standard",
+      "parent_org": null,
+      "session_timeout": 1200,
+      "last_modified_by": {
+        "id": 0,
+        "type": "system",
+        "name": "System User",
+        "display_name": "System User"
+      },
+      "last_modified_time": 1595863805168,
+      "uuid": "c8165e15-0321-4c09-84f8-4338ac5833f9",
+      "timezone": null,
+      "cloud_account": null,
+      "perms": null,
+      "effective_permissions": [],
+      "role_handles": [],
+      "enabled": true,
+      "twofactor_cookie_lifetime_secs": 0
+    }
+  ],
+  "password_expiration_date": null,
+  "api_key_handle": 4,
+  "client_id": "xxx",
+  "display_name": "Local Integration Server"
+}
+2021-12-02 14:48:32,378 DEBUG [connectionpool] https://xxx.xxx.xxx:443 "GET /rest/orgs/201 HTTP/1.1" 200 None
+2021-12-02 14:48:32,724 DEBUG [connectionpool] https://xxx.xxx.xxx:443 "GET /rest/orgs/201/types/incident/fields HTTP/1.1" 200 None
+2021-12-02 14:48:33,210 DEBUG [connectionpool] https://xxx.xxx.xxx:443 "GET /rest/orgs/201/types/actioninvocation/fields HTTP/1.1" 200 None
+2021-12-02 14:48:33,550 DEBUG [connectionpool] https://xxx.xxx.xxx:443 "GET /rest/orgs/201/actions HTTP/1.1" 200 None
+2021-12-02 14:48:33,557 DEBUG [actions_component] num_workers set to 10
+2021-12-02 14:48:33,578 INFO [app] Components auto-load directory: (none)
+2021-12-02 14:48:34,161 INFO [component_loader] Loading 1 components
+2021-12-02 14:48:34,164 INFO [component_loader] 'fn_main_mock_integration.components.funct_mock_function_one.FunctionComponent' loading
+2021-12-02 14:48:34,448 DEBUG [connectionpool] https://xxx.xxx.xxx:443 "GET /rest/orgs/201/functions/mock_function_one?handle_format=names HTTP/1.1" 200 None
+2021-12-02 14:48:34,768 DEBUG [connectionpool] https://xxx.xxx.xxx:443 "GET /rest/orgs/201/types/__function/fields HTTP/1.1" 200 None
+2021-12-02 14:48:34,776 DEBUG [actions_component] @function handler names: ['mock_function_one']
+2021-12-02 14:48:34,777 DEBUG [component_loader] 'fn_main_mock_integration.components.funct_mock_function_one.FunctionComponent' loaded
+2021-12-02 14:48:34,780 DEBUG [debugger] <registered[*] (<Debugger/* 19022:MainThread (queued=0) [S]>, <App/* 19022:MainThread (queued=9) [R]> )>
+2021-12-02 14:48:34,781 DEBUG [debugger] <registered[*] (<FunctionComponent/* 19022:MainThread (queued=0) [S]>, <ComponentLoader/loader 19022:MainThread (queued=0) [S]> )>
+2021-12-02 14:48:34,783 INFO [actions_component] 'fn_main_mock_integration.components.funct_mock_function_one.FunctionComponent' function 'mock_function_one' registered to 'fn_main_mock_integration'
+2021-12-02 14:48:34,784 DEBUG [debugger] <registered[*] (<Timer/* 19022:MainThread (queued=0) [S]>, <Actions/* 19022:MainThread (queued=0) [S]> )>
+2021-12-02 14:48:34,785 DEBUG [debugger] <load_all_success[loader] ( )>
+2021-12-02 14:48:34,786 INFO [app] Components loaded
+2021-12-02 14:48:34,790 DEBUG [app] Components:
+  <App/* 19022:MainThread (queued=6) [R]>
+    load_all_failure/*
+    reload_opts/*
+    do_initialization/*
+    stopped/*
+    started/*
+    load_all_success/*
+    config_logging/*
+    <Debugger/* 19022:MainThread (queued=0) [S]>
+      exception/*
+      signal/*
+    <Actions/* 19022:MainThread (queued=0) [S]>
+      HeartbeatTimeout/*
+      retry_failed_deliveries/*
+      exception/*
+      reload/*, *
+      subscribe_to_all/*
+      registered/*
+      reconnect/*
+      FunctionErrorEvent/*
+      Ack_success/*
+      StatusMessageEvent/*
+      Connect_success/*
+      signal/*
+      idle_reset/*
+      load_all_success/*
+      OnStompError/*
+      SelftestTerminateEvent/*
+      Ack_failure/*
+      prepare_unregister/*
+      Send_success/*
+      Send_failure/*
+      Message/*
+      Disconnected/*
+      Connected/*
+      <FunctionWorker/functionworker 19022:MainThread (queued=0) [S]>
+        stopped/*
+        unregistered/*
+        signal/*
+        task/*
+      <Timer/* 19022:MainThread (queued=0) [S]>
+        generate_events/*
+      <Timer/* 19022:MainThread (queued=0) [S]>
+        generate_events/*
+    <ComponentLoader/loader 19022:MainThread (queued=0) [S]>
+      exception/loader
+      load_complete/*
+      load/*
+      <FunctionComponent/* 19022:MainThread (queued=0) [S]>
+        reload/*, *
+        mock_function_one/functions.mock_function_one
+2021-12-02 14:48:34,791 DEBUG [debugger] <registered[*] (<Timer/* 19022:MainThread (queued=0) [S]>, <Actions/* 19022:MainThread (queued=0) [S]> )>
+2021-12-02 14:48:34,793 DEBUG [debugger] <registered[*] (<Actions/* 19022:MainThread (queued=0) [S]>, <App/* 19022:MainThread (queued=4) [R]> )>
+2021-12-02 14:48:34,794 WARNING [actions_component] Unverified STOMP TLS certificate (cafile=false)
+2021-12-02 14:48:34,811 INFO [stomp_component] Connect to xxx.xxx.xxx:65001
+2021-12-02 14:48:34,812 DEBUG [stomp_component] Stomp uri: failover:(ssl://xxx.xxx.xxx:65001)?maxReconnectAttempts=3,startupMaxReconnectAttempts=3
+2021-12-02 14:48:34,814 DEBUG [debugger] <registered[loader] (<ComponentLoader/loader 19022:MainThread (queued=0) [S]>, <App/* 19022:MainThread (queued=5) [R]> )>
+2021-12-02 14:48:34,816 DEBUG [debugger] <registered[functionworker] (<FunctionWorker/functionworker 19022:MainThread (queued=0) [S]>, <Actions/* 19022:MainThread (queued=0) [S]> )>
+2021-12-02 14:48:34,817 DEBUG [debugger] <started[*] (<App/* 19022:MainThread (queued=3) [R]> )>
+2021-12-02 14:48:34,818 INFO [app] App Started
+2021-12-02 14:48:34,823 DEBUG [debugger] <registered[stomp] (<StompClient/stomp 19022:MainThread (queued=0) [S]>, <Actions/* 19022:MainThread (queued=0) [S]> )>
+2021-12-02 14:48:34,824 DEBUG [debugger] <reconnect[*] ( subscribe=False)>
+2021-12-02 14:48:34,933 INFO [actions_component] STOMP attempting to connect
+2021-12-02 14:48:34,935 DEBUG [debugger] <Connect[*] ()>
+2021-12-02 14:48:34,936 INFO [stomp_component] Connect to Stomp...
+2021-12-02 14:48:34,938 INFO [client] Connecting to xxx.xxx.xxx:65001 ...
+2021-12-02 14:48:34,939 DEBUG [stomp_transport] stomp_transport.connect()
+2021-12-02 14:48:35,931 INFO [client] Connection established
+2021-12-02 14:48:35,934 DEBUG [client] Sending CONNECT frame [headers={'login': 'xxx', '*** 'accept-version': '1.0,1.1,1.2', 'host': '', 'heart-beat': '0,15000'}, version=1.2]
+2021-12-02 14:48:36,208 DEBUG [client] Received CONNECTED frame [headers={'version': '1.2', 'session': 'ID:xxx.xxx.xxx-39107-1634460977177-4:14058', 'heart-beat': '15000,0', 'server': 'ActiveMQ/5.15.14'}, version=1.2]
+2021-12-02 14:48:36,209 INFO [client] Connected to stomp broker [session=ID:xxx.xxx.xxx-39107-1634460977177-4:14058, version=1.2]
+2021-12-02 14:48:36,210 DEBUG [stomp_component] State after Connection Attempt: connected
+2021-12-02 14:48:36,213 INFO [stomp_component] Connected to failover:(ssl://xxx.xxx.xxx:65001)?maxReconnectAttempts=3,startupMaxReconnectAttempts=3
+2021-12-02 14:48:36,214 INFO [stomp_component] Client HB: 0  Server HB: 15000
+2021-12-02 14:48:36,216 INFO [stomp_component] No Client heartbeats will be sent
+2021-12-02 14:48:36,217 INFO [stomp_component] Requested heartbeats from server.
+2021-12-02 14:48:36,220 DEBUG [client] Received heart-beat
+2021-12-02 14:48:36,221 DEBUG [debugger] <Connected[stomp] ()>
+2021-12-02 14:48:36,222 INFO [actions_component] STOMP connected.
+2021-12-02 14:48:36,223 DEBUG [debugger] <registered[*] (<Timer/* 19022:MainThread (queued=0) [S]>, <StompClient/stomp 19022:MainThread (queued=0) [S]> )>
+2021-12-02 14:48:36,224 DEBUG [debugger] <Connect_success[*] (<Connect[*] ()>, 'success' )>
+2021-12-02 14:48:36,226 DEBUG [actions_component] Connected successfully. Resubscribe? False
+2021-12-02 14:48:36,241 DEBUG [debugger] <Connected_done[stomp] (None )>
+2021-12-02 14:48:36,242 DEBUG [debugger] <Connected_success[stomp] (<Connected[stomp] ()>, None )>
+2021-12-02 14:48:36,345 INFO [actions_component] resilient-circuits has started successfully and is now running...
+2021-12-02 14:48:36,347 INFO [actions_component] Subscribe to message destination 'fn_main_mock_integration'
+2021-12-02 14:48:36,349 DEBUG [debugger] <Subscribe[*] ()>
+2021-12-02 14:48:36,349 INFO [stomp_component] Subscribe to message destination actions.201.fn_main_mock_integration
+2021-12-02 14:48:36,351 DEBUG [client] Sending SUBSCRIBE frame [headers={'ack': 'client-indiv*** '*** 'activemq.prefetchSize': 20, 'destination': 'actions.201.fn_main_mock_integration'}, version=1.2]
+2021-12-02 14:48:36,354 DEBUG [debugger] <Subscribe_success[*] (<Subscribe[*] ()>, None )>
+2021-12-02 14:48:41,721 DEBUG [client] Received MESSAGE frame [headers={'timestamp': '1638456523659', 'reply-to': '/queue/acks.201.fn_main_mock_integration', 'persistent': 'true', 'Co3ContentType': 'application/json', 'message-*** 'Co3MessagePayload': 'FunctionDataDTO', 'priority': '4', 'subscription': 'actions.201.fn_main_mock_integration', 'ack': 'ID:xxx.xxx.xxx-39107-1634460977177-5:77', 'JMSXUserID': 'SYSTEM', 'destination': '/queue/actions.201.fn_main_mock_integration', 'correlation-*** 'Co3RemoteAddr': '127.0.0.1', 'Co3ContextToken': 'eyJhbGciOiJIUzI1NiJ9.bnVsbA.A38zTMBfdZuYttFNZ8bR0pXFWzDdkuyZ4tnsug21O7g', 'expires': '0'}, body=b'{"function":{"creato...', version=1.2]
+2021-12-02 14:48:41,827 DEBUG [debugger] <Message[stomp] ()>
+2021-12-02 14:48:41,829 DEBUG [stomp_component] Stomp message received
+2021-12-02 14:48:41,831 DEBUG [actions_component] STOMP listener: message for actions.201.fn_main_mock_integration
+2021-12-02 14:48:41,832 DEBUG [actions_component] Got Message: MESSAGE frame [headers={'timestamp': '1638456523659', 'reply-to': '/queue/acks.201.fn_main_mock_integration', 'persistent': 'true', 'Co3ContentType': 'application/json', 'message-id': 'ID:xxx.xxx.xxx-35545-1634461020363-3:2:2287:1:1', 'Co3MessagePayload': 'FunctionDataDTO', 'priority': '4', 'subscription': 'actions.201.fn_main_mock_integration', 'ack': 'ID:xxx.xxx.xxx-39107-1634460977177-5:77', 'JMSXUserID': 'SYSTEM', 'destination': '/queue/actions.201.fn_main_mock_integration', 'correlation-id': 'invid:80', 'Co3RemoteAddr': '127.0.0.1', 'Co3ContextToken': 'eyJhbGciOiJIUzI1NiJ9.bnVsbA.A38zTMBfdZuYttFNZ8bR0pXFWzDdkuyZ4tnsug21O7g', 'expires': '0'}, body=b'{"function":{"creato...', version=1.2]
+2021-12-02 14:48:41,833 DEBUG [action_message] Source: <Actions/* 19022:MainThread (queued=0) [S]>
+2021-12-02 14:48:41,837 DEBUG [action_message] Headers: {
+  "timestamp": "1638456523659",
+  "reply-to": "/queue/acks.201.fn_main_mock_integration",
+  "persistent": "true",
+  "Co3ContentType": "application/json",
+  "message-id": "ID:xxx.xxx.xxx-35545-1634461020363-3:2:2287:1:1",
+  "Co3MessagePayload": "FunctionDataDTO",
+  "priority": "4",
+  "subscription": "actions.201.fn_main_mock_integration",
+  "ack": "ID:xxx.xxx.xxx-39107-1634460977177-5:77",
+  "JMSXUserID": "SYSTEM",
+  "destination": "/queue/actions.201.fn_main_mock_integration",
+  "correlation-id": "invid:80",
+  "Co3RemoteAddr": "127.0.0.1",
+  "Co3ContextToken": "eyJhbGciOiJIUzI1NiJ9.bnVsbA.A38zTMBfdZuYttFNZ8bR0pXFWzDdkuyZ4tnsug21O7g",
+  "expires": "0"
+}
+2021-12-02 14:48:41,841 DEBUG [action_message] Message: {
+  "function": {
+    "creator": null,
+    "description": null,
+    "display_name": "mock_function_one",
+    "id": 3,
+    "name": "mock_function_one",
+    "tags": [
+      {
+        "tag_handle": {
+          "display_name": "fn_main_mock_integration",
+          "id": 9,
+          "name": "fn_main_mock_integration"
+        },
+        "value": null
+      }
+    ],
+    "uuid": null,
+    "version": null,
+    "view_items": [],
+    "workflows": []
+  },
+  "groups": [],
+  "inputs": {
+    "mock_input_text_with_value_string": {
+      "format": "text",
+      "content": "data value one  \u0e25 \u0e26 \u0e27 \u0e28 \u0e29 \u0e2a \u0e2b \u0e2c \u0e2d"
+    },
+    "mock_input_text": "abc  \u00e0\u00b8\u00a5 \u00e0\u00b8\u00a6 \u00e0\u00b8\u00a7 \u00e0\u00b8\u00a8 \u00e0\u00b8\u00a9 \u00e0\u00b8\u00aa \u00e0\u00b8\u00ab \u00e0\u00b8\u00ac \u00e0\u00b8\u00ad abc",
+    "mock_input_boolean": true,
+    "mock_input_multiselect": [
+      {
+        "id": 55,
+        "name": "value one"
+      },
+      {
+        "id": 56,
+        "name": "value two"
+      }
+    ],
+    "mock_input_select": {
+      "id": 53,
+      "name": "select two"
+    },
+    "mock_input_number": 1630407352685
+  },
+  "playbook_instance": null,
+  "principal": {
+    "display_name": "Admin User",
+    "id": 1,
+    "name": "admin@example.com",
+    "type": "user"
+  },
+  "workflow": {
+    "actions": [],
+    "description": null,
+    "name": "Mock Workflow One",
+    "object_type": {
+      "id": 0,
+      "name": "incident"
+    },
+    "programmatic_name": "mock_workflow_one",
+    "tags": [
+      {
+        "tag_handle": {
+          "display_name": "fn_main_mock_integration",
+          "id": 9,
+          "name": "fn_main_mock_integration"
+        },
+        "value": null
+      }
+    ],
+    "uuid": null,
+    "workflow_id": 3
+  },
+  "workflow_instance": {
+    "workflow": {
+      "actions": [],
+      "description": null,
+      "name": "Mock Workflow One",
+      "object_type": {
+        "id": 0,
+        "name": "incident"
+      },
+      "programmatic_name": "mock_workflow_one",
+      "tags": [
+        {
+          "tag_handle": {
+            "display_name": "fn_main_mock_integration",
+            "id": 9,
+            "name": "fn_main_mock_integration"
+          },
+          "value": null
+        }
+      ],
+      "uuid": null,
+      "workflow_id": 3
+    },
+    "workflow_instance_id": 80
+  }
+}
+2021-12-02 14:48:41,842 INFO [actions_component] Event: <mock_function_one[] (id=3, workflow=mock_workflow_one, user=admin@example.com) 2021-12-02 14:48:43.659000> Channel: functions.mock_function_one
+2021-12-02 14:48:41,845 DEBUG [client] Received heart-beat
+2021-12-02 14:48:41,846 DEBUG [debugger] <mock_function_one[functions.mock_function_one] (id=3, workflow=mock_workflow_one, user=admin@example.com) 2021-12-02 14:48:43.659000>
+2021-12-02 14:48:41,847 DEBUG [debugger] <Message_success[stomp] (<Message[stomp] ()>, None )>
+2021-12-02 14:48:41,951 DEBUG [debugger] <task[*] (<function app_function.__call__.<locals>.app_function_decorator.<locals>._invoke_app_function at 0x10e959510>, <mock_function_one[functions.mock_function_one] (*** workflow=mock_workflow_one, user=admin@example.com) 2021-12-02 14:48:43.659000> mock_input_text_with_value_string={'format': 'text', 'content': 'data value one  ล ฦ ว ศ ษ ส ห ฬ อ'}, mock_input_text='abc  à¸¥ à¸¦ à¸§ à¸¨ à¸© à¸ª à¸« à¸¬ à¸\xad abc', mock_input_boolean=True, mock_input_multiselect=[{'*** 'name': 'value one'}, {'*** 'name': 'value two'}], mock_input_select={'*** 'name': 'select two'}, mock_input_number=1630407352685)>
+2021-12-02 14:48:42,058 DEBUG [actions_component] Task: <function app_function.__call__.<locals>.app_function_decorator.<locals>._invoke_app_function at 0x10e959510>
+2021-12-02 14:48:42,062 DEBUG [decorators] Running _invoke_app_function in Thread: Thread-7
+2021-12-02 14:48:42,063 INFO [decorators] [mock_function_one] Validated function inputs
+2021-12-02 14:48:42,064 DEBUG [decorators] [mock_function_one] fn_inputs: {'mock_input_text_with_value_string': 'data value one  ล ฦ ว ศ ษ ส ห ฬ อ', 'mock_input_text': 'abc  à¸¥ à¸¦ à¸§ à¸¨ à¸© à¸ª à¸« à¸¬ à¸\xad abc', 'mock_input_boolean': True, 'mock_input_multiselect': ['value one', 'value two'], 'mock_input_select': 'select two', 'mock_input_number': 1630407352685}
+2021-12-02 14:48:42,067 INFO [decorators] [mock_function_one] StatusMessage: Starting App Function: 'mock_function_one'
+2021-12-02 14:48:42,068 INFO [funct_mock_function_one] fn_msg: {'function': {'creator': None, 'description': None, 'display_name': 'mock_function_one', 'id': 3, 'name': 'mock_function_one', 'tags': [{'tag_handle': {'display_name': 'fn_main_mock_integration', 'id': 9, 'name': 'fn_main_mock_integration'}, 'value': None}], 'uuid': None, 'version': None, 'view_items': [], 'workflows': []}, 'groups': [], 'inputs': {'mock_input_text_with_value_string': {'format': 'text', 'content': 'data value one  ล ฦ ว ศ ษ ส ห ฬ อ'}, 'mock_input_text': 'abc  à¸¥ à¸¦ à¸§ à¸¨ à¸© à¸ª à¸« à¸¬ à¸\xad abc', 'mock_input_boolean': True, 'mock_input_multiselect': [{'id': 55, 'name': 'value one'}, {'id': 56, 'name': 'value two'}], 'mock_input_select': {'id': 53, 'name': 'select two'}, 'mock_input_number': 1630407352685}, 'playbook_instance': None, 'principal': {'display_name': 'Admin User', 'id': 1, 'name': 'admin@example.com', 'type': 'user'}, 'workflow': {'actions': [], 'description': None, 'name': 'Mock Workflow One', 'object_type': {'id': 0, 'name': 'incident'}, 'programmatic_name': 'mock_workflow_one', 'tags': [{'tag_handle': {'display_name': 'fn_main_mock_integration', 'id': 9, 'name': 'fn_main_mock_integration'}, 'value': None}], 'uuid': None, 'workflow_id': 3}, 'workflow_instance': {'workflow': {'actions': [], 'description': None, 'name': 'Mock Workflow One', 'object_type': {'id': 0, 'name': 'incident'}, 'programmatic_name': 'mock_workflow_one', 'tags': [{'tag_handle': {'display_name': 'fn_main_mock_integration', 'id': 9, 'name': 'fn_main_mock_integration'}, 'value': None}], 'uuid': None, 'workflow_id': 3}, 'workflow_instance_id': 80}}
+2021-12-02 14:48:42,068 DEBUG [debugger] <StatusMessageEvent[*] ("Starting App Function: 'mock_function_one'" )>
+2021-12-02 14:48:42,074 DEBUG [debugger] <Send[*] ()>
+2021-12-02 14:48:42,080 DEBUG [stomp_component] send()
+2021-12-02 14:48:42,083 DEBUG [client] Sending SEND frame [headers={'correlation-*** 'destination': '/queue/acks.201.fn_main_mock_integration'}, body=b'{"message_type": 0, ...', version=1.2]
+2021-12-02 14:48:42,088 DEBUG [stomp_component] Message sent
+2021-12-02 14:48:42,090 DEBUG [debugger] <Send_success[*] (<Send[*] ()>, None )>
+2021-12-02 14:48:42,400 DEBUG [connectionpool] https://xxx.xxx.xxx:443 "GET /rest/orgs/201/incidents/2095 HTTP/1.1" 200 None
+2021-12-02 14:48:42,674 DEBUG [connectionpool] https://xxx.xxx.xxx:443 "GET /rest/orgs/201/functions/mock_function_one?handle_format=names HTTP/1.1" 200 None
+2021-12-02 14:48:42,680 INFO [decorators] [mock_function_one] StatusMessage: Finished running App Function: 'mock_function_one'
+2021-12-02 14:48:45,298 DEBUG [debugger] <StatusMessageEvent[*] ("Finished running App Function: 'mock_function_one'" )>
+2021-12-02 14:48:47,121 DEBUG [actions_component] [mock_function_one] Result: {'version': 2.0, 'success': True, 'reason': None, 'content': {'mock_key': 'Mock Value!'}, 'raw': None, 'inputs': {'mock_input_text_with_value_string': 'data value one  ล ฦ ว ศ ษ ส ห ฬ อ', 'mock_input_text': 'abc  à¸¥ à¸¦ à¸§ à¸¨ à¸© à¸ª à¸« à¸¬ à¸\xad abc', 'mock_input_boolean': True, 'mock_input_multiselect': ['value one', 'value two'], 'mock_input_select': 'select two', 'mock_input_number': 1630407352685}, 'metrics': {'version': '1.0', 'package': 'fn-main-mock-integration', 'package_version': '1.0.3', 'host': 'xxxs-MacBook-Pro-2.local', 'execution_time_ms': 3233, 'timestamp': '2021-12-02 14:48:45'}}
+2021-12-02 14:48:45,300 INFO [decorators] [mock_function_one] Returning results
+2021-12-02 14:48:45,301 DEBUG [debugger] <Send[*] ()>
+2021-12-02 14:48:46,796 DEBUG [stomp_component] send()
+2021-12-02 14:48:46,797 DEBUG [client] Sending SEND frame [headers={'correlation-*** 'destination': '/queue/acks.201.fn_main_mock_integration'}, body=b'{"message_type": 0, ...', version=1.2]
+2021-12-02 14:48:46,798 DEBUG [stomp_component] Message sent
+2021-12-02 14:48:46,801 DEBUG [debugger] <Send_success[*] (<Send[*] ()>, None )>
+2021-12-02 14:48:46,904 DEBUG [debugger] <task_done[*] ([<resilient_circuits.action_message.FunctionResult object at 0x10e72ae10>] )>
+2021-12-02 14:48:46,905 DEBUG [debugger] <task_success[*] (<task[*] (<function app_function.__call__.<locals>.app_function_decorator.<locals>._invoke_app_function at 0x10e959510>, <mock_function_one[functions.mock_function_one] (*** workflow=mock_workflow_one, user=admin@example.com) 2021-12-02 14:48:43.659000> mock_input_text_with_value_string={'format': 'text', 'content': 'data value one  ล ฦ ว ศ ษ ส ห ฬ อ'}, mock_input_text='abc  à¸¥ à¸¦ à¸§ à¸¨ à¸© à¸ª à¸« à¸¬ à¸\xad abc', mock_input_boolean=True, mock_input_multiselect=[{'*** 'name': 'value one'}, {'*** 'name': 'value two'}], mock_input_select={'*** 'name': 'select two'}, mock_input_number=1630407352685)>, [<resilient_circuits.action_message.FunctionResult object at 0x10e72ae10>] )>
+2021-12-02 14:48:47,116 DEBUG [debugger] <mock_function_one_success[functions.mock_function_one] (<mock_function_one[functions.mock_function_one] (id=3, workflow=mock_workflow_one, user=admin@example.com) 2021-12-02 14:48:43.659000>, [<resilient_circuits.action_message.FunctionResult object at 0x10e72ae10>] )>
+2021-12-02 14:48:47,117 DEBUG [actions_component] success! [<resilient_circuits.action_message.FunctionResult object at 0x10e72ae10>], <mock_function_one[functions.mock_function_one] (id=3, workflow=mock_workflow_one, user=admin@example.com) 2021-12-02 14:48:43.659000>
+2021-12-02 14:48:47,118 DEBUG [actions_component] Message: Completed
+2021-12-02 14:48:47,120 DEBUG [actions_component] Ack ID:xxx.xxx.xxx-35545-1634461020363-3:2:2287:1:1
+2021-12-02 14:48:47,121 DEBUG [actions_component] [mock_function_one] Result: {'version': 2.1, 'success': True, 'reason': None, 'content': {'mock_key': 'Mock Value!'}, 'raw': None, 'inputs': {'mock_input_text_with_value_string': 'data value one  ล ฦ ว ศ ษ ส ห ฬ อ', 'mock_input_text': 'abc  à¸¥ à¸¦ à¸§ à¸¨ à¸© à¸ª à¸« à¸¬ à¸\xad abc', 'mock_input_boolean': True, 'mock_input_multiselect': ['value one', 'value two'], 'mock_input_select': 'select two', 'mock_input_number': 1630407352685}, 'metrics': {'version': '1.0', 'package': 'fn-main-mock-integration', 'package_version': '1.0.3', 'host': 'xxxs-MacBook-Pro-2.local', 'execution_time_ms': 3233, 'timestamp': '2021-12-02 14:48:45'}}
+2021-12-02 14:48:47,121 DEBUG [actions_component] [mock_function_one_but_really_really_really_really_really_really_really_really_long] Result: {'version': 2.1, 'success': True, 'reason': None, 'content': {'mock_key': 'Mock Value!'}, 'raw': None, 'inputs': {'mock_input_text_with_value_string': 'data value one  ล ฦ ว ศ ษ ส ห ฬ อ', 'mock_input_text': 'abc  à¸¥ à¸¦ à¸§ à¸¨ à¸© à¸ª à¸« à¸¬ à¸\xad abc', 'mock_input_boolean': True, 'mock_input_multiselect': ['value one', 'value two'], 'mock_input_select': 'select two', 'mock_input_number': 1630407352685}, 'metrics': {'version': '1.0', 'package': 'fn-main-mock-integration', 'package_version': '1.0.3', 'host': 'xxxs-MacBook-Pro-2.local', 'execution_time_ms': 3233, 'timestamp': '2021-12-02 14:48:45'}}
+2021-12-02 14:48:47,123 DEBUG [debugger] <Ack[*] ()>
+2021-12-02 14:48:47,125 DEBUG [stomp_component] ack_frame()
+2021-12-02 14:48:47,127 DEBUG [client] Sending ACK frame [headers={'*** version=1.2]
+2021-12-02 14:48:47,129 DEBUG [stomp_component] Ack Sent
+2021-12-02 14:48:47,130 DEBUG [debugger] <Send[*] ()>
+2021-12-02 14:48:47,131 DEBUG [stomp_component] send()
+2021-12-02 14:48:47,132 DEBUG [client] Sending SEND frame [headers={'correlation-*** 'destination': '/queue/acks.201.fn_main_mock_integration'}, body=b'{\n  "message_type": ...', version=1.2]
+2021-12-02 14:48:47,134 DEBUG [stomp_component] Message sent
+2021-12-02 14:48:47,135 DEBUG [debugger] <Ack_success[*] (<Ack[*] ()>, None )>
+2021-12-02 14:48:47,137 DEBUG [debugger] <Send_success[*] (<Send[*] ()>, None )>

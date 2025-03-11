@@ -1,0 +1,221 @@
+**2025-02: version 51.0.5.0**
+* No changes
+
+**2024-12: version 51.0.4.0
+* No changes
+
+**2024-07: version 51.0.2.2**
+* Update dependency version of setuptools version to 70.3.x to address CVE-2024-6345
+
+**2024-07: version 51.0.2.1**
+
+* All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12. To continue using
+  SOAR libraries on earlier versions of Python, use v52.0.2.0.974
+
+**2024-05: version 51.0.2.0**
+
+* Added official support for Python 3.12
+
+**2024-04: version 51.0.1.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2024-02: version 51.0.1.0**
+
+* All SOAR Python libraries now officially support Python 3.11
+* Updated ``pytz`` dependency requirement to ``~= 2024.1``
+* Updated ``jinja2`` dependency requirement to ``~= 3.1`` to address CVE-2024-22195
+
+**2024-01: version 51.0.0.2**
+
+* Improve debug logs for retry parameters in :class:`resilient_lib.RequestsCommon.execute() <resilient_lib.components.requests_common.RequestsCommon.execute>`
+* Added internal UI components for HTML Blocks and Headers as well as Summary Section functionality
+
+**2023-11: version 51.0.0.0**
+
+* Added optional retry to :class:`resilient_lib.RequestsCommon.execute() <resilient_lib.components.requests_common.RequestsCommon.execute>`.
+  This allows developers to control the retry behavior of failed requests. See
+  :class:`resilient_lib.RequestsCommon.execute() <resilient_lib.components.requests_common.RequestsCommon.execute>` for more details and examples
+
+**2023-10: version 50.1**
+
+* Unit test improvements to better handle flaky ``requests`` tests
+
+**2023-08: version 50.0**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2023-07: version 49.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2023-05: version 49.0**
+
+* Added new functions for pollers to interact with SOAR
+
+**2023-04: version 48.1**
+
+* Updated SOAR case default filters for poller helper methods
+
+**2023-02: version 48.0**
+
+* Added support for ``verify`` config in app.config when using
+  :class:`resilient_lib.RequestsCommon.execute() <resilient_lib.components.requests_common.RequestsCommon.execute>`.
+  ``verify`` now can be set to ``True``, ``False``, or ``<path_to_your_custom_CA_bundle>`` to control the value used
+  when verifying SSL certificates. This change is backward compatible with any apps that use ``RequestsCommon.execute()``
+  so any apps updated to run on v48.0 will pull in these changes and the ``verify`` configuration will be supported for that app
+* Updated :class:`resilient_lib.RequestsCommon <resilient_lib.components.requests_common.RequestsCommon>` to take advantage
+  of persistent sessions from the ``requests`` library using ``requests.Session()``. This has multiple advantages,
+  including cookies persisting from the endpoint and significant performance increases when connecting to the same host.
+  If non-session objects are desired, switch your code to use the new class
+  :class:`resilient_lib.RequestsCommonWithoutSession <resilient_lib.components.requests_common.RequestsCommonWithoutSession>`
+  which behaves the same as the old ``RequestsCommon`` would
+* Updated project to use ``pyproject.toml`` and ``setup.cfg`` metadata files. Build backend continues to use ``setuptools``.
+  Instead of directly invoking setup.py to get a sdist or wheel, use ``build`` as a build frontend:
+
+  .. code-block:: bash
+
+      pip install build
+      python -m build
+
+**2022-12: version 47.1**
+
+* :class:`resilient_lib.RequestsCommon.get_client_auth() <resilient_lib.components.requests_common.RequestsCommon.get_client_auth>` renamed from ``get_clientauth``. Alias provided for ``get_clientauth`` for backward compatiblity. Please use :class:`get_client_auth() <resilient_lib.components.requests_common.RequestsCommon.get_client_auth>` from now on
+
+**2022-11: version 47.0**
+
+* Support for poller-based apps added with new `Common Poller Methods`_,
+  including ``resilient_lib.poller()`` decorator and ``resilient_lib.SOARCommon``
+  class of common SOAR methods
+
+**2022-08: version 46.0**
+
+* ``build_incident_url`` urlencodes it's ``orgId``
+
+**2022-07: version 45.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2022-05: version 45.0**
+
+* Added ``build_task_url`` to build direct links to incident Tasks
+* Updated ``build_incident_url`` to support appending Organization ID queries
+* Added ``client_auth_cert`` and ``client_auth_key`` options for client side certificates.
+  These can be specified per app in the relevant [fn_some_app] section of the app.config
+  and will be used in any requests made through ``resilient_lib.RequestsCommon``.
+
+**2022-04: version 44.1**
+
+* Added `Common Jinja Methods`_ for help with using Jinja in your App
+
+**2022-02: version 44.0**
+
+* Ensure ``tests/`` is not included in packaged code
+* Officially support ``Python 3.9``
+
+**2022-01: version 43.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-11: version 43.0**
+
+* Formatted Sphinx documentation and hosted it at https://ibm.biz/soar-python-docs
+* ``validate_fields`` also handles a ``namedtuple``
+
+**2021-11: version 42.3**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-10: version 42.2**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-08: version 42.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-08: version 42.0**
+
+* Added support for ``HTTP_PROXY``, ``HTTPS_PROXY`` and ``NO_PROXY`` environmental variables. See the App Host Deployment Guide for details.
+* Fix to OAuth2 to avoid infinite loop in some circumstances.
+
+**2021-06: version 41.1**
+
+* Added ``execute`` as an alias for ``execute_call_v2``
+* Bug fixes
+
+**2021-05: version 41.0**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-03: version 40.2**
+
+* Bug fix for to use ``setuptools_scm < 6.0.0`` for Python 2.7 environments
+
+**2021-03: version 40.1**
+
+* No major changes. Just bumping build number to coincide with other builds
+
+**2021-02: version 40.0**
+
+* bug fixes
+
+**2020-12: version 39**
+
+* add a capability to close an incident
+* fixes a bug where timeout defined in function section is not processed as an int
+
+**2020-09: version 38**
+
+* ``validate_fields`` now handles a field if it's type is **Text with value string**
+
+**2020-05: version 37**
+
+* ``execute_call_v2``
+* might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs.
+
+**2020-04: version 36.2.dev**
+
+* ``execute_call_v2`` might give an error when debugging with PyCharm. Added a workaround in a comment above the line where it occurs.
+
+**2020-01-16: version 35.0.195**
+
+* Added OAuth2 Client Credentials workflow handler
+* Added support for timeout argument in integrations config section
+
+**2019-10-07: version 34.0.194**
+
+* Add functionality to resilient_lib to upload attachment
+* Added support for a timeout parameter across all integrations using the ``execute_call_v2()`` function
+
+**2019-08-02: version 33.0.189**
+
+* Added support for API key and API key secret, now able to authenticate
+  using API keys instead of email/password
+* New functions added to ``resilient-lib``
+    * ``get_file_attachment_metadata()``
+    * ``write_to_tmp_file()``
+* Updated ``validate_fields()`` function in ``resilient-lib``,
+  adding the ability to validate fields in app.config
+* Other minor bug fixes.
+
+**2019-07-03: version 32.0.186**
+
+*  Added more flexible ``execute_call_v2()`` method in ``resilient-lib``
+*  Fix for deprecated log warnings
+*  Other minor bug fixes
+
+**2019-04-12: version 32.0.140**
+
+*  Improvements to ``resilient-lib``
+*  Other minor bug fixes/improvements
+
+**2019-03-06: version 32.0.126**
+
+* Removed ``selftest`` from function template
+* Improvements to ``resilient-lib``
+
+**2019-01-15: version 32.0**
+
+* Added ``resilient-lib`` to repo and PyPi - common library calls which facilitate the development of functions for IBM Resilient
+* Added Sphinx documentation builder

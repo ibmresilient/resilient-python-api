@@ -1,0 +1,65 @@
+{
+    "is_saml": false, 
+    "user_id": 1, 
+    "csrf_token": "79945884c2e6f2339cbffbbaba01f17b", 
+    "user_lname": "Engine", 
+    "saml_alias": null, 
+    "user_email": "integrations@example.com", 
+    "user_fname": "Orchestration", 
+    "session_ip": "192.168.56.1", 
+    "orgs": [
+        {
+            "zip": null, 
+            "supports_ldap": false, 
+            "twofactor_auth_domain": null, 
+            "authorized_ldap_group": null, 
+            "has_available_twofactor": false, 
+            "name": "Other Mock Org", 
+            "tasks_private": false, 
+            "perms": {
+                "observer": false, 
+                "master_administrator": true, 
+                "administrator": false, 
+                "create_incs": true, 
+                "create_shared_layout": true
+            }, 
+            "twofactor_cookie_lifetime_secs": 0, 
+            "require_saml": false, 
+            "addr2": null, 
+            "addr": null, 
+            "state": null, 
+            "city": "AnyCity", 
+            "attachments_enabled": true, 
+            "enabled": true, 
+            "id": 201, 
+            "has_saml": false
+        }, 
+        {
+            "zip": null, 
+            "supports_ldap": false, 
+            "twofactor_auth_domain": null, 
+            "authorized_ldap_group": null, 
+            "has_available_twofactor": false, 
+            "name": "Test Organization", 
+            "tasks_private": false, 
+            "perms": {
+                "observer": false, 
+                "master_administrator": true, 
+                "administrator": false, 
+                "create_incs": true, 
+                "create_shared_layout": true
+            }, 
+            "twofactor_cookie_lifetime_secs": 0, 
+            "require_saml": false, 
+            "addr2": null, 
+            "addr": null, 
+            "state": null, 
+            "city": null, 
+            "attachments_enabled": true, 
+            "enabled": true, 
+            "id": 202, 
+            "has_saml": false
+        }
+    ], 
+    "is_ldap": false
+}

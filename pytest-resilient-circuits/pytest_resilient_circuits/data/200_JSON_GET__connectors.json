@@ -1,0 +1,13 @@
+{
+	"queues": [{
+		"connector_id": 1,
+		"connector_display_name": "Virustotal",
+		"queue_name": "connectors.202.mynewqueue"
+	},
+    {
+		"connector_id": 2,
+		"connector_display_name": "NotVirustotal",
+		"queue_name": "connectors.202.mynewqueuetwo"
+	}],
+	"org_id": 202
+}

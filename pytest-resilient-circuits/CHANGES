@@ -1,0 +1,284 @@
+2024-07: version 51.0.2.2
+* Update dependency version of setuptools version to 70.3.x to address CVE-2024-6345
+
+2024-07: version 51.0.2.1
+* All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12.
+  To continue using SOAR libraries on earlier versions of Python, use v52.0.2.0.974
+
+2024-05: version 51.0.2.0
+* Added official support for Python 3.12
+
+2024-02: version 51.0.1.0
+* No major changes. Just bumping build number to coincide with other builds
+
+2023-11: version 51.0.0.0
+* No major changes. Just bumping build number to coincide with other builds
+
+2023-10: version 50.1
+* No major changes. Just bumping build number to coincide with other builds
+
+2023-08: version 50.0
+* No major changes. Just bumping build number to coincide with other builds
+
+2023-07: version 49.1
+* No major changes. Just bumping build number to coincide with other builds
+
+2023-05: version 49.0
+* No major changes. Just bumping build number to coincide with other builds.
+
+2023-02: version 48.0
+* Updated project to use ``pyproject.toml`` and ``setup.cfg`` metadata files. Build backend continues to use ``setuptools``.
+  Instead of directly invoking setup.py to get a sdist or wheel, use ``build`` as a build frontend:
+
+  .. code-block:: bash
+
+      pip install build
+      python -m build
+
+2022-08: version 46.0
+* Add ability to set ``IS_SELFTEST`` parameter when invoking the ``circuits_app`` fixture. Example:
+
+  .. code-block::
+
+    class TestIsNotASelftestActionsComponent:
+
+        @pytest.mark.parametrize("circuits_app", [{"IS_SELFTEST": False}], indirect=True)
+        def test_is_this_a_selftest_action_component(self, circuits_app):
+         assert helpers.is_this_a_selftest(circuits_app.app.action_component) is False
+* Extended the capability for the fixture ``fx_mock_resilient_client`` to support more mocked endpoints
+
+
+2022-05: version 45.0
+* No major changes. Just bumping build number to coincide with other builds.
+
+2021-03: version 40.1
+* No major changes. Just bumping build number to coincide with other builds
+
+2020-09-21 version 39.0
+
+* added mock for patch
+
+2019-10-07: version 34.0.194
+
+* Fixed the namespace issue causing the plugin to be unusable with latest pytest.
+
+
+2019-08-02: version 33.0.189
+
+* Added support for API key and API key secret, now able to authenticate
+  using API keys instead of email/password
+* New functions added to resilient-lib
+    'get_file_attachment_metadata()'
+    'write_to_tmp_file()'
+* Updated 'validate_fields()' function in resilient-lib,
+  adding the ability to validate fields in app.config
+* Other minor bug fixes.
+
+
+
+2019-07-03: version 32.0.186
+
+*  Added more flexible 'execute_call_v2()' method in resilient-lib
+*  Fix for deprecated log warnings
+*  Other minor bug fixes
+
+
+2019-04-12: version 32.0.140
+
+*  Fix for exposed Resilient passwords in resilient-circuits log when run in DEBUG mode
+*  'codegen' creates setup.py files which will programmatically compute function component entry points
+*  Added WorkflowStatus class
+*  Running 'codegen', 'codegen --reload', and 'extract' now automatically creates export files in Resilient to run against. Manually export no longer needed
+*  'extract' will now extract all data associated with playbooks including Tasks, Scripts, and custom Artifact Types
+*  Support for activemq hosted externally (ISC)
+*  Improvements to 'resilient-lib'
+*  Other minor bug fixes/improvements
+
+
+2019-03-06: version 32.0.126
+
+Removed selftest from function template
+Improvements to resilient-lib
+
+
+2019-01-15: version 32.0
+
+Added `resilient-lib` to repo and PyPi - common library calls which facilitate the development of functions for IBM Resilient
+Added Sphinx documentation builder
+Fixed an issue with `resilient-circuits extract`
+
+
+2018-12-05: version 31.0
+
+Add 'resilient-circuits selftest' command to call selftest functions for every package and prints their return state
+Add 'resilient-circuits clone' Clone Resilient workflows
+Add 'resilient-circuits codegen --reload' command to reload existing package
+Add 'resilient-circuits extract' command to extract customization data into a single file
+Added support for specifying lists of packages to run 'config/customize/selftest' against
+Added 'rc-webserver' and 'rc-cts' to repo and PyPi
+Added codegen improvements
+Jinja template imporvements
+Bug Fixes
+
+
+2018-04-15: version 30.0
+
+Add '@function' decorator to implement workflow functions
+Add 'resilient-circuits test' command to replace res-action-test
+Add 'resilient-circuits codegen' command to generate boilerplate functions and installable packages
+Add 'resilient-circuits customize' command to import customizations from installed packages
+Fix an issue with keyring values outside the [resilient] config section
+Fix various issues with pytest-resilient-circuits mocks and fixtures
+Update action message log format for greater readability
+Update 'resilient-circuits list' to show packages with no components
+Add '-v' flag to 'resilient-circuits list'
+
+
+2018-02-22: version 29.1.0
+
+Fix an issue with performance receiving STOMP messages
+
+
+2017-12-12: version 29.0.1
+
+Fix an issue with backward compatibility between 'co3' and 'resilient' package names
+
+
+2017-12-01: version 29.0.0
+
+New package versions: Published under the MIT open-source license.
+New package versions: Published to pypi.
+resilient: Refactoring base class to support minimal environments
+resilient-circuits: change default JINJA autoescape for safety
+pytest-resilient-circuits: support creating datatables in tests
+gadget: don't print labels to stdout
+
+
+2017-09-01: version 28.2.1
+
+change license to MIT
+rename 'co3' package to 'resilient'
+    NOTE: The module 'co3' is retained for backward compatibility, and most applications will still work
+      using 'import co3' after this change.  Applications that import from submodules (`import co3.co3.xxx`)
+      must be changed to import from 'resilient' instead.
+Add 'docs' for autogenerated package documentation
+
+
+2017-08-24: version 28.1.
+
+co3: add 'patch' method to SimpleClient for efficient field-level updates
+
+gadget: add '--patch' option
+gadget: use 'patch' instead of 'get_put' for '--update' actions
+gadget: fix a problem using 'gadget --list' with unicode characters in incident names
+
+resilient-circuits: fix a problem with python3 handling unicode surrogate pairs (e.g. emoji) in action messages
+resilient-circuits: add 'idna' and 'punycode' JINJA filters for domain encoding
+resilient-circuits: add '--config-file' commandline argument
+resilient-circuits: fix various performance and reliability issues
+
+
+2017-06-22: version 28.0.33
+
+co3: disable the ConfigParser '%' interpolation feature
+
+
+2017-06-14: version 28.0.30
+
+co3: Add get_const() to get the ConstREST endpoint
+co3: Add search() to post to the SearchExREST endpoint (only for v28+ servers)
+     (Note: there is no method to call the deprecated 'searchREST' endpoint from earlier versions)
+co3: Add --search option and artifact_search.json example to 'gadget'
+co3: Fix proxy support, adding config options: proxy_host, proxy_port, proxy_user, proxy_password
+co3: Remove 'stomp.py' dependency, resilient_circuits now uses stompest library
+co3: New 'res-keyring' command-line utility to store secrets in the keyring
+co3: Move the keyring and env argument parser from resilient_circuits into co3,
+     so all config files can make use of '^xxx' (keyring) and '$xxx' (environment) values
+co3: Add a dependency on 'keyring' package
+
+resilient-circuits: Change the STOMP protocol implementation from 'stomp.py' to 'stompest' library,
+     with a significant refactoring, for better reliability and maintainability.
+resilient-circuits: Add support for STOMP connections via proxy server.
+resilient-circuits: Add a dependency on 'stompest' and 'pysocks' packages
+resilient-circuits: Remove old 'stomp.py'-based examples
+resilient-circuits: Name unnamed actions, e.g. those initiated from v28 workflow, as '_unnamed_'
+resilient-circuits: Defer subscribing to queues until all components have loaded
+resilient-circuits: Fix a problem with international characters in 'get_action_field_label()'
+resilient-circuits: Fix a problem with international characters in status messages and exceptions
+resilient-circuits: Change to the 'app_restartable' functionality to remove a memory leak and streamline.
+     Instead of fully unloading and reloading components on configuration file changes,
+     Components are instead sent a 'reload' event.
+resilient-circuits: Update the file_lookup example to handle the reload event
+
+
+2017-04-27: version 27.1.22
+
+co3: Remove 'dist', instead releases are available on https://github.com/Co3Systems/co3-api/releases
+co3: Minor modifications to automated build numbering
+
+resilient-circuits: Remove 'dist', instead releases are available on https://github.com/Co3Systems/co3-api/releases
+resilient-circuits: Build numbering to track the 'co3' module; depend where version is >= major.minor
+resilient-circuits: Config entry 'stomp_cafile' to support using different TLS certificates for STOMP and REST
+resilient-circuits: Bugfix in 'app_restartable' configuration file handling
+
+
+2017-04-21: version 27.1.13
+
+co3: Remember the available orgs that the user can log in to
+co3: Add 'post_artifact_file' method to support posting file (binary) artifacts
+co3: Add 'cached_get' method and '--cache-ttl' commandline option
+co3: Add 'get_client' helper function to properly construct a SimpleClient from options
+co3: For Debian OS, specify exact version of the 'keyring' dependency
+co3: Use configuration file ($APP_CONFIG_FILE or ./app.config or ~/.resilient/app.config) for utility scripts
+co3: Move the utility scripts 'gadget' and 'finfo' into the co3 module, installed as executables
+co3: Add support for tests
+Internal procedure change to use CI build process to produce the distribution package
+
+resilient-circuits: Various updates for reliability
+resilient-circuits: New support for packaged installable application components
+resilient-circuits: New 'resilient-circuits' utility executable to configure and run applications
+resilient-circuits: Make 'components' directory optional
+resilient-circuits: Updated configuration file locations ($APP_CONFIG_FILE or ./app.config or ~/.resilient/app.config)
+resilient-circuits: Log the servername at startup
+
+pytest-resilient-circuits: New framework for tests and mocks
+
+
+2017-02-17: version 27.0.0
+
+Licensing change to "IBM Resilient"
+co3: Support UTF8 strings in co3 module
+co3: Support UTF8 characters in configuration files
+co3: Add optional 'timeout' parameter to REST calls
+co3: Add 'NoChange' to optimize get/put
+co3: Fix 'post_attachment()' to guess MIME-type based on the filename
+
+resilient-circuits: Add documentation for reading configuration values from keystore with 'key=^VALUE' syntax
+resilient-circuits: Add an option for reading configuration values from the environment with 'key=$VALUE' syntax
+resilient-circuits: Add '@debounce()' decorator for event handler functions
+resilient-circuits: Add '--noload' option to skip loading specific components
+resilient-circuits: Load components in a deterministic order (alphabetically)
+resilient-circuits: Better handle connecting to Resilient without Action Module enabled
+resilient-circuits: Better consistency with REST API in TLS certificate verification
+
+
+2016-08-10: version 26.0.3
+
+Add requirements.txt for easier offline downloading of Python dependencies
+
+
+2016-08-10: version 26.0.2
+
+resilient-circuits: Fix issue when unsubscribing from STOMP queues
+
+
+2016-08-01: version 26.0.1
+
+resilient-circuits: Allow override of password prompting
+resilient-circuits: Allow blank config values
+resilient-circuits: Fix an issue with 'app-restartable' updating too often
+resilient-circuits: Fix an issue with events for non-string channel ids
+resilient-circuits: Fix an issue with loading some action components
+
+
+2016-06-29: version 26.0.0
