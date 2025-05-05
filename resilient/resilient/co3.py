@@ -667,7 +667,7 @@ class SimpleClient(co3base.BaseClient):
             _raise_if_error(ex.get_response())
         return response
 
-    def search(self, payload, co3_context_token=None, timeout=None):
+    def search(self, payload, co3_context_token=None, timeout=None, headers=None):
         """
         Posts to the ``SearchExREST`` endpoint.
 
@@ -681,6 +681,7 @@ class SimpleClient(co3base.BaseClient):
         :type co3_context_token: str
         :param timeout: Optional timeout (seconds).
         :type timeout: int
+        :param headers: optional headers to include
         :return: List of results, as an array of ``SearchExResultDTO``
         :rtype: list
         :raises SimpleHTTPException: if an HTTP exception occurs.
@@ -692,7 +693,7 @@ class SimpleClient(co3base.BaseClient):
                                          data=payload_json,
                                          proxies=self.proxies,
                                          cookies=self.cookies,
-                                         headers=self.make_headers(co3_context_token),
+                                         headers=self.make_headers(co3_context_token, additional_headers=headers),
                                          verify=self.verify,
                                          timeout=timeout)
         _raise_if_error(response)
