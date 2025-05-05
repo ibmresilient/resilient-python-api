@@ -445,8 +445,13 @@ class BaseClient(object):
 
         return result
 
-    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None, get_response_object=None,
-            skip_retry=[]):
+    def get(self, uri,
+            co3_context_token=None,
+            timeout=None,
+            is_uri_absolute=None,
+            get_response_object=None,
+            skip_retry=[],
+            headers=None):
         """Gets the specified URI.  Note that this URI is relative to <base_url>/rest/orgs/<org_id>.  So
         for example, if you specify a uri of /incidents, the actual URL would be something like this:
 
@@ -458,7 +463,9 @@ class BaseClient(object):
           timeout: number of seconds to wait for response
           is_uri_absolute: if True, does not insert /org/{org_id} into the uri
           get_response_object: if True, returns the response object rather than the json of the response.text
-          skip_retry: list of HTTP responses to skip throwing an exception
+          skip_retry: optional list of http status codes to skip retry operations and throwing an exception
+          headers: optional dictionary of headers to include in the GET API call
+
         Returns:
           A dictionary, array, or response object with the value returned by the server.
         Raises:
@@ -478,7 +485,7 @@ class BaseClient(object):
                                       url,
                                       proxies=self.proxies,
                                       cookies=self.cookies,
-                                      headers=self.make_headers(co3_context_token),
+                                      headers=self.make_headers(co3_context_token, additional_headers=headers),
                                       verify=self.verify,
                                       timeout=timeout,
                                       cert=self.cert)
