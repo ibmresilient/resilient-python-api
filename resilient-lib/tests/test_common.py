@@ -15,7 +15,7 @@ from resilient_lib.components.resilient_common import (
     build_incident_url, build_resilient_url, build_task_url, clean_html,
     close_incident, get_file_attachment, get_file_attachment_metadata,
     get_file_attachment_name, readable_datetime, str_to_bool, unescape,
-    validate_fields, write_file_attachment, write_to_tmp_file)
+    validate_fields, write_file_attachment, write_to_tmp_file, get_artifacts)
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
@@ -372,13 +372,7 @@ class TestWriteAttachments:
 
     @pytest.mark.livetest
     def test_write_file_attachment(self):
-        config = configparser.ConfigParser()
-        with open(resilient.get_config_file(), 'r') as f:
-            config.read_file(f)
-
-        LOG.info(config)
-        # Connect to Resilient
-        client = resilient.get_client(dict(config['resilient']))
+        client = get_res_client()
 
         inc = self._create_incident(client, {"name": "test for attachment"})
 
@@ -391,3 +385,45 @@ class TestWriteAttachments:
 
         assert response
         assert response['name'] == file_name
+
+class TestGetArtifacts:
+    @pytest.mark.livetest
+    def test_get_artifacts(self):
+        client = get_res_client()
+
+        result_list = get_artifacts(client, 3138)
+
+        assert isinstance(result_list, list)
+
+    @pytest.mark.livetest
+    def test_get_artifacts_query_paged(self):
+        client = get_res_client()
+
+        filters = { 
+            "start": 0,
+            "length": 25,
+            "filters": [
+                {
+                    "conditions": [{
+                        "field_name": "type",
+                        "method": "equals",
+                        "value": 1 # IP Address
+                    }]
+                }
+            ]
+        }
+
+        headers = {"handle_format": "names"}
+
+        result_list = get_artifacts(client, 3138, query_filters=filters, headers=headers)
+        assert isinstance(result_list, list)
+        assert result_list[0].get("type") == "IP Address"
+
+
+def get_res_client():
+    config = configparser.ConfigParser()
+    with open(resilient.get_config_file(), 'r') as f:
+        config.read_file(f)
+
+    # Connect to Resilient
+    return resilient.get_client(dict(config['resilient']))

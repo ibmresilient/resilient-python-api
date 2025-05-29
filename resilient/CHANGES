@@ -1,3 +1,7 @@
+**2025-05: version 51.0.6.0**
+* Added support for API headers with the **search** function
+* Added support for API headers with the **get** function
+
 **2025-02: version 51.0.5.0**
 * No changes
 

@@ -358,7 +358,14 @@ class SimpleClient(co3base.BaseClient):
     def _get_cache(self):
         return self.cache
 
-    def get(self, uri, co3_context_token=None, timeout=None, is_uri_absolute=None, get_response_object=None, skip_retry=[]):
+    def get(self,
+            uri,
+            co3_context_token=None,
+            timeout=None,
+            is_uri_absolute=None,
+            get_response_object=None,
+            skip_retry=[],
+            headers=None):
         """Gets the specified URI.
 
         .. note::
@@ -376,6 +383,10 @@ class SimpleClient(co3base.BaseClient):
         :type is_uri_absolute: bool
         :param get_response_object: if True, returns entire response object.
         :type get_response_object: bool
+        :param skip_retry: optional list of http status codes to skip retry operations
+        :type skip_retry: list
+        :param headers: optional dictionary of headers to include in the GET API call
+        :type headers: dict
         :return: A dictionary, list, or response object with the value returned by the server.
         :rtype: dict | list | Response
         :raises SimpleHTTPException: if an HTTP exception occurs.
@@ -383,7 +394,13 @@ class SimpleClient(co3base.BaseClient):
         # Call get from BaseClient, convert exception if there is any
         response = None
         try:
-            response = super(SimpleClient, self).get(uri, co3_context_token, timeout, is_uri_absolute, get_response_object, skip_retry=skip_retry)
+            response = super(SimpleClient, self).get(uri,
+                                                     co3_context_token,
+                                                     timeout,
+                                                     is_uri_absolute,
+                                                     get_response_object,
+                                                     skip_retry=skip_retry,
+                                                     headers=headers)
         except co3base.BasicHTTPException as ex:
             _raise_if_error(ex.get_response())
         return response
@@ -681,7 +698,8 @@ class SimpleClient(co3base.BaseClient):
         :type co3_context_token: str
         :param timeout: Optional timeout (seconds).
         :type timeout: int
-        :param headers: optional headers to include
+        :param headers: key/value pairs for additional headers. ex: {"handle_format": "names"}
+        :type headers: dict | None
         :return: List of results, as an array of ``SearchExResultDTO``
         :rtype: list
         :raises SimpleHTTPException: if an HTTP exception occurs.
