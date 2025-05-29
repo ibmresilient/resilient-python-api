@@ -6,6 +6,9 @@ import requests
 
 log = logging.getLogger(__name__)
 
+DEFAULT_HEADERS = {
+    "Content-type": "application/x-www-form-urlencoded"
+}
 
 class OAuth2ClientCredentialsSession(requests.Session):
     """
@@ -92,14 +95,18 @@ class OAuth2ClientCredentialsSession(requests.Session):
 
         self.authenticate(url, client_id, client_secret, scope, proxies)
 
-    def authenticate(self, url, client_id, client_secret, scope, proxies=None):
+    def authenticate(self, url, 
+                     client_id, client_secret, 
+                     scope, 
+                     proxies=None,
+                     headers=DEFAULT_HEADERS):
         """
         Authenticate with the endpoint
         """
         token_url = url
 
         log.debug("Requesting token from {0}".format(url))
-        r = self.get_token(token_url, client_id, client_secret, scope, proxies)
+        r = self.get_token(token_url, client_id, client_secret, scope, proxies, headers=headers)
 
         log.info("Response status code: {}".format(r.status_code))
         r.raise_for_status()
@@ -118,7 +125,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
 
         return True
 
-    def get_token(self, token_url, client_id, client_secret, scope=None, proxies=None):
+    def get_token(self, token_url, client_id, client_secret, scope=None, proxies=None, headers=None):
         """
         **Override this method if the request needs specific information in the
         body of the request**
@@ -158,7 +165,7 @@ class OAuth2ClientCredentialsSession(requests.Session):
         }
         if scope:
             post_data['scope'] = scope
-        return self.post(token_url, data=post_data, proxies=proxies)
+        return self.post(token_url, data=post_data, proxies=proxies, headers=headers)
 
     def update_token(self):
         """
