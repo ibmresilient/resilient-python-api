@@ -2,6 +2,7 @@ import datetime
 import os
 
 import jinja2
+import jinja2.sandbox
 import pytest
 from resilient_lib import (global_jinja_env, make_payload_from_template,
                            render, render_json)
@@ -222,5 +223,19 @@ def test_soar_trimlist(str_list, expected_results):
 def test_global_jinja_env():
     env = global_jinja_env()
 
-    assert isinstance(env, jinja2.environment.Environment)
+    assert isinstance(env, jinja2.sandbox.SandboxedEnvironment)
     assert env.filters.get("soar_trimlist")
+
+def test_template_injection():
+    injection_template = """
+    {% for x in ().__class__.__base__.__subclasses__() %}
+        {% if "warning" in x.__name__ %}
+           {{
+                x()._module.__builtins__["__import__"]("os").system("id > /tmp/pwnd")
+           }}
+        {%endif%}
+    {%endfor%}
+    """
+
+    with pytest.raises(jinja2.exceptions.SecurityError):
+        render(injection_template, [])
