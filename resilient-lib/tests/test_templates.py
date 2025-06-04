@@ -2,7 +2,6 @@ import datetime
 import os
 
 import jinja2
-import jinja2.sandbox
 import pytest
 from resilient_lib import (global_jinja_env, make_payload_from_template,
                            render, render_json)
