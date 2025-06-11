@@ -111,7 +111,8 @@ import sys
 import time
 
 import pytz
-from jinja2 import Environment, Undefined, select_autoescape
+from jinja2 import Undefined, select_autoescape
+from jinja2.sandbox import SandboxedEnvironment as Environment
 from jinja2.exceptions import TemplateError, TemplateSyntaxError
 from resilient_lib import readable_datetime
 

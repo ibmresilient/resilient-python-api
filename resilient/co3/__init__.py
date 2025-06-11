@@ -13,4 +13,4 @@ except PackageNotFoundError:
 
 from resilient import *
 
-warnings.warn("The 'co3' module is deprecated, use 'resilient' instead", DeprecationWarning)
+warnings.warning("The 'co3' module is deprecated, use 'resilient' instead", DeprecationWarning)

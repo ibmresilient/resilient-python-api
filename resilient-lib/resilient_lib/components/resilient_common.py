@@ -676,3 +676,27 @@ def _patch_to_close_incident(res_client, incident_id, close_fields, handle_names
     response = res_client.patch(uri, patch)
 
     return response
+
+def get_artifacts(res_client, incident_id, query_filters=None, headers=None):
+    """ This functions makes it easy to replace API calls to GET /incidents/{inc_id}/artifacts
+        It uses query_paged capabilities which are the supported way to get artifacts
+
+    :param res_client: SimpleClient
+    :type res_client: SimpleClient
+    :param incident_id: incident id
+    :type incident_id: int
+    :param query_filters: any query parameters 
+    :type query_filters: None | dict
+    :param headers: any headers to include, such as handle_format=names 
+    :type headers: None | dict
+    :return: list of returned artifacts
+    :rtype: list
+    """
+    uri = "/incidents/{}/artifacts/query_paged".format(incident_id)
+
+    result = res_client.post(uri, query_filters if query_filters else {}, headers=headers)
+
+    if result and isinstance(result, dict):
+        return result.get("data", [])
+    
+    return None

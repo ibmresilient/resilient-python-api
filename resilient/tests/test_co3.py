@@ -6,6 +6,7 @@ import json
 
 import pytest
 from mock import patch
+from requests import Response
 
 import resilient
 from resilient.co3 import SimpleHTTPException
@@ -266,3 +267,27 @@ def test_simple_client_raises_error_with_skip_retry(fx_simple_client):
 
     # key is that this is only 1 call, no retries were made since skip_retry was set
     assert requests_adapter.call_count == 1
+
+def test_simple_client_search_ex_headers(fx_simple_client):
+    test_headers = {"handle_format": "names"}
+    def test_execute_request(method,
+                             url,
+                             data=None,
+                             proxies=None,
+                             cookies=None,
+                             headers=None,
+                             verify=None,
+                             timeout=None):
+        """ test that the headers are set from the search method """
+        for k,v in test_headers.items():
+            assert k in headers
+            assert headers[k] == v
+        resp =  Response()
+        resp.status_code = 200
+        resp._content = b"{}"
+        return resp
+
+    base_client = fx_simple_client[0]
+    _requests_adapter = fx_simple_client[1]
+    base_client._execute_request = test_execute_request
+    base_client.search({}, headers=test_headers)
