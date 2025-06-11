@@ -53,7 +53,7 @@ def poller(named_poller_interval, named_last_poller_time):
                 last_poller_time = get_last_poller_date(120) # look back 2 hours
 
                 if is_this_a_selftest(self):
-                    LOG.warn("Running selftest -- disabling poller")
+                    LOG.warning("Running selftest -- disabling poller")
                 else:
                     poller_thread = Thread(target=self.run)
                     poller_thread.daemon = True

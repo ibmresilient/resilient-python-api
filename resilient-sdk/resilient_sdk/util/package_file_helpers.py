@@ -989,7 +989,7 @@ def create_extension(path_setup_py_file, path_apikey_permissions_file,
             path_zipped_validate_report = os.path.join(path_build, os.path.basename(path_validate_report))
             shutil.copy(path_validate_report, path_zipped_validate_report)
         else:
-            LOG.warn("WARNING: If a validation report is not included with your submission, it will get rejected. Run this command with the '--validate' flag to include validations.")
+            LOG.warning("WARNING: If a validation report is not included with your submission, it will get rejected. Run this command with the '--validate' flag to include validations.")
 
         # Write the customize ImportDefinition to the app*.zip export.res file
         sdk_helpers.write_file(path_export_res, json.dumps(import_definition, sort_keys=True))

@@ -50,12 +50,12 @@ class KeyringUtils(object):
                             f.seek(0)
                         self.config.read_file(f)
                 except Exception as exc:
-                    logger.warn(u"Couldn't read config file '%s': %s", config_path, exc)
+                    logger.warning(u"Couldn't read config file '%s': %s", config_path, exc)
                     self.config = None
             else:
-                logger.warn(u"Couldn't read config file '%s'", config_file)
+                logger.warning(u"Couldn't read config file '%s'", config_file)
         else:
-            logger.warn(u"Couldn't read config file")
+            logger.warning(u"Couldn't read config file")
 
     def run(self):
         """
