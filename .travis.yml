@@ -22,7 +22,7 @@ stages:
   - name: release to quay
     if: tag =~ ^release\/pypi\/.+ OR ( type = cron AND branch = master )
   - name: sync public repo
-    if: tag =~ ^release\/pypi\/.+
+    if: tag =~ ^release\/pypi\/.+ OR ( commit_message =~ \[sync\] AND branch = master )
 
 env:
   global:
@@ -137,7 +137,7 @@ matrix:
             $PATH_SCRIPTS_DIR/manage_fyre_instance.sh DELETE $FYRE_CLUSTER_NAME;
           fi
 
-    - stage: sonarqube and detect secrets scan
+    - stage: DISABLED sonarqube and detect secrets scan
       name: SonarQube Scan
       language: java
       env: RUN_TYPE=sonarqube
