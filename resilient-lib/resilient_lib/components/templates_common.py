@@ -29,7 +29,7 @@ value of ``DEFAULT_TEMPLATE_PATH`` is used.
 
 .. code-block:: python
 
-    import pkg_resources
+    import importlib
     from resilient_circuits import AppFunctionComponent, FunctionResult, app_function
     from resilient_lib import make_payload_from_template
 
@@ -37,8 +37,7 @@ value of ``DEFAULT_TEMPLATE_PATH`` is used.
     FN_NAME = "my_function_using_jinja"
 
     # Creating an absolute path to the template
-    DEFAULT_TEMPLATE_PATH = pkg_resources.resource_filename(PACKAGE_NAME, "util/templates/<default_name>.jinja2")
-
+    DEFAULT_TEMPLATE_PATH = importlib.resources.files("PACKAGE_NAME").joinpath("util/templates/<default_name>.jinja2")
     class FunctionComponent(AppFunctionComponent):
 
         def __init__(self, opts):
