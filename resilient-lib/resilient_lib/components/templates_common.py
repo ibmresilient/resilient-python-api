@@ -37,7 +37,7 @@ value of ``DEFAULT_TEMPLATE_PATH`` is used.
     FN_NAME = "my_function_using_jinja"
 
     # Creating an absolute path to the template
-    DEFAULT_TEMPLATE_PATH = importlib.resources.files("PACKAGE_NAME").joinpath("util/templates/<default_name>.jinja2")
+    DEFAULT_TEMPLATE_PATH = importlib.resources.files(PACKAGE_NAME).joinpath("util/templates/<default_name>.jinja2")
     class FunctionComponent(AppFunctionComponent):
 
         def __init__(self, opts):
