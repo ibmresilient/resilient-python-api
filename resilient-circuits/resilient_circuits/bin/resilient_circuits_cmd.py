@@ -8,7 +8,8 @@ import logging
 import os
 import sys
 from collections import defaultdict
-import pkg_resources
+from importlib.metadata import distributions, entry_points as iter_entry_points
+from importlib.resources import files
 from resilient import get_config_file
 from resilient_circuits import helpers, constants
 from resilient_circuits.util.resilient_customize import customize_resilient
@@ -80,7 +81,7 @@ def run(resilient_circuits_args, restartable=False, config_file=None):
     if config_file:
         kwargs = {"config_file": config_file}
 
-    LOG.info(helpers.get_env_str(pkg_resources.working_set))
+    LOG.info(helpers.get_env_str(distributions()))
 
     app.run(**kwargs)
 
@@ -94,57 +95,68 @@ def list_installed(args):
     # - resilient.circuits.customize: produces schema customizations
     # - resilient.circuits.components: identifies components that implement actions, functions, etc.
     # We want to list all components, but include (as "empty") packages that define the other entry-points too.
+    
+    # all installed
+    installed_packages = {dist.name: dist for dist in distributions()}
+    
     entry_points = []
-    entry_points.extend([ep for ep in pkg_resources.iter_entry_points('resilient.circuits.config')])
-    entry_points.extend([ep for ep in pkg_resources.iter_entry_points('resilient.circuits.customize')])
-    component_entry_points = [ep for ep in pkg_resources.iter_entry_points('resilient.circuits.components')]
+    entry_points.extend([ep for ep in helpers.get_entry_points("resilient.circuits.config")])
+    entry_points.extend([ep for ep in helpers.get_entry_points("resilient.circuits.customize")])
+    component_entry_points = [ep for ep in helpers.get_entry_points("resilient.circuits.components")]
     entry_points.extend(component_entry_points)
     LOG.debug(u"Found %d installed entry-points", len(entry_points))
     for ep in entry_points:
-        components[ep.dist].append(ep)
+        components[helpers.get_entry_point_name(ep)].append(ep)
     if not components:
         LOG.info(u"No resilient-circuits components are installed")
         return
 
     ep_list = {}
     LOG.info(u"The following packages and components are installed:")
-    for dist, component_list in components.items():
+    for pkg_name, component_list in components.items():
         if args.verbose:
-            clist = "\n\t".join([str(ep) for ep in component_list if ep in component_entry_points])
+            clist = "\n\t".join([f"{ep.name} = {ep.value}" for ep in component_list if ep in component_entry_points])
             if clist == "":
-                ep = u"{} ({}):\n\t(Package does not define any components)".format(
-                    dist.as_requirement(),
-                    dist.egg_info)
+                ep_info = u"{} ({}):\n\t(Package does not define any components)".format(
+                    as_requirement(installed_packages.get(pkg_name)),
+                    egg_info(installed_packages.get(pkg_name)))
             else:
-                ep = u"{} ({}):\n\t{}".format(
-                    dist.as_requirement(),
-                    dist.egg_info,
+                ep_info = u"{} ({}):\n\t{}".format(
+                    as_requirement(installed_packages.get(pkg_name)),
+                    egg_info(installed_packages.get(pkg_name)),
                     clist)
         else:
             clist = "\n\t".join([ep.name for ep in component_list if ep in component_entry_points])
             if clist == "":
-                ep = u"{}:\n\t(Package does not define any components)".format(
-                    dist.as_requirement())
+                ep_info = u"{}:\n\t(Package does not define any components)".format(
+                    as_requirement(installed_packages.get(pkg_name)))
             else:
-                ep = u"{}:\n\t{}".format(
-                    dist.as_requirement(),
+                ep_info = u"{}:\n\t{}".format(
+                    as_requirement(installed_packages.get(pkg_name)),
                     clist)
 
-        ep_list[str(dist.as_requirement())] = ep
+        ep_list[str(as_requirement(installed_packages.get(pkg_name)))] = ep_info
 
     for ep_item in sorted(ep_list.keys()):
         LOG.info(ep_list[ep_item])
 
+def as_requirement(dist):
+    ### this function recreates the results returns from pkg_resource.EntryPoint.as_requirement()
+    return f"{dist.name}={dist.version}"
+
+def egg_info(dist):
+    ### this function recreates the results returns from pkg_resource.EntryPoint.as_requirement()
+    return str(dist._path)
 
 def generate_default(install_list):
     """ return string containing entire default app.config """
-    base_config_fn = pkg_resources.resource_filename("resilient_circuits", "data/app.config.base")
-    entry_points = pkg_resources.iter_entry_points('resilient.circuits.configsection')
+    base_config_fn = files("resilient_circuits").joinpath("data", "app.config.base")
+    entry_points = helpers.get_entry_points("resilient.circuits.configsection")
     additional_sections = []
     remaining_list = install_list[:] if install_list else []
     for entry in entry_points:
         dist = entry.dist
-        package_name = entry.dist.project_name
+        package_name = entry.dist.name
 
         # if a list is provided, use it to filter which packages to add to the app.config file
         if install_list is not None and package_name not in remaining_list:
@@ -228,13 +240,13 @@ def generate_or_update_config(args):
             config.read_file(config_file)
             existing_sections = config.sections()
 
-        entry_points = pkg_resources.iter_entry_points('resilient.circuits.configsection')
+        entry_points = iter_entry_points(group='resilient.circuits.configsection')
         remaining_list = args.install_list[:] if args.install_list else []
 
         with open(config_filename, "a", encoding="utf-8") as config_file:
             for entry in entry_points:
                 dist = entry.dist
-                package_name = entry.dist.project_name
+                package_name = entry.dist.name
                 try:
                     func = entry.load()
                 except ImportError:

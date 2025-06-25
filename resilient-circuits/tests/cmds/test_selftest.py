@@ -4,30 +4,23 @@
 
 import logging
 from argparse import Namespace
+from collections import namedtuple
 
 import pytest
+from importlib.metadata import entry_points as iter_entry_points, EntryPoint, PathDistribution
 from mock import patch
-from pkg_resources import EggInfoDistribution, EntryPoint
+
 from resilient_circuits import helpers
 from resilient_circuits.cmds import selftest
 from tests.shared_mock_data import mock_paths
 from resilient_app_config_plugins import Keyring
 
-MOCKED_SELFTEST_ENTRYPOINTS = [
-    EntryPoint.parse('test = tests.selftest_tests.mocked_fail_script:selftest', dist=EggInfoDistribution(
-        project_name='test',
-        version="0.1",
-    )), 
-    EntryPoint.parse('test2 = tests.selftest_tests.mocked_success_script:selftest', dist=EggInfoDistribution(
-        project_name='test2',
-        version="0.1"
-    )),
-    EntryPoint.parse('test3 = tests.selftest_tests.mocked_unimplemented_script:selftest', dist=EggInfoDistribution(
-        project_name='test3',
-        version="0.1"
-    ))
-]
+MOCK_DIST = namedtuple("mock_dist", ("name", "version"))
 
+# mock data for EntryPoints
+EP0 = EntryPoint(group="resilient.circuits.selftest", name="selftest", value="tests.selftest_tests.mocked_fail_script:selftest")
+EP1 = EntryPoint(group="resilient.circuits.selftest", name="selftest", value="tests.selftest_tests.mocked_success_script:selftest")
+EP2 = EntryPoint(group="resilient.circuits.selftest", name="selftest", value="tests.selftest_tests.mocked_unimplemented_script:selftest")
 
 def test_error_connecting_to_soar_rest(caplog):
     with pytest.raises(SystemExit) as sys_exit:
@@ -55,11 +48,15 @@ def test_run_apps_selftest_success():
     app_configs = helpers.get_configs(path_config_file=mock_paths.MOCK_APP_CONFIG, ALLOW_UNRECOGNIZED=True)
     parser = Namespace(install_list=['test2'], project_name=['test2'])
 
-    with patch("resilient_circuits.bin.resilient_circuits_cmd.pkg_resources.iter_entry_points", create=True) as mocked_entrypoints:
-        mocked_entrypoints.return_value = [MOCKED_SELFTEST_ENTRYPOINTS[1]]
+    with patch("resilient_circuits.cmds.selftest.iter_entry_points", create=True) as mocked_entrypoints:
+        mocked_entrypoints.return_value = [EP1]
         with patch("resilient_circuits.bin.resilient_circuits_cmd.get_config_file") as mocked_config:
             mocked_config.return_value = mock_paths.MOCK_APP_CONFIG
-            selftest.run_apps_selftest(parser, app_configs)
+            with patch("importlib.metadata.EntryPoint.dist") as mock_distribution:
+                mock_distribution.name = "test2"
+                mock_distribution.version = "1.0.0"
+
+                selftest.run_apps_selftest(parser, app_configs)
 
 
 def test_run_apps_selftest_failure():
@@ -73,9 +70,13 @@ def test_run_apps_selftest_failure():
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         parser = Namespace(install_list=['test'], project_name=['test'])
 
-        with patch("resilient_circuits.cmds.selftest.pkg_resources.iter_entry_points", create=True) as mocked_entrypoints:
-            mocked_entrypoints.return_value = MOCKED_SELFTEST_ENTRYPOINTS
-            selftest.run_apps_selftest(parser, app_configs)
+        with patch("resilient_circuits.cmds.selftest.iter_entry_points", create=True) as mocked_entrypoints:
+            mocked_entrypoints.return_value = [EP0]
+            with patch("importlib.metadata.EntryPoint.dist") as mock_distribution:
+                mock_distribution.name = "test"
+                mock_distribution.version = "1.0.0"
+
+                selftest.run_apps_selftest(parser, app_configs)
 
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 1
@@ -91,9 +92,13 @@ def test_run_apps_selftest_unimplemented():
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         parser = Namespace(install_list=['test3'], project_name=['test3'])
 
-        with patch("resilient_circuits.cmds.selftest.pkg_resources.iter_entry_points", create=True) as mocked_entrypoints:
-            mocked_entrypoints.return_value = [MOCKED_SELFTEST_ENTRYPOINTS[2]]
-            selftest.run_apps_selftest(parser, app_configs)
+        with patch("resilient_circuits.cmds.selftest.iter_entry_points", create=True) as mocked_entrypoints:
+            mocked_entrypoints.return_value = [EP2]
+            with patch("importlib.metadata.EntryPoint.dist") as mock_distribution:
+                mock_distribution.name = "test3"
+                mock_distribution.version = "1.0.0"
+
+                selftest.run_apps_selftest(parser, app_configs)
 
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 2

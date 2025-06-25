@@ -7,7 +7,7 @@
 import os
 import sys
 import logging
-import pkg_resources
+from importlib.metadata import entry_points as iter_entry_points
 from circuits import Loader, Event
 from circuits.core.handlers import handler
 from resilient_circuits.stomp_events import SubscribeLowCode, Unsubscribe
@@ -88,7 +88,7 @@ class ComponentLoader(Loader):
             self.fire(load_all_success())
 
     def discover_installed_components(self, entry_points):
-        entry_points = pkg_resources.iter_entry_points(entry_points)
+        entry_points = iter_entry_points(group=entry_points)
         ep = None
         try:
             return_list = []

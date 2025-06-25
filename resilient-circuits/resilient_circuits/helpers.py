@@ -9,7 +9,9 @@ import re
 import sys
 import time
 
-import pkg_resources
+from collections.abc import Iterable
+from importlib.metadata import distributions, Distribution, entry_points
+from importlib.util import find_spec, module_from_spec
 from resilient_circuits import constants
 from six import string_types
 
@@ -215,19 +217,20 @@ def get_packages(working_set):
     and their version in working_set
 
     :param working_set: the working_set for all packages installed in this env
-    :type working_set: setuptools.pkg_resources.WorkingSet obj
+    :type working_set: importlib.metadata.Distribution obj
     :return: pkg_list: a list of tuples [('name','version')] e.g. [('resilient-circuits', '39.0.0')].
-        If ``working_set`` is not a ``pkg_resources.WorkingSet`` object, just return the current value of ``working_set``
+        If ``working_set`` is not a ``importlib.metadata.Distribution`` object, just return the current value of ``working_set``
     :rtype: list
     """
 
-    if not isinstance(working_set, pkg_resources.WorkingSet):
+    if not isinstance(working_set, Iterable):
         return working_set
 
     pkg_list = []
 
     for pkg in working_set:
-        pkg_list.append((pkg.project_name, pkg.version))
+        if hasattr(pkg, "name"):
+            pkg_list.append((pkg.name, pkg.version))
 
     return sorted(pkg_list, key=lambda x: x[0].lower())
 
@@ -237,8 +240,8 @@ def get_env_str(packages):
     Return a str with the Python version and the
     packages
 
-    :param packages: the working_set for all packages installed in this env
-    :type packages: setuptools.pkg_resources.WorkingSet obj
+    :param packages: the distribution for all packages installed in this env
+    :type packages: importlib.metadata.PathDistribution obj
     :return: env_str: a str of the Environment
     :rtype: str
     """
@@ -261,9 +264,6 @@ def get_env_str(packages):
 
     env_str += u"\n###############"
     return env_str
-
-
-
 
 def get_queue(destination):
     """
@@ -439,3 +439,61 @@ def sub_fn_inputs_from_protected_secrets(fn_inputs, opts):
             fn_inputs[key] = fn_inputs_manager[key]
 
     return fn_inputs
+
+def get_entry_points(group):
+    """get the importlib EntryPoint objects for a given group
+
+    :param group: group to search installed packages. Ex. resilient.circuits.selftest
+    :type group: str
+    :return: list of entrypoints found
+    :rtype: list
+    """
+    return entry_points(group=group)
+
+def get_entry_point_name(ep):
+    """ find the name of the app from the importlib EntryPoint
+
+    :param ep: EntryPoint object 
+    :type ep: importlib EntryPoint 
+    :return: name of app
+    :rtype: str
+    """
+    return ep.value.split(".")[0] if ep else ""
+
+def get_entry_function(entry):
+    """get function associated with an entrypoint definition
+
+    :param entry: import.metadata.EntryPoint
+    :type entry: import.metadata.EntryPoint
+    :return: function associated with EnterPoint
+    :rtype: object
+    """
+    # ep.value like 'fn_outbound_email.util.config:config_section_data'
+    (spec_name, funct_name) = entry.value.split(":")
+    spec = find_spec(spec_name)
+
+    if spec:
+        module = module_from_spec(spec)
+
+        if module:
+            spec.loader.exec_module(module)
+            return getattr(module, funct_name, None)
+
+    return None
+
+def get_package_function(package, group):
+    """ return the entry point function for a install app.
+
+    :param package: name of the app. ex: fn_rest_api
+    :type package: str
+    :param group: entry point info. ex: resilient.circuits.selftest
+    :type group: str
+    :return: object
+    :rtype: function for the given package and group entry point
+    """
+    entries = get_entry_points(group=group)
+    for entry in entries:
+        if package == get_entry_point_name(entry):
+            return get_entry_function(entry)
+
+    return None
