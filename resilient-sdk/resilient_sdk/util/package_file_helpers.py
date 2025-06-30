@@ -18,7 +18,8 @@ import tempfile
 import zipfile
 from collections import defaultdict
 
-import pkg_resources
+from importlib.resources import files
+from importlib.metadata import distribution, PackageNotFoundError
 from packaging.version import parse
 from resilient import ImportDefinition
 from resilient_sdk.util import constants, sdk_helpers
@@ -67,15 +68,15 @@ BASE_NAME_PAYLOAD_SAMPLES_EP_SUCCESS = "mock_json_endpoint_success.json"
 BASE_NAME_PAYLOAD_SAMPLES_EX_FAIL = "mock_json_expectation_fail.json"
 BASE_NAME_PAYLOAD_SAMPLES_EP_FAIL = "mock_json_endpoint_fail.json"
 
-PATH_DEFAULT_ICON_EXTENSION_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/app_logo.png")
-PATH_DEFAULT_ICON_COMPANY_LOGO = pkg_resources.resource_filename("resilient_sdk", "data/ext/icons/company_logo.png")
-PATH_DEFAULT_README = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/README.md.jinja2")
-PATH_DEFAULT_SCREENSHOT = pkg_resources.resource_filename("resilient_sdk", "data/codegen/templates/package_template/doc/screenshots/main.png")
-PATH_DEFAULT_POLLER_CREATE_TEMPLATE = pkg_resources.resource_filename("resilient_sdk",
+PATH_DEFAULT_ICON_EXTENSION_LOGO = files("resilient_sdk").joinpath("data/ext/icons/app_logo.png")
+PATH_DEFAULT_ICON_COMPANY_LOGO = files("resilient_sdk").joinpath("data/ext/icons/company_logo.png")
+PATH_DEFAULT_README = files("resilient_sdk").joinpath("data/codegen/templates/package_template/README.md.jinja2")
+PATH_DEFAULT_SCREENSHOT = files("resilient_sdk").joinpath("data/codegen/templates/package_template/doc/screenshots/main.png")
+PATH_DEFAULT_POLLER_CREATE_TEMPLATE = files("resilient_sdk").joinpath(
                     "data/codegen/templates/package_template/package/poller/data/soar_create_case.jinja2")
-PATH_DEFAULT_POLLER_CLOSE_TEMPLATE = pkg_resources.resource_filename("resilient_sdk",
+PATH_DEFAULT_POLLER_CLOSE_TEMPLATE = files("resilient_sdk").joinpath(
                     "data/codegen/templates/package_template/package/poller/data/soar_close_case.jinja2")
-PATH_DEFAULT_POLLER_UPDATE_TEMPLATE = pkg_resources.resource_filename("resilient_sdk",
+PATH_DEFAULT_POLLER_UPDATE_TEMPLATE = files("resilient_sdk").joinpath(
                     "data/codegen/templates/package_template/package/poller/data/soar_update_case.jinja2")
 
 
@@ -1038,7 +1039,7 @@ def get_required_python_version(python_requires_str):
 
 def check_package_installed(package_name):
     """
-    Uses pkg_resources.require to certify that a package is installed
+    Uses importlib.metadata.distribution to certify that a package is installed
 
     :param package_name: name of package
     :type package_name: str
@@ -1046,8 +1047,8 @@ def check_package_installed(package_name):
     :rtype: bool
     """
     try:
-        pkg_resources.require(package_name)
-    except pkg_resources.DistributionNotFound:
+        distribution(package_name)
+    except PackageNotFoundError:
         return False
 
     return True

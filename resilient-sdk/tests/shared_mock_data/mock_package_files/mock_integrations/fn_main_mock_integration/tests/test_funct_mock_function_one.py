@@ -58,7 +58,7 @@ class TestMockFunctionOne:
         "mock_input_text": "sample text"
     }
 
-    expected_results_1 = {"content": "xyz"}
+    expected_results_1 = {"note_text": "sample text"}
 
     @pytest.mark.parametrize("mock_inputs, expected_results", [
         (mock_inputs_1, expected_results_1)
