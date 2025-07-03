@@ -583,7 +583,7 @@ def sh_filter(val):
     for char in str(val):
         if char in "$#\"":
             char = "\\" + char
-        elif ord(char) < 32 or ord(char) > 126:
+        elif ord(char) < 32: # Removed `or ord(char) > 126` so that some unicode characters do not get encoded
             char = "\\%03o" % ord(char)
         escaped.append(char)
     return ''.join(escaped)
