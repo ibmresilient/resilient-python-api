@@ -10,7 +10,7 @@ import sys
 import time
 
 from collections.abc import Iterable
-from importlib.metadata import distributions, Distribution, entry_points
+from importlib.metadata import distributions, entry_points
 from importlib.util import find_spec, module_from_spec
 from resilient_circuits import constants
 from six import string_types
@@ -448,7 +448,11 @@ def get_entry_points(group):
     :return: list of entrypoints found
     :rtype: list
     """
-    return entry_points(group=group)
+    if sys.version_info.major == 3 and sys.version_info.minor > 9:
+        return entry_points(group=group)
+    else:
+        eps = entry_points()
+        return eps.get(group, [])
 
 def get_entry_point_name(ep):
     """ find the name of the app from the importlib EntryPoint
