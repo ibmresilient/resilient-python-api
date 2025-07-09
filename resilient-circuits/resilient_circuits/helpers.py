@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2025. All Rights Reserved.
+# pragma pylint: disable=line-too-long, wrong-import-order
 
 """Common Helper Functions for resilient-circuits"""
 import copy
@@ -10,7 +11,7 @@ import sys
 import time
 
 from collections.abc import Iterable
-from importlib.metadata import distributions, entry_points
+from importlib.metadata import entry_points, distribution
 from importlib.util import find_spec, module_from_spec
 from resilient_circuits import constants
 from six import string_types
@@ -501,3 +502,32 @@ def get_package_function(package, group):
             return get_entry_function(entry)
 
     return None
+
+def get_distribution_name(dist):
+    """find the name of the importlib.metadata.Distribution object
+        Python 3.9 is different than 3.12
+
+    :param dist: object to parse
+    :type dist: Distribution
+    :return: Name of distribution
+    :rtype: str
+    """
+    if hasattr(dist, "name"):
+        return dist.name
+    else:
+        return dist.metadata["name"]
+
+def get_distribution_from_entry_point(ep):
+    """ get the distribution object from the entry point object
+        Python 3.9 is different than 3.12
+
+    :param ep: entrypoint
+    :type ep: EntryPoint
+    :return: associated distribution
+    :rtype: Distribution
+    """
+    if hasattr(ep, "dist"):
+        return ep.dist
+    else:
+        pkg_name = ep.value.split(".")[0]
+        return distribution(pkg_name)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2025. All Rights Reserved.
+# pragma pylint: disable=line-too-long, wrong-import-order
 
 """Utility to import customizations"""
 
@@ -8,7 +9,6 @@ from __future__ import print_function
 import base64
 import json
 import logging
-from importlib.metadata import entry_points as iter_entry_points
 
 import resilient
 from resilient import (ActionDefinition, Definition, FunctionDefinition,
@@ -16,7 +16,8 @@ from resilient import (ActionDefinition, Definition, FunctionDefinition,
                        SimpleHTTPException, TypeDefinition)
 from resilient import helpers as res_helpers
 from resilient_circuits.app import AppArgumentParser
-from resilient_circuits.helpers import get_package_function, get_entry_function
+from resilient_circuits.helpers import get_distribution_from_entry_point, get_distribution_name, \
+    get_package_function, get_entry_function, get_entry_points as iter_entry_points
 
 try:
     from builtins import input
@@ -88,8 +89,8 @@ def do_customize_resilient(client, entry_points, yflag, install_list):
     for entry in entry_points:
         ep_count = ep_count + 1
         def_count = 0
-        dist = entry.dist
-        dist_str = entry.dist.name
+        dist = get_distribution_from_entry_point(entry)
+        dist_str = get_distribution_name(dist)
 
         if install_list is None or dist_str in install_list:
             if install_list is not None:
@@ -206,7 +207,6 @@ class Customizations(object):
 
             uri = "/message_destinations"
             all_destinations = dict((dest["programmatic_name"], dest) for dest in self.client.get(uri)["entities"])
-            [dest.get("programmatic_name") for dest in import_data.get("message_destinations", [])]
             for dest in import_data.get("message_destinations", []):
                 dest_name = dest.get("programmatic_name")
                 if dest_name in all_destinations:

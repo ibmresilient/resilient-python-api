@@ -7,20 +7,21 @@ from argparse import Namespace
 from collections import namedtuple
 
 import pytest
-from importlib.metadata import entry_points as iter_entry_points, EntryPoint, PathDistribution
+from importlib.metadata import EntryPoint
 from mock import patch
 
 from resilient_circuits import helpers
 from resilient_circuits.cmds import selftest
+from resilient_circuits.helpers import get_entry_points as iter_entry_points
 from tests.shared_mock_data import mock_paths
 from resilient_app_config_plugins import Keyring
 
 MOCK_DIST = namedtuple("mock_dist", ("name", "version"))
 
 # mock data for EntryPoints
-EP0 = EntryPoint(group="resilient.circuits.selftest", name="selftest", value="tests.selftest_tests.mocked_fail_script:selftest")
-EP1 = EntryPoint(group="resilient.circuits.selftest", name="selftest", value="tests.selftest_tests.mocked_success_script:selftest")
-EP2 = EntryPoint(group="resilient.circuits.selftest", name="selftest", value="tests.selftest_tests.mocked_unimplemented_script:selftest")
+EP_FAILURE = EntryPoint(group="resilient.circuits.selftest", name="selftest", value="tests.selftest_tests.mocked_fail_script:selftest")
+EP_SUCCESS = EntryPoint(group="resilient.circuits.selftest", name="selftest", value="tests.selftest_tests.mocked_success_script:selftest")
+EP_UNIMPLEMENTED = EntryPoint(group="resilient.circuits.selftest", name="selftest", value="tests.selftest_tests.mocked_unimplemented_script:selftest")
 
 def test_error_connecting_to_soar_rest(caplog):
     with pytest.raises(SystemExit) as sys_exit:
@@ -49,14 +50,13 @@ def test_run_apps_selftest_success():
     parser = Namespace(install_list=['test2'], project_name=['test2'])
 
     with patch("resilient_circuits.cmds.selftest.iter_entry_points", create=True) as mocked_entrypoints:
-        mocked_entrypoints.return_value = [EP1]
+        ep = EP_SUCCESS
+        setattr(ep, "dist", MOCK_DIST("test2", "1.0.0"))
+        mocked_entrypoints.return_value = [ep]
         with patch("resilient_circuits.bin.resilient_circuits_cmd.get_config_file") as mocked_config:
             mocked_config.return_value = mock_paths.MOCK_APP_CONFIG
-            with patch("importlib.metadata.EntryPoint.dist") as mock_distribution:
-                mock_distribution.name = "test2"
-                mock_distribution.version = "1.0.0"
 
-                selftest.run_apps_selftest(parser, app_configs)
+            selftest.run_apps_selftest(parser, app_configs)
 
 
 def test_run_apps_selftest_failure():
@@ -71,12 +71,11 @@ def test_run_apps_selftest_failure():
         parser = Namespace(install_list=['test'], project_name=['test'])
 
         with patch("resilient_circuits.cmds.selftest.iter_entry_points", create=True) as mocked_entrypoints:
-            mocked_entrypoints.return_value = [EP0]
-            with patch("importlib.metadata.EntryPoint.dist") as mock_distribution:
-                mock_distribution.name = "test"
-                mock_distribution.version = "1.0.0"
+            ep = EP_FAILURE
+            setattr(ep, "dist", MOCK_DIST("test", "1.0.0"))
+            mocked_entrypoints.return_value = [ep]
 
-                selftest.run_apps_selftest(parser, app_configs)
+            selftest.run_apps_selftest(parser, app_configs)
 
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 1
@@ -93,12 +92,11 @@ def test_run_apps_selftest_unimplemented():
         parser = Namespace(install_list=['test3'], project_name=['test3'])
 
         with patch("resilient_circuits.cmds.selftest.iter_entry_points", create=True) as mocked_entrypoints:
-            mocked_entrypoints.return_value = [EP2]
-            with patch("importlib.metadata.EntryPoint.dist") as mock_distribution:
-                mock_distribution.name = "test3"
-                mock_distribution.version = "1.0.0"
+            ep = EP_UNIMPLEMENTED
+            setattr(ep, "dist", MOCK_DIST("test3", "1.0.0"))
+            mocked_entrypoints.return_value = [ep]
 
-                selftest.run_apps_selftest(parser, app_configs)
+            selftest.run_apps_selftest(parser, app_configs)
 
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 2

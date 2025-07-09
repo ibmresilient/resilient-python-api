@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2025. All Rights Reserved.
+# pragma pylint: disable=line-too-long, wrong-import-order
 
 """ Command line tool to manage and run resilient-circuits """
 import argparse
@@ -8,10 +9,11 @@ import logging
 import os
 import sys
 from collections import defaultdict
-from importlib.metadata import distributions, entry_points as iter_entry_points
+from importlib.metadata import distributions
 from importlib.resources import files
 from resilient import get_config_file
 from resilient_circuits import helpers, constants
+from resilient_circuits.helpers import get_distribution_from_entry_point, get_distribution_name, get_entry_points as iter_entry_points
 from resilient_circuits.util.resilient_customize import customize_resilient
 from resilient_circuits.cmds import selftest
 
@@ -95,14 +97,14 @@ def list_installed(args):
     # - resilient.circuits.customize: produces schema customizations
     # - resilient.circuits.components: identifies components that implement actions, functions, etc.
     # We want to list all components, but include (as "empty") packages that define the other entry-points too.
-    
+
     # all installed
-    installed_packages = {dist.name: dist for dist in distributions()}
-    
+    installed_packages = {get_distribution_name(dist): dist for dist in distributions()}
+
     entry_points = []
-    entry_points.extend([ep for ep in helpers.get_entry_points("resilient.circuits.config")])
-    entry_points.extend([ep for ep in helpers.get_entry_points("resilient.circuits.customize")])
-    component_entry_points = [ep for ep in helpers.get_entry_points("resilient.circuits.components")]
+    entry_points.extend(list(helpers.get_entry_points("resilient.circuits.config")))
+    entry_points.extend(list(helpers.get_entry_points("resilient.circuits.customize")))
+    component_entry_points = list(helpers.get_entry_points("resilient.circuits.components"))
     entry_points.extend(component_entry_points)
     LOG.debug(u"Found %d installed entry-points", len(entry_points))
     for ep in entry_points:
@@ -142,7 +144,7 @@ def list_installed(args):
 
 def as_requirement(dist):
     ### this function recreates the results returns from pkg_resource.EntryPoint.as_requirement()
-    return f"{dist.name}={dist.version}"
+    return f"{get_distribution_name(dist)}=={dist.version}"
 
 def egg_info(dist):
     ### this function recreates the results returns from pkg_resource.EntryPoint.as_requirement()
@@ -155,14 +157,14 @@ def generate_default(install_list):
     additional_sections = []
     remaining_list = install_list[:] if install_list else []
     for entry in entry_points:
-        dist = entry.dist
-        package_name = entry.dist.name
+        dist = get_distribution_from_entry_point(entry)
+        package_name = get_distribution_name(dist)
 
         # if a list is provided, use it to filter which packages to add to the app.config file
         if install_list is not None and package_name not in remaining_list:
             LOG.debug("{} bypassed".format(package_name))
             continue
-        elif package_name in remaining_list:
+        if package_name in remaining_list:
             remaining_list.remove(package_name)
 
         try:
@@ -245,8 +247,8 @@ def generate_or_update_config(args):
 
         with open(config_filename, "a", encoding="utf-8") as config_file:
             for entry in entry_points:
-                dist = entry.dist
-                package_name = entry.dist.name
+                dist = get_distribution_from_entry_point(entry)
+                package_name = get_distribution_name(dist)
                 try:
                     func = entry.load()
                 except ImportError:
