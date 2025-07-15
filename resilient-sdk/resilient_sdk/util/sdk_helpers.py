@@ -8,7 +8,6 @@ import copy
 import datetime
 import hashlib
 import importlib
-import importlib.metadata
 import io
 import json
 import keyword
@@ -27,6 +26,7 @@ from argparse import SUPPRESS
 from collections import OrderedDict
 from zipfile import BadZipfile, ZipFile, is_zipfile
 
+import pkg_resources
 import requests
 import requests.exceptions
 from jinja2 import Environment, PackageLoader
@@ -141,7 +141,7 @@ def write_latest_pypi_tmp_file(latest_version, path_sdk_tmp_pypi_version):
     Writes the ``latest_version`` and the ts of the current time
     to ``path_sdk_tmp_pypi_version``
 
-    If ``latest_version`` is a ``packaging.Version``, get its ``base_version``.
+    If ``latest_version`` is a ``pkg_resources.Version``, get its ``base_version``.
     Note: this is actually a different Version type - we would have to import extra
     dependencies to correctly use isinstance(latest_version, Version) - so just checking
     if it has the attribute
@@ -1450,17 +1450,17 @@ def get_resilient_sdk_version():
 
 def get_package_version(package_name):
     """
-    Uses importlib to parse the version of a package if installed in the environment.
+    Uses pkg_resources to parse the version of a package if installed in the environment.
     If not installed, return None
 
     :param package_name: name of the package to get version of
     :type package_name: str
-    :return: a packaging.version.Version object representing the version of the given package or None
+    :return: a Version object representing the version of the given package or None
     :rtype: Version or None
     """
     try:
-        return parse_version(importlib.metadata.version(package_name))
-    except importlib.metadata.PackageNotFoundError:
+        return parse_version(pkg_resources.require(package_name)[0].version)
+    except pkg_resources.DistributionNotFound:
         return None
 
 
@@ -1472,7 +1472,7 @@ def get_latest_version_on_pypi():
 
     :raises HTTPError: if a problem occurs reaching pypi.org
     :return: the latest available version of this library on PyPi
-    :rtype: packaging.version.Version
+    :rtype: pkg_resources.extern.packaging.version.Version
     """
     r = requests.get(constants.URL_PYPI_VERSION, timeout=5)
     r.raise_for_status()
@@ -1501,7 +1501,7 @@ def get_latest_available_version():
     than 3 days, gets the latest version from PyPi
 
     :return: the latest available version of this library on PyPi
-    :rtype: packaging.version.Version
+    :rtype: pkg_resources.Version
     """
     latest_available_version = None
 
