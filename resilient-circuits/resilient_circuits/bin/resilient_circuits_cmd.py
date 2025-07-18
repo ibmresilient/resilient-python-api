@@ -271,7 +271,7 @@ def generate_or_update_config(args):
                 if new_section and new_section not in existing_sections:
                     if args.install_list is None or package_name in remaining_list:
                         # Add the default data for this required section to the config file
-                        LOG.info(u"Adding new section '%s' for '%s'", new_section, dist)
+                        LOG.info(u"Adding new section '%s' for '%s'", new_section, package_name)
                         if package_name in remaining_list:
                             remaining_list.remove(package_name)
 
