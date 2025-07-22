@@ -512,6 +512,9 @@ def get_distribution_name(dist):
     :return: Name of distribution
     :rtype: str
     """
+    if not dist:
+        return None
+
     if hasattr(dist, "name"):
         return dist.name
     else:

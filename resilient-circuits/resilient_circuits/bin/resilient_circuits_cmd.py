@@ -144,7 +144,10 @@ def list_installed(args):
 
 def as_requirement(dist):
     ### this function recreates the results returns from pkg_resource.EntryPoint.as_requirement()
-    return f"{get_distribution_name(dist)}=={dist.version}"
+    if dist:
+        return f"{get_distribution_name(dist)}=={dist.version}"
+    else:
+        return "Unknown"
 
 def egg_info(dist):
     ### this function recreates the results returns from pkg_resource.EntryPoint.as_requirement()
