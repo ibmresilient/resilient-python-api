@@ -26,9 +26,7 @@ from argparse import SUPPRESS
 from collections import OrderedDict
 from zipfile import BadZipfile, ZipFile, is_zipfile
 
-import pkg_resources
 import requests
-import requests.exceptions
 from jinja2 import Environment, PackageLoader
 from packaging.version import InvalidVersion
 from packaging.version import parse as parse_version
@@ -1459,8 +1457,10 @@ def get_package_version(package_name):
     :rtype: Version or None
     """
     try:
-        return parse_version(pkg_resources.require(package_name)[0].version)
-    except pkg_resources.DistributionNotFound:
+        dist = importlib.metadata.distribution(package_name)
+        return parse_version(dist.version)
+
+    except importlib.metadata.PackageNotFoundError:
         return None
 
 
@@ -1501,7 +1501,7 @@ def get_latest_available_version():
     than 3 days, gets the latest version from PyPi
 
     :return: the latest available version of this library on PyPi
-    :rtype: pkg_resources.Version
+    :rtype: packaging.parse.Version
     """
     latest_available_version = None
 
@@ -1602,7 +1602,7 @@ def parse_version_object(version_obj):
     :param version_obj: a Version object to be parsed
     :type version_obj: Version
     :return: (v.major, v.minor, v.micro) tuple
-    :rypte: (int, int, int)
+    :rtype: (int, int, int)
     """
 
     if sys.version_info[0] >= 3: # python 3

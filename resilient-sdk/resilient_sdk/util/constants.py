@@ -4,7 +4,7 @@
 
 import os
 
-import pkg_resources
+import importlib
 from packaging.version import parse as parse_version
 
 PATH_RES_DEFAULT_DIR = os.path.abspath(os.path.join(os.path.expanduser("~"), ".resilient"))
@@ -107,7 +107,7 @@ TOX_MIN_PACKAGE_VERSION = (3, 24, 4)
 
 # pylint constants (for validate)
 PYLINT_PACKAGE_NAME = "pylint"
-PATH_VALIDATE_PYLINT_RC_FILE = pkg_resources.resource_filename(SDK_RESOURCE_NAME, os.path.join(BASE_PATH_VALIDATE_DATA, ".pylintrc"))
+PATH_VALIDATE_PYLINT_RC_FILE = importlib.resources.files(SDK_RESOURCE_NAME).joinpath(BASE_PATH_VALIDATE_DATA, ".pylintrc")
 PYLINT_MIN_VERSION = (2, 12) # minimum pylint version that has stats objs rather than stats dictionary
                              # this is the min required for bug in pylint that was found in pylint 2.6.0
 

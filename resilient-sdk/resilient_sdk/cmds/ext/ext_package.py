@@ -6,7 +6,8 @@
 
 import logging
 import os
-from setuptools import sandbox as use_setuptools
+import subprocess
+import sys
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
 from resilient_sdk.util.sdk_exception import SDKException
@@ -155,8 +156,7 @@ class CmdExtPackage(BaseCmd):
         LOG.propagate = propagate_logs
 
         # Create the build distribution
-        use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
-
+        run_setup_script(path_setup_py_file)
         LOG.info("\nBuild Distribution finished. See: %s", path_output_dir)
 
         # Create the app
@@ -179,3 +179,10 @@ class CmdExtPackage(BaseCmd):
         LOG.propagate = True
 
         return path_the_extension_zip
+
+def run_setup_script(path_setup_py_file):
+    # Ensure the directory of the setup.py is the working directory
+    dir_setup_py_file = os.path.dirname(path_setup_py_file)
+    command = [sys.executable, path_setup_py_file, "sdist", "--formats=gztar"]
+
+    subprocess.run(command, cwd=dir_setup_py_file, check=True)
