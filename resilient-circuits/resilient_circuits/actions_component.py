@@ -218,14 +218,11 @@ class ResilientComponent(BaseComponent):
                                        for field in client.cached_get("/types/actioninvocation/fields"))
 
             if fn_names:
-
                 try:
-
                     for fn_name in fn_names:
-                        self._functions[fn_name] = client.cached_get("/functions/{0}?handle_format=names".format(fn_name))
+                        self._functions[fn_name] = client.cached_get("/functions/{0}?handle_format=names".format(fn_name), skip_retry=[404])
 
                     self._function_fields = dict((field["name"], field) for field in client.cached_get("/types/__function/fields"))
-
 
                 except resilient.SimpleHTTPException:
                     # functions are not available, pre-v30 server
@@ -865,7 +862,9 @@ class Actions(ResilientComponent):
                 queue_name = channel.split(".", 1)[-1]
                 LOG.info("'%s.%s' low code handler registered to '%s'", type(component).__module__, type(component).__name__, queue_name)
             else:
-                LOG.warning("Channel: %s not associated with any handler", channel)
+                # wildcard channel creates noisy log entries
+                if channel != "*":
+                    LOG.warning("Channel: %s not associated with any handler", channel)
                 continue
 
             if queue_name in self.listeners:

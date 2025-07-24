@@ -4,10 +4,12 @@
 
 import json
 
+from collections import namedtuple
 from mock import patch
 from resilient_circuits.util.resilient_customize import Customizations
 from resilient import helpers as res_helpers
 
+MOCK_DIST = namedtuple("mock_dist", ("name", "version"))
 
 def test_customizations_load_import(fx_simple_client, fx_read_mock_definition):
     """
@@ -37,4 +39,4 @@ def test_customizations_load_import(fx_simple_client, fx_read_mock_definition):
 
         with patch("resilient.helpers.remove_tag", new=res_helpers.remove_tag) as mock_remove_tag:
 
-            c.load_import(import_def, "mock instance")
+            c.load_import(import_def, MOCK_DIST("test", "v1.0.0"))

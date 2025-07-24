@@ -6,8 +6,8 @@ import os
 import time
 
 from mock import patch
-import pkg_resources
 import pytest
+from importlib.metadata import distributions
 from resilient_app_config_plugins.plugin_base import PAMPluginInterface
 from resilient_circuits import ResilientComponent, constants, function, helpers
 from resilient_circuits.stomp_events import HeartbeatTimeout
@@ -119,7 +119,7 @@ def test_validate_configs():
 
 def test_get_packages():
 
-    pkgs = helpers.get_packages(pkg_resources.working_set)
+    pkgs = helpers.get_packages(distributions())
 
     for pkg in pkgs:
         assert len(pkg) == 2
@@ -133,27 +133,27 @@ def test_get_packages_not_a_working_set_obj():
 
     pkgs = helpers.get_packages(invalid_ws)
 
-    assert pkgs == invalid_ws
+    assert pkgs == []
 
 
 def test_env_str():
 
-    env_str = helpers.get_env_str(pkg_resources.working_set)
+    env_str = helpers.get_env_str(distributions())
 
     assert "Environment" in env_str
     assert "Python Version" in env_str
     assert "Installed packages" in env_str
-    assert "\n\tresilient-circuits" in env_str
+    assert "\n\tresilient_circuits" in env_str
 
 
 def test_env_str_with_env_var(fx_add_proxy_env_var):
 
-    env_str = helpers.get_env_str(pkg_resources.working_set)
+    env_str = helpers.get_env_str(distributions())
 
     assert "Environment" in env_str
     assert "Python Version" in env_str
     assert "Installed packages" in env_str
-    assert "\n\tresilient-circuits" in env_str
+    assert "\n\tresilient_circuits" in env_str
     assert "Connecting through proxy: 'https://192.168.0.5:3128'" in env_str
 
 

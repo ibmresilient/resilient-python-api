@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2025. All Rights Reserved.
+# pragma pylint: disable=line-too-long, wrong-import-order
 
 import logging
 import os
@@ -8,12 +9,14 @@ import time
 from collections import defaultdict
 from threading import Thread
 
-import pkg_resources
+
+from importlib.metadata import distributions
 from requests.exceptions import ConnectionError, SSLError
 from resilient import BasicHTTPException, SimpleClient, SimpleHTTPException
 from resilient import constants as res_constants
 from resilient import get_and_parse_proxy_env_var, is_env_proxies_set
 from resilient_circuits import app, constants, helpers
+from resilient_circuits.helpers import get_distribution_from_entry_point, get_distribution_name, get_entry_points as iter_entry_points
 from resilient_circuits.actions_component import (SELFTEST_ERRORS,
                                                   SELFTEST_SUBSCRIPTIONS)
 from resilient_circuits.stomp_events import SelftestTerminateEvent
@@ -206,7 +209,7 @@ def check_soar_stomp_connection(cmd_line_args, app_configs):
     LOG.info("- Checking if we can authenticate a STOMP connection with '{0}' to '{1}'".format(user, host))
 
     try:
-        LOG.info("{0}{1}{0}".format(constants.LOG_DIVIDER, helpers.get_env_str(pkg_resources.working_set)))
+        LOG.info("{0}{1}{0}".format(constants.LOG_DIVIDER, helpers.get_env_str(distributions())))
         LOG.info("{0}Instantiating instance of resilient-circuits and starting it...{0}".format(constants.LOG_DIVIDER))
         resilient_circuits_instance = app.App(ALLOW_UNRECOGNIZED=True, IS_SELFTEST=True)
 
@@ -257,14 +260,14 @@ def run_apps_selftest(cmd_line_args, app_configs):
     """
 
     if hasattr(cmd_line_args, "print_env") and cmd_line_args.print_env:
-        LOG.info(helpers.get_env_str(pkg_resources.working_set))
+        LOG.info(helpers.get_env_str(distributions()))
 
     components = defaultdict(list)
 
     # custom entry_point only for selftest functions
-    selftest_entry_points = [ep for ep in pkg_resources.iter_entry_points('resilient.circuits.selftest')]
+    selftest_entry_points = list(iter_entry_points(group='resilient.circuits.selftest'))
     for ep in selftest_entry_points:
-        components[ep.dist].append(ep)
+        components[get_distribution_from_entry_point(ep)].append(ep)
 
     if len(selftest_entry_points) == 0:
         LOG.info("No selftest entry points found.")
@@ -280,14 +283,15 @@ def run_apps_selftest(cmd_line_args, app_configs):
     selftest_unknown_count = 0
 
     for dist, component_list in components.items():
-        if cmd_line_args.install_list is None or dist.project_name in install_list:
+        dist_name = get_distribution_name(dist)
+        if cmd_line_args.install_list is None or dist_name in install_list:
             # remove name from list
-            if dist.project_name in install_list:
-                install_list.remove(dist.project_name)
+            if dist_name in install_list:
+                install_list.remove(dist_name)
 
-            LOG.info("{0}Running selftest for: '{1}'{0}".format(constants.LOG_DIVIDER, dist.project_name))
+            LOG.info("{0}Running selftest for: '{1}'{0}".format(constants.LOG_DIVIDER, dist_name))
             # add an entry for the package
-            LOG.info("\n%s: ", dist.project_name)
+            LOG.info("\n%s: ", dist_name)
             for ep in component_list:
                 # load the entry point
                 try:
@@ -351,7 +355,7 @@ def execute_command(cmd_line_args):
 
     if hasattr(cmd_line_args, "print_env") and cmd_line_args.print_env:
         LOG.info("- Printing runtime environment")
-        LOG.info(helpers.get_env_str(pkg_resources.working_set))
+        LOG.info(helpers.get_env_str(distributions()))
 
     LOG.info("- Getting app.configs")
     app_configs = helpers.get_configs(ALLOW_UNRECOGNIZED=True)

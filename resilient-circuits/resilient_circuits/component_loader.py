@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2024. All Rights Reserved.
-# pragma pylint: disable=line-too-long
+# (c) Copyright IBM Corp. 2010, 2025. All Rights Reserved.
+# pragma pylint: disable=line-too-long, wrong-import-order
 
 """Dynamic component loader"""
 
 import os
 import sys
 import logging
-import pkg_resources
 from circuits import Loader, Event
 from circuits.core.handlers import handler
 from resilient_circuits.stomp_events import SubscribeLowCode, Unsubscribe
 from resilient_circuits import constants, helpers
+from resilient_circuits.helpers import get_distribution_name, get_entry_points as iter_entry_points
 from threading import Lock
 
 LOG = logging.getLogger(__name__)
@@ -88,7 +88,7 @@ class ComponentLoader(Loader):
             self.fire(load_all_success())
 
     def discover_installed_components(self, entry_points):
-        entry_points = pkg_resources.iter_entry_points(entry_points)
+        entry_points = iter_entry_points(group=entry_points)
         ep = None
         try:
             return_list = []
@@ -111,7 +111,7 @@ class ComponentLoader(Loader):
             return return_list
 
         except ImportError as e:
-            LOG.error("Failed to load '%s' from '%s'", ep, ep.dist)
+            LOG.error("Failed to load '%s' from '%s'", ep, ep.name)
             raise e
 
     def update_inbound_handlers(self, custom_q_name: str, cmp_class: object) -> None:
