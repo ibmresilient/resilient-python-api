@@ -742,7 +742,8 @@ class BaseClient(object):
                                     data=mimedata,
                                     co3_context_token=co3_context_token,
                                     timeout=timeout,
-                                    bytes_handle=bytes_handle)
+                                    bytes_handle=bytes_handle,
+                                    skip_retry=skip_retry)
 
     def _get_put(self, uri, apply_func, co3_context_token=None, timeout=None, skip_retry=[]):
         """Internal helper to do a get/apply/put loop

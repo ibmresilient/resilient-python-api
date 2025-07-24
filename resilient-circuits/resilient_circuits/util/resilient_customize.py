@@ -9,6 +9,7 @@ from __future__ import print_function
 import base64
 import json
 import logging
+from resilient_lib import str_to_bool as strtobool
 
 import resilient
 from resilient import (ActionDefinition, Definition, FunctionDefinition,

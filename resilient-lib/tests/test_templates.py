@@ -8,7 +8,8 @@ from resilient_lib import (global_jinja_env, make_payload_from_template,
 from resilient_lib.components.templates_common import (soar_datetimeformat,
                                                        soar_splitpart,
                                                        soar_substitute,
-                                                       soar_trimlist)
+                                                       soar_trimlist,
+                                                       sh_filter)
 
 TEST_DATA = data = {
     "string": "templates",
@@ -238,3 +239,14 @@ def test_template_injection():
 
     with pytest.raises(jinja2.exceptions.SecurityError):
         render(injection_template, [])
+
+@pytest.mark.parametrize("shell_params, expected_results", [
+    ("안녕하세요 세상", "안녕하세요 세상"),
+    ("안녕하세요 $ 세상","안녕하세요 \\$ 세상"),
+    ("恶意软件,坏的", "恶意软件,坏的"),
+    ("something# ^bad", "something\\# ^bad"),
+    ("ÀÁÂÃÄÅÆ\tÇ", "ÀÁÂÃÄÅÆ\\011Ç"),
+    ("no changes", "no changes")
+])
+def test_sh_filter(shell_params, expected_results):
+    assert sh_filter(shell_params) == expected_results
