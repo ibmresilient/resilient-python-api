@@ -289,6 +289,32 @@ def test_post(fx_base_client):
 
     assert r.get("incident_id") == 1001
 
+def test_post_artifact_file_no_retry(fx_base_client):
+    
+    base_client = fx_base_client[0]
+    requests_adapter = fx_base_client[1]
+
+    incident_id = 1001
+    uri = f"/incidents/{incident_id}/artifacts/files"
+    full_uri = f"{base_client.base_url}/rest/orgs/{base_client.org_id}{uri}"
+
+    mock_response = {"status_code": 400, "message": "Bad Request"}
+    requests_adapter.register_uri('POST', full_uri, status_code=400, text=json.dumps(mock_response))
+
+    fake_file = io.BytesIO(b"fake artifact content")
+
+    with pytest.raises(BasicHTTPException) as exc_info:
+        base_client.post_artifact_file(
+        uri=uri,
+        artifact_type="IP Address",
+        artifact_filepath=None,
+        value="127.0.0.0",
+        bytes_handle=fake_file,
+        skip_retry=[400]
+    )
+
+    assert "Bad Request" in str(exc_info.value)
+
 def test_post_with_absolute_uri(fx_base_client):
     # test again with URI absolute
     base_client = fx_base_client[0]
