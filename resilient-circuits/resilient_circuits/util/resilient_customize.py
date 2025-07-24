@@ -8,7 +8,7 @@ from __future__ import print_function
 import base64
 import json
 import logging
-from distutils.util import strtobool
+from resilient_lib import str_to_bool as strtobool
 
 import pkg_resources
 import resilient
