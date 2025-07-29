@@ -1,3 +1,6 @@
+**2025-07: version 1.0.1**
+* convert datetime.utcfromtimestamp to datetime.fromtimestamp
+
 **2023-05: version 1.0**
 
 * Initial release. Includes support for HashiCorp Vault (key-value engine) and Cyberark (CCP)

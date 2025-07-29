@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2010, 2018. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2025. All Rights Reserved.
+# pragma pylint: disable=line-too-long, wrong-import-order
 
 """Utility to import customizations"""
 
@@ -8,15 +9,16 @@ from __future__ import print_function
 import base64
 import json
 import logging
-from distutils.util import strtobool
+from resilient_lib import str_to_bool as strtobool
 
-import pkg_resources
 import resilient
 from resilient import (ActionDefinition, Definition, FunctionDefinition,
                        ImportDefinition, MessageDestinationDefinition,
                        SimpleHTTPException, TypeDefinition)
 from resilient import helpers as res_helpers
 from resilient_circuits.app import AppArgumentParser
+from resilient_circuits.helpers import get_distribution_from_entry_point, get_distribution_name, \
+    get_package_function, get_entry_function, get_entry_points as iter_entry_points
 
 try:
     from builtins import input
@@ -27,21 +29,11 @@ except ImportError:
 
 LOG = logging.getLogger(__name__)
 
-
 def get_customization_definitions(package):
     """Read the default configuration-data section from the given package"""
-    data = None
-    try:
-        dist = pkg_resources.get_distribution(package)
-        entries = pkg_resources.get_entry_map(dist, "resilient.circuits.customize")
-        if entries:
-            for entry in iter(entries):
-                func = entries[entry].load()
-                data = func(client=None)
-    except pkg_resources.DistributionNotFound:
-        pass
-    return data or []
 
+    customize_funct = get_package_function(package, "resilient.circuits.customize")
+    return customize_funct() if customize_funct else None
 
 def get_function_definition(package, function_name):
     """Find a function in the default configuration-data section from the given package"""
@@ -60,9 +52,6 @@ def get_function_definition(package, function_name):
                 if func["name"] == function_name:
                     # Found it!  Success.
                     return func
-
-
-
 
 def setdefault(dictionary, defaults):
     """Fill in the blanks"""
@@ -90,7 +79,7 @@ def customize_resilient(args):
 
     # Call each of the 'customize' entry points to get type definitions,
     # then apply them to the resilient server
-    entry_points = pkg_resources.iter_entry_points('resilient.circuits.customize')
+    entry_points = iter_entry_points(group='resilient.circuits.customize')
     do_customize_resilient(client, entry_points, args.yflag, args.install_list)
 
 
@@ -101,14 +90,14 @@ def do_customize_resilient(client, entry_points, yflag, install_list):
     for entry in entry_points:
         ep_count = ep_count + 1
         def_count = 0
-        dist = entry.dist
-        dist_str = entry.dist.project_name
+        dist = get_distribution_from_entry_point(entry)
+        dist_str = get_distribution_name(dist)
 
         if install_list is None or dist_str in install_list:
             if install_list is not None:
                 install_list.remove(dist_str)
             try:
-                func = entry.load()
+                func = get_entry_function(entry)
             except ImportError:
                 LOG.exception(u"Customizations for package '%s' cannot be loaded.", repr(dist))
                 continue
@@ -119,8 +108,8 @@ def do_customize_resilient(client, entry_points, yflag, install_list):
             # - fields first,
             # - then message destinations,
             # - then actions, functions, etc
-
-            LOG.info(u"Package '%s':", dist)
+            dist_label = f"{dist.name} {dist.version}"
+            LOG.info(u"Package '%s':", dist_label)
             definitions = func(client=client)
             for definition in definitions:
                 def_count = def_count + 1
@@ -142,7 +131,7 @@ def do_customize_resilient(client, entry_points, yflag, install_list):
                 except SimpleHTTPException:
                     LOG.error(u"Failed, %s", customizations.doing)
                     raise
-            LOG.info(u"Package '%s' done.", dist)
+            LOG.info(u"Package '%s' done.", dist_label)
 
     if install_list is not None and len(install_list) > 0:
         LOG.warning("%s not found. Check package name(s)", install_list)
@@ -169,7 +158,7 @@ class Customizations(object):
             yes = False
             inp = input(u"    OK to import {}? (y/n):".format(activity))
             try:
-                yes = strtobool(inp)
+                yes = bool(inp.lower().strip() == "y")
             except ValueError:
                 pass
         if not yes:
@@ -183,7 +172,7 @@ class Customizations(object):
         LOG.debug(json.dumps(import_data, indent=2))
         uri = "/configurations/imports"
         done = False
-        if self.confirm(u"customizations from '{}'".format(dist)):
+        if self.confirm(f"customizations from '{dist.name} {dist.version}'"):
             result = self.client.post(uri, import_data)
             import_id = result["id"]
             LOG.debug(result)
@@ -219,7 +208,6 @@ class Customizations(object):
 
             uri = "/message_destinations"
             all_destinations = dict((dest["programmatic_name"], dest) for dest in self.client.get(uri)["entities"])
-            [dest.get("programmatic_name") for dest in import_data.get("message_destinations", [])]
             for dest in import_data.get("message_destinations", []):
                 dest_name = dest.get("programmatic_name")
                 if dest_name in all_destinations:

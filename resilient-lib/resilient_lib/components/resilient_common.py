@@ -511,7 +511,7 @@ def str_to_bool(value):
     :rtype: bool
     """
     value = str(value).lower()
-    return value in ('1', 'true', 'yes', 'on')
+    return value in ('1', 'true', 'yes', 'y', 'on', 'confirm', 'agree')
 
 
 def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):

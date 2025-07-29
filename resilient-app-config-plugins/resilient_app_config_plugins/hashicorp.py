@@ -3,7 +3,7 @@
 # (c) Copyright IBM Corp. 2023. All Rights Reserved.
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import requests
 from cachetools import TTLCache, cached
@@ -34,10 +34,10 @@ class HashiCorpVault(PAMPluginInterface):
 
     def __init__(self, protected_secrets_manager, key, *args, **kwargs):
         self.protected_secrets_manager = protected_secrets_manager
-        self.key = key # unused in hashicorp, but relevant to others -- here for demo puposes
+        self.key = key # unused in hashicorp, but relevant to others -- here for demo purposes
 
         self.client_token = None
-        self.lease_expiration = datetime.utcnow()
+        self.lease_expiration = datetime.now(timezone.utc)
 
     def _get_access_token(self):
         """
@@ -45,7 +45,7 @@ class HashiCorpVault(PAMPluginInterface):
         reach out to HashiCorp to get client token using
         role_id and secret_id provided in protected secrets.
         """
-        time_before_request = datetime.utcnow()
+        time_before_request = datetime.now(timezone.utc)
 
 
         # check if any configs are missing from the required list
@@ -180,7 +180,7 @@ class HashiCorpVault(PAMPluginInterface):
             LOG.error("HashiCorpVault value '%s' was not properly formatted. Please review the formatting guide for this plugin in the documentation", plain_text_value)
             return default
 
-        if not self.client_token or datetime.utcnow() >= self.lease_expiration:
+        if not self.client_token or datetime.now(timezone.utc) >= self.lease_expiration:
             self._get_access_token()
 
         if not self.client_token:

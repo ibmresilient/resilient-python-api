@@ -3,7 +3,7 @@
 # (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
 
 import os
-import pkg_resources
+import importlib
 
 PACKAGE_NAME = "resilient"
 
@@ -21,7 +21,7 @@ ENV_VAR_APP_HOST_CONTAINER = "APP_HOST_CONTAINER"
 
 # Headers
 HEADER_MODULE_VER_KEY = "Resilient-Module-Version"
-HEADER_MODULE_VER_VALUE = pkg_resources.get_distribution(PACKAGE_NAME).version
+HEADER_MODULE_VER_VALUE = importlib.metadata.version(PACKAGE_NAME)
 
 # Error Codes
 ERROR_CODE_CONNECTION_UNAUTHORIZED = 21

@@ -4,7 +4,7 @@
 
 from datetime import datetime
 import platform
-import pkg_resources  # part of setuptools
+import importlib
 
 METRICS_VERSION = "1.0"
 LOW_CODE_METRICS_VERSION = "2.0"
@@ -23,14 +23,17 @@ class FunctionMetrics:
 
         try:
             # get information about the package we're running
-            pkg = pkg_resources.get_distribution(self.func)
-        except pkg_resources.DistributionNotFound:
+            pkg_version = importlib.metadata.version(self.func)
+            pkg_project_name = importlib.metadata.Distribution.from_name(self.func).name
+        except importlib.metadata.PackageNotFoundError:
             pkg = MissingPkg()
+            pkg_version = pkg.version
+            pkg_project_name = pkg.project_name
 
         return {
             "version": self.version,
-            "package": pkg.project_name,
-            "package_version": pkg.version,
+            "package": pkg_project_name,
+            "package_version": pkg_version,
             "host": platform.node(),
             "execution_time_ms": int(total_time.total_seconds() * 1000),
             "timestamp": self.end_time.strftime("%Y-%m-%d %H:%M:%S")

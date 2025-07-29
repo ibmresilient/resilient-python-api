@@ -1,3 +1,7 @@
+**2025-07: version 51.0.7.0**
+* removed use of pkg_resources
+* updated setuptools to 79.0.x
+
 **2025-05: version 51.0.6.0**
 * New function, get_artifacts, using the artifacts/query_paged API call
 

@@ -4,8 +4,8 @@
 """Utility functions for configuration"""
 
 from __future__ import print_function
+from resilient_circuits.helpers import get_package_function
 import logging
-import pkg_resources
 
 
 LOG = logging.getLogger("__name__")
@@ -13,14 +13,6 @@ LOG = logging.getLogger("__name__")
 
 def get_config_data(package):
     """Read the default configuration-data section from the given package"""
-    data = None
-    try:
-        dist = pkg_resources.get_distribution(package)
-        entries = pkg_resources.get_entry_map(dist, "resilient.circuits.configsection")
-        if entries:
-            entry = next(iter(entries))
-            func = entries[entry].load()
-            data = func()
-    except pkg_resources.DistributionNotFound:
-        pass
-    return data or ""
+
+    config_funct = get_package_function(package, "resilient.circuits.configsection")
+    return config_funct() if config_funct else None

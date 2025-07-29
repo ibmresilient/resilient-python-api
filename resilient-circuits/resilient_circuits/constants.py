@@ -4,7 +4,7 @@
 
 import os
 
-import pkg_resources
+import importlib
 
 PACKAGE_NAME = "resilient-circuits"
 
@@ -47,7 +47,7 @@ APP_CONFIG_LOG_BACKUP_COUNT = "log_backup_count"
 
 # Headers
 HEADER_CIRCUITS_VER_KEY = "Resilient-Circuits-Version"
-HEADER_CIRCUITS_VER_VALUE = pkg_resources.get_distribution(PACKAGE_NAME).version
+HEADER_CIRCUITS_VER_VALUE = importlib.metadata.version(PACKAGE_NAME)
 
 # Exit Codes
 EXIT_SELFTEST_ERROR = 1             # Error running App's selftest

@@ -9,7 +9,7 @@ import json
 import re
 import os.path
 import random
-import datetime
+from datetime import datetime, timezone
 import logging
 import traceback
 import six
@@ -48,7 +48,7 @@ class ActionMessageBase(Event):
         self.timestamp = None
         ts = headers.get("timestamp")
         if ts is not None:
-            self.timestamp = datetime.datetime.utcfromtimestamp(float(ts)/1000)
+            self.timestamp = datetime.fromtimestamp(float(ts)/1000, timezone.utc)
 
         self.name = "_unknown_"
         self.displayname = "Unknown"
