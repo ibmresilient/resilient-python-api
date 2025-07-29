@@ -1,3 +1,6 @@
+**2025-07: version 51.0.7.0**
+* removed use of pkg_resources
+
 **2025-05: version 51.0.6.0**
 * Added support for API headers with the **search** function
 * Added support for API headers with the **get** function
