@@ -3,6 +3,7 @@
 # (c) Copyright IBM Corp. 2010, 2021. All Rights Reserved.
 
 import logging
+import sys
 from argparse import Namespace
 from collections import namedtuple
 
@@ -51,7 +52,10 @@ def test_run_apps_selftest_success():
 
     with patch("resilient_circuits.cmds.selftest.iter_entry_points", create=True) as mocked_entrypoints:
         ep = EP_SUCCESS
-        setattr(ep, "dist", MOCK_DIST("test2", "1.0.0"))
+        if sys.version_info >= (3, 11):
+            ep._for(MOCK_DIST("test2", "1.0.0"))
+        else:
+            setattr(ep, "dist", MOCK_DIST("test2", "1.0.0"))
         mocked_entrypoints.return_value = [ep]
         with patch("resilient_circuits.bin.resilient_circuits_cmd.get_config_file") as mocked_config:
             mocked_config.return_value = mock_paths.MOCK_APP_CONFIG
@@ -72,7 +76,10 @@ def test_run_apps_selftest_failure():
 
         with patch("resilient_circuits.cmds.selftest.iter_entry_points", create=True) as mocked_entrypoints:
             ep = EP_FAILURE
-            setattr(ep, "dist", MOCK_DIST("test", "1.0.0"))
+            if sys.version_info >= (3, 11):
+                ep._for(MOCK_DIST("test", "1.0.0"))
+            else:
+                setattr(ep, "dist", MOCK_DIST("test", "1.0.0"))
             mocked_entrypoints.return_value = [ep]
 
             selftest.run_apps_selftest(parser, app_configs)
@@ -93,7 +100,10 @@ def test_run_apps_selftest_unimplemented():
 
         with patch("resilient_circuits.cmds.selftest.iter_entry_points", create=True) as mocked_entrypoints:
             ep = EP_UNIMPLEMENTED
-            setattr(ep, "dist", MOCK_DIST("test3", "1.0.0"))
+            if sys.version_info >= (3, 11):
+                ep._for(MOCK_DIST("test3", "1.0.0"))
+            else:
+                setattr(ep, "dist", MOCK_DIST("test3", "1.0.0"))
             mocked_entrypoints.return_value = [ep]
 
             selftest.run_apps_selftest(parser, app_configs)
