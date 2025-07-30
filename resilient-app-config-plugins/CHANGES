@@ -1,3 +1,6 @@
+**2025-07: version 1.0.2**
+* Updated requests-pkcs12 dependency to 1.25 for py3.6+
+
 **2025-07: version 1.0.1**
 * convert datetime.utcfromtimestamp to datetime.fromtimestamp
 
