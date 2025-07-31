@@ -4,33 +4,35 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="search" title="Search" href="../../search.html" /><link rel="next" title="resilient-sdk" href="../resilient-sdk/resilient-sdk.html" /><link rel="prev" title="resilient-circuits" href="../resilient-circuits/resilient-circuits.html" />
+        <link rel="prefetch" href="../../_static/IBM_Security_Light.png" as="image" />
+        <link rel="prefetch" href="../../_static/IBM_Security_Dark.png" as="image" />
 
-    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 7.4.4 and Furo 2024.05.06 -->
+    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
         <title>resilient-lib - IBM SOAR Python Documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=387cc868" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
   
       }
     }
@@ -89,19 +91,6 @@
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
   </symbol>
-  <symbol id="svg-sun-half" viewBox="0 0 24 24">
-    <title>Auto light/dark mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M13 12h5" />
-      <path d="M13 15h4" />
-      <path d="M13 18h1" />
-      <path d="M13 9h4" />
-      <path d="M13 6h1" />
-    </svg>
-  </symbol>
   <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
     <title>Auto light/dark, in light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -142,7 +131,7 @@
       <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
       <path d="M13.5 6.5l4 4" />
       <path d="M20 21l2 -2l-2 -2" />
-      <path d="M17 17l-2 2l2 2" /
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
   <symbol id="svg-eye" viewBox="0 0 24 24">
@@ -202,7 +191,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo only-light" src="../../_static/IBM_Security_Light.png" alt="Light Logo"/>
     <img class="sidebar-logo only-dark" src="../../_static/IBM_Security_Dark.png" alt="Dark Logo"/>
@@ -268,7 +256,7 @@
 </pre></div>
 </div>
 <p>To use it within your App development, <strong>import</strong> it like any other Python Package:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">readable_datetime</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">readable_datetime</span>
 
 <span class="n">created_date</span> <span class="o">=</span> <span class="n">readable_datetime</span><span class="p">(</span><span class="n">fn_inputs</span><span class="o">.</span><span class="n">inc_create_date</span><span class="p">,</span> <span class="n">rtn_format</span><span class="o">=</span><span class="s2">&quot;%m-</span><span class="si">%d</span><span class="s2">-%Y %H:%M:%S&quot;</span><span class="p">)</span>
 </pre></div>
@@ -464,6 +452,31 @@ set <code class="docutils literal notranslate"><span class="pre">handle_names</s
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>requests.Response</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="resilient_lib.components.resilient_common.get_artifacts">
+<span class="sig-name descname"><span class="pre">get_artifacts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.resilient_common.get_artifacts" title="Link to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>This functions makes it easy to replace API calls to GET /incidents/{inc_id}/artifacts</dt><dd><p>It uses query_paged capabilities which are the supported way to get artifacts</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>res_client</strong> (<a class="reference internal" href="../resilient/resilient.html#resilient.co3.SimpleClient" title="resilient.co3.SimpleClient"><em>SimpleClient</em></a>) – SimpleClient</p></li>
+<li><p><strong>incident_id</strong> (<em>int</em>) – incident id</p></li>
+<li><p><strong>query_filters</strong> (<em>None</em><em> | </em><em>dict</em>) – any query parameters</p></li>
+<li><p><strong>headers</strong> (<em>None</em><em> | </em><em>dict</em>) – any headers to include, such as handle_format=names</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of returned artifacts</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
 </dd>
 </dl>
 </dd></dl>
@@ -701,8 +714,8 @@ to an Incident or a Task</p>
 in the <code class="docutils literal notranslate"><span class="pre">finally</span></code> block of the <code class="docutils literal notranslate"><span class="pre">FunctionComponent</span></code> code.</p>
 </div>
 <p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">shutil</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="n">path_tmp_file</span><span class="p">,</span> <span class="n">path_tmp_dir</span> <span class="o">=</span> <span class="n">write_to_tmp_file</span><span class="p">(</span><span class="n">attachment_contents</span><span class="p">,</span> <span class="n">tmp_file_name</span><span class="o">=</span><span class="n">attachment_metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">))</span>
@@ -734,11 +747,11 @@ in the <code class="docutils literal notranslate"><span class="pre">finally</spa
 
 <dl class="py class">
 <dt class="sig sig-object py" id="resilient_lib.components.html2markdown.MarkdownParser">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MarkdownParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'**'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">italic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">underline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strikeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'~~'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bullets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monospace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['{{',</span> <span class="pre">'}}']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['h1.',</span> <span class="pre">'h2.',</span> <span class="pre">'h3.',</span> <span class="pre">'h4.',</span> <span class="pre">'h5.',</span> <span class="pre">'h6.']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blockquote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'```'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MarkdownParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'**'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">italic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">underline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'__'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strikeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'~~'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bullets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'*'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monospace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['{{',</span> <span class="pre">'}}']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['h1.',</span> <span class="pre">'h2.',</span> <span class="pre">'h3.',</span> <span class="pre">'h4.',</span> <span class="pre">'h5.',</span> <span class="pre">'h6.']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blockquote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'```'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.html2markdown.MarkdownParser" title="Link to this definition">¶</a></dt>
 <dd><p>Convert HTML text into Markdown. A wrapper for
 <a class="reference external" href="https://docs.python.org/3.6/library/html.parser.html#html.parser.HTMLParser">html.parser.HTMLParser</a></p>
 <p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">MarkdownParser</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">MarkdownParser</span>
 
 <span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;&lt;div class=&#39;rte&#39;&gt;&lt;div&gt;&lt;strong&gt;&lt;u&gt;underline and strong&lt;/u&gt;&lt;/strong&gt;&lt;/div&gt;&lt;/div&gt;&quot;</span>
 <span class="n">markdown</span> <span class="o">=</span> <span class="s2">&quot;*_underline and strong_*&quot;</span>
@@ -770,7 +783,7 @@ returns the converted string</p>
 
 <dl class="py class" id="module-resilient_lib.components.oauth2_client_credentials_session">
 <dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OAuth2ClientCredentialsSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OAuth2ClientCredentialsSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession" title="Link to this definition">¶</a></dt>
 <dd><p>Wrapper around <a class="reference external" href="https://docs.python-requests.org/en/latest/api/#requests.Session">requests.Session</a>
 which receives authentication tokens through the <code class="docutils literal notranslate"><span class="pre">client_credentials</span></code> type of OAuth2 grant,
 and adds tokens to the requests made through the session.
@@ -780,7 +793,7 @@ It also attempts to keep track of the token and refresh it as needed.</p>
 </ul>
 <p>This session does not request authorization from the user first. The scope should be pre-authorized.</p>
 <p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">,</span> <span class="n">RequestsCommon</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">,</span> <span class="n">RequestsCommon</span>
 
 <span class="n">api1</span> <span class="o">=</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">(</span><span class="s1">&#39;https://example1.com/&lt;tenant_id&gt;/oauth/v2/&#39;</span><span class="p">,</span> <span class="n">client_id</span><span class="o">=</span><span class="s1">&#39;xxx&#39;</span><span class="p">,</span> <span class="n">client_secret</span><span class="o">=</span><span class="s1">&#39;xxx&#39;</span><span class="p">)</span>
 <span class="n">api2</span> <span class="o">=</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">(</span><span class="s1">&#39;https://example2.com/&lt;tenant_id&gt;/oauth/v2/&#39;</span><span class="p">,</span> <span class="n">client_id</span><span class="o">=</span><span class="s1">&#39;xxx&#39;</span><span class="p">,</span> <span class="n">client_secret</span><span class="o">=</span><span class="s1">&#39;xxx&#39;</span><span class="p">)</span>
@@ -826,13 +839,13 @@ The mapping protocol must be in the format:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.authenticate">
-<span class="sig-name descname"><span class="pre">authenticate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.authenticate" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">authenticate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'Content-type':</span> <span class="pre">'application/x-www-form-urlencoded'}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.authenticate" title="Link to this definition">¶</a></dt>
 <dd><p>Authenticate with the endpoint</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.get_token">
-<span class="sig-name descname"><span class="pre">get_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.get_token" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_secret</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.oauth2_client_credentials_session.OAuth2ClientCredentialsSession.get_token" title="Link to this definition">¶</a></dt>
 <dd><p><strong>Override this method if the request needs specific information in the
 body of the request</strong></p>
 <p>For example, <em>Cloud Foundry</em> asking <code class="docutils literal notranslate"><span class="pre">grant_type</span></code> to be <code class="docutils literal notranslate"><span class="pre">password</span></code> and API key to be passed in <code class="docutils literal notranslate"><span class="pre">password</span></code>.</p>
@@ -910,7 +923,7 @@ for information on any parameters available</p>
 <h2>Common Request Methods<a class="headerlink" href="#common-request-methods" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommon">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RequestsCommon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_opts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RequestsCommon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_opts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommon" title="Link to this definition">¶</a></dt>
 <dd><p>This class represents common functions around the use of the requests package for REST based APIs.
 It incorporates the app.config section <code class="docutils literal notranslate"><span class="pre">[integrations]</span></code> which can be used to define a common set of proxies
 for use by all functions using this library.</p>
@@ -968,9 +981,9 @@ If <code class="docutils literal notranslate"><span class="pre">callback</span><
 unless the <code class="docutils literal notranslate"><span class="pre">callback</span></code> function raises an error in the parameter
 <code class="docutils literal notranslate"><span class="pre">retry_exceptions</span></code> (see below) in which case the retry logic will kick in.</p>
 <p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">IntegrationError</span><span class="p">,</span> <span class="n">RequestsCommon</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntegrationError</span><span class="p">,</span> <span class="n">RequestsCommon</span>
 
-<span class="k">def</span> <span class="nf">custom_callback</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">custom_callback</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; custom callback function to handle 400 error codes &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&gt;=</span> <span class="mi">400</span> <span class="ow">and</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&lt;</span> <span class="mi">500</span><span class="p">:</span>
         <span class="c1"># raise ValueError which will be retried</span>
@@ -1153,7 +1166,7 @@ or from the <strong>Integrations Section</strong> (<code class="docutils literal
 
 <dl class="py class">
 <dt class="sig sig-object py" id="resilient_lib.components.requests_common.RequestsCommonWithoutSession">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RequestsCommonWithoutSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommonWithoutSession" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RequestsCommonWithoutSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.requests_common.RequestsCommonWithoutSession" title="Link to this definition">¶</a></dt>
 <dd><p>This class extends <a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon" title="resilient_lib.components.requests_common.RequestsCommon"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestsCommon</span></code></a> maintaining the behavior of
 <code class="docutils literal notranslate"><span class="pre">RequestsCommon</span></code> that was present in versions &lt;= 47.1.x.</p>
 <p>The difference is that every time <code class="xref py py-class docutils literal notranslate"><span class="pre">RequestsCommonWithoutSession.execute()</span></code>
@@ -1179,33 +1192,33 @@ is called, this class will use <code class="docutils literal notranslate"><span 
 <span class="sig-name descname"><span class="pre">poller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">named_poller_interval</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">named_last_poller_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.poller_common.poller" title="Link to this definition">¶</a></dt>
 <dd><p>Decorator to wrap a function as the logic for a poller.</p>
 <p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">threading</span><span class="w"> </span><span class="kn">import</span> <span class="n">Thread</span>
 
-<span class="kn">from</span> <span class="nn">resilient_circuits</span> <span class="kn">import</span> <span class="n">AppFunctionComponent</span><span class="p">,</span> <span class="n">is_this_a_selftest</span>
-<span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">poller</span><span class="p">,</span> <span class="n">get_last_poller_date</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">resilient_circuits</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppFunctionComponent</span><span class="p">,</span> <span class="n">is_this_a_selftest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">poller</span><span class="p">,</span> <span class="n">get_last_poller_date</span>
 
 <span class="n">PACKAGE_NAME</span> <span class="o">=</span> <span class="s2">&quot;fn_my_app&quot;</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="k">class</span> <span class="nc">MyPoller</span><span class="p">(</span><span class="n">AppFunctionComponent</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyPoller</span><span class="p">(</span><span class="n">AppFunctionComponent</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">PollerComponent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">opts</span><span class="p">,</span> <span class="n">PACKAGE_NAME</span><span class="p">)</span>
 
         <span class="n">polling_interval</span> <span class="o">=</span> <span class="mi">5</span> <span class="c1"># set to 5 seconds or could get from ``self.options``</span>
         <span class="n">last_poller_time</span> <span class="o">=</span> <span class="n">get_last_poller_date</span><span class="p">(</span><span class="mi">120</span><span class="p">)</span> <span class="c1"># look back 2 hours</span>
 
         <span class="k">if</span> <span class="n">is_this_a_selftest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Running selftest -- disabling poller&quot;</span><span class="p">)</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Running selftest -- disabling poller&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">poller_thread</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
             <span class="n">poller_thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="n">poller_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
     <span class="nd">@poller</span><span class="p">(</span><span class="s1">&#39;polling_interval&#39;</span><span class="p">,</span> <span class="s1">&#39;last_poller_time&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># poll endpoint</span>
         <span class="n">query_results</span> <span class="o">=</span> <span class="n">query_entities_since_last_poll</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;last_poller_time&#39;</span><span class="p">])</span>
@@ -1227,7 +1240,7 @@ is called, this class will use <code class="docutils literal notranslate"><span 
 
 <dl class="py class" id="module-resilient_lib.components.poller_common">
 <dt class="sig sig-object py" id="resilient_lib.components.poller_common.SOARCommon">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SOARCommon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rest_client</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.poller_common.SOARCommon" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SOARCommon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rest_client</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.poller_common.SOARCommon" title="Link to this definition">¶</a></dt>
 <dd><p>Common methods for accessing IBM SOAR cases and their entities: comments, attachments, etc.
 This class and its methods should be used in conjunction with wrapped
 polling logic to communicated with the SOAR platform.</p>
@@ -1260,7 +1273,7 @@ polling logic to communicated with the SOAR platform.</p>
 <code class="docutils literal notranslate"><span class="pre">rowdata</span></code> should be formatted as a dictionary of
 column name and value pairs</p>
 <p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">SOARCommon</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">SOARCommon</span>
 
 <span class="n">soar_common</span> <span class="o">=</span> <span class="n">SOARCommon</span><span class="p">(</span><span class="n">res_client</span><span class="p">)</span>
 
@@ -1467,7 +1480,7 @@ To find all cases that are synced from the endpoint platform,
 provide the unique search field that matches the unique id of your
 endpoint solution.</p>
 <p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">SOARCommon</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">SOARCommon</span>
 
 <span class="n">soar_common</span> <span class="o">=</span> <span class="n">SOARCommon</span><span class="p">(</span><span class="n">res_client</span><span class="p">)</span>
 <span class="n">found_id</span> <span class="o">=</span> <span class="n">get_id_from_endpoint_query_result</span><span class="p">()</span>
@@ -1564,7 +1577,7 @@ that the <code class="docutils literal notranslate"><span class="pre">eval_value
 <p>This method is intended to be used to safely take input strings from the user’s
 config file that will eventually need to evaluated as JSON elsewhere in the code.</p>
 <p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">eval_mapping</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">eval_mapping</span>
 
 <span class="n">config_value</span> <span class="o">=</span> <span class="n">app_configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;some_config&quot;</span><span class="p">)</span>
 <span class="c1"># Assume that &#39;config_value&#39; has a value of</span>
@@ -1622,23 +1635,22 @@ value of <code class="docutils literal notranslate"><span class="pre">DEFAULT_TE
 <ol class="arabic simple" start="3">
 <li><p>Add the following code to your <strong>Function</strong>:</p></li>
 </ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pkg_resources</span>
-<span class="kn">from</span> <span class="nn">resilient_circuits</span> <span class="kn">import</span> <span class="n">AppFunctionComponent</span><span class="p">,</span> <span class="n">FunctionResult</span><span class="p">,</span> <span class="n">app_function</span>
-<span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">make_payload_from_template</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">resilient_circuits</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppFunctionComponent</span><span class="p">,</span> <span class="n">FunctionResult</span><span class="p">,</span> <span class="n">app_function</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_payload_from_template</span>
 
 <span class="n">PACKAGE_NAME</span> <span class="o">=</span> <span class="s2">&quot;my_app&quot;</span>
 <span class="n">FN_NAME</span> <span class="o">=</span> <span class="s2">&quot;my_function_using_jinja&quot;</span>
 
 <span class="c1"># Creating an absolute path to the template</span>
-<span class="n">DEFAULT_TEMPLATE_PATH</span> <span class="o">=</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">resource_filename</span><span class="p">(</span><span class="n">PACKAGE_NAME</span><span class="p">,</span> <span class="s2">&quot;util/templates/&lt;default_name&gt;.jinja2&quot;</span><span class="p">)</span>
+<span class="n">DEFAULT_TEMPLATE_PATH</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="n">PACKAGE_NAME</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;util/templates/&lt;default_name&gt;.jinja2&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FunctionComponent</span><span class="p">(</span><span class="n">AppFunctionComponent</span><span class="p">):</span>
 
-<span class="k">class</span> <span class="nc">FunctionComponent</span><span class="p">(</span><span class="n">AppFunctionComponent</span><span class="p">):</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FunctionComponent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">opts</span><span class="p">,</span> <span class="n">PACKAGE_NAME</span><span class="p">)</span>
 
     <span class="nd">@app_function</span><span class="p">(</span><span class="n">FN_NAME</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">_app_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn_inputs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_app_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn_inputs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Function: A function showing how to use Jinja templates</span>
 <span class="sd">        Inputs:</span>
@@ -1747,7 +1759,7 @@ This environment can be expanded upon to add additional custom filters.</p>
 </dd>
 </dl>
 <p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient</span><span class="o">-</span><span class="n">lib</span> <span class="kn">import</span> <span class="nn">global_jinja_env</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient</span><span class="o">-</span><span class="n">lib</span> <span class="kn">import</span><span class="w"> </span><span class="nn">global_jinja_env</span>
 
 <span class="n">addl_custom_filters</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;filter_name&quot;</span><span class="p">:</span> <span class="n">method_name</span>
@@ -2257,10 +2269,10 @@ increase its <em>random</em> probability</p></li>
 <h2>Exceptions<a class="headerlink" href="#exceptions" title="Link to this heading">¶</a></h2>
 <dl class="py exception">
 <dt class="sig sig-object py" id="resilient_lib.components.integration_errors.IntegrationError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IntegrationError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.integration_errors.IntegrationError" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IntegrationError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_lib.components.integration_errors.IntegrationError" title="Link to this definition">¶</a></dt>
 <dd><p>Class used to signal Integration Errors. It doesn’t add any specific information other than
 identifying the type of error</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">resilient_lib</span> <span class="kn">import</span> <span class="n">IntegrationError</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntegrationError</span>
 
 <span class="k">raise</span> <span class="n">IntegrationError</span><span class="p">(</span><span class="s2">&quot;Example raising custom error&quot;</span><span class="p">)</span>
 </pre></div>
@@ -2270,13 +2282,21 @@ identifying the type of error</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">¶</a></h2>
+<p><strong>2025-07: version 51.0.7.1</strong>
+* No major changes. Just bumping build number to coincide with other builds</p>
+<p><strong>2025-07: version 51.0.7.0</strong>
+* removed use of pkg_resources
+* updated setuptools to 79.0.x</p>
+<p><strong>2025-05: version 51.0.6.0</strong>
+* New function, get_artifacts, using the artifacts/query_paged API call</p>
+<p><strong>2025-02: version 51.0.5.0</strong>
+* No changes</p>
+<p><strong>2024-12: version 51.0.4.0</strong>
+* No changes</p>
 <p><strong>2024-07: version 51.0.2.2</strong>
 * Update dependency version of setuptools version to 70.3.x to address CVE-2024-6345</p>
-<p><strong>2024-07: version 51.0.2.1</strong></p>
-<ul class="simple">
-<li><p>All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12. To continue using
-SOAR libraries on earlier versions of Python, use v52.0.2.0.974</p></li>
-</ul>
+<p><strong>2024-07: version 51.0.2.1</strong>
+* All IBM SOAR Python libraries now only officially support Python 3.9, 3.11, and 3.12. To continue using SOAR libraries on earlier versions of Python, use v52.0.2.0.974</p>
 <p><strong>2024-05: version 51.0.2.0</strong></p>
 <ul class="simple">
 <li><p>Added official support for Python 3.12</p></li>
@@ -2558,6 +2578,7 @@ adding the ability to validate fields in app.config</p></li>
 <li><a class="reference internal" href="#resilient_lib.components.resilient_common.build_task_url"><code class="docutils literal notranslate"><span class="pre">build_task_url()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.resilient_common.clean_html"><code class="docutils literal notranslate"><span class="pre">clean_html()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.resilient_common.close_incident"><code class="docutils literal notranslate"><span class="pre">close_incident()</span></code></a></li>
+<li><a class="reference internal" href="#resilient_lib.components.resilient_common.get_artifacts"><code class="docutils literal notranslate"><span class="pre">get_artifacts()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.resilient_common.get_file_attachment"><code class="docutils literal notranslate"><span class="pre">get_file_attachment()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.resilient_common.get_file_attachment_metadata"><code class="docutils literal notranslate"><span class="pre">get_file_attachment_metadata()</span></code></a></li>
 <li><a class="reference internal" href="#resilient_lib.components.resilient_common.get_file_attachment_name"><code class="docutils literal notranslate"><span class="pre">get_file_attachment_name()</span></code></a></li>
@@ -2655,10 +2676,10 @@ adding the ability to validate fields in app.config</p></li>
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=975c56e2"></script>
-    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+</div><script src="../../_static/documentation_options.js?v=4b7ca7a2"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../_static/scripts/furo.js?v=4e2eecee"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=a56c686a"></script>
     </body>

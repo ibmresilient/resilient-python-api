@@ -4,33 +4,35 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="search" title="Search" href="../../search.html" /><link rel="next" title="resilient-circuits" href="../resilient-circuits/resilient-circuits.html" /><link rel="prev" title="IBM SOAR Python Libraries" href="../../index.html" />
+        <link rel="prefetch" href="../../_static/IBM_Security_Light.png" as="image" />
+        <link rel="prefetch" href="../../_static/IBM_Security_Dark.png" as="image" />
 
-    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 7.4.4 and Furo 2024.05.06 -->
+    <link rel="shortcut icon" href="../../_static/IBM_Security_Shield.ico"/><!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
         <title>resilient - IBM SOAR Python Documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=387cc868" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
-  --color-code-foreground: black;
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
   
       }
     }
@@ -89,19 +91,6 @@
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
   </symbol>
-  <symbol id="svg-sun-half" viewBox="0 0 24 24">
-    <title>Auto light/dark mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M13 12h5" />
-      <path d="M13 15h4" />
-      <path d="M13 18h1" />
-      <path d="M13 9h4" />
-      <path d="M13 6h1" />
-    </svg>
-  </symbol>
   <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
     <title>Auto light/dark, in light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -142,7 +131,7 @@
       <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
       <path d="M13.5 6.5l4 4" />
       <path d="M20 21l2 -2l-2 -2" />
-      <path d="M17 17l-2 2l2 2" /
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
   <symbol id="svg-eye" viewBox="0 0 24 24">
@@ -202,7 +191,6 @@
     <div class="sidebar-container">
       
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
-  
   <div class="sidebar-logo-container">
     <img class="sidebar-logo only-light" src="../../_static/IBM_Security_Light.png" alt="Light Logo"/>
     <img class="sidebar-logo only-dark" src="../../_static/IBM_Security_Dark.png" alt="Dark Logo"/>
@@ -264,7 +252,7 @@
 <h2>API Client<a class="headerlink" href="#api-client" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="resilient.co3.SimpleClient">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimpleClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_ttl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">240</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">certauth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimpleClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_ttl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">240</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">certauth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient" title="Link to this definition">¶</a></dt>
 <dd><p>Python helper class for using the IBM SOAR REST API.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">An example script showing how to connect and get</span>
@@ -274,12 +262,12 @@
 <span class="sd">python sample_connect.py &quot;https://&lt;host&gt;&quot;, &quot;&lt;org_name&gt;&quot;, &quot;&lt;api_key_id&gt;&quot;, &quot;&lt;api_key_secret&gt;&quot;, &quot;&lt;path_to_ca_file&gt;|False&quot;</span>
 <span class="sd">&#39;&#39;&#39;</span>
 
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">resilient</span> <span class="kn">import</span> <span class="n">SimpleClient</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">resilient</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleClient</span>
 
 
-<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
 
     <span class="n">args</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>
@@ -414,7 +402,7 @@ if you specify a uri of <code class="docutils literal notranslate"><span class="
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient.co3.SimpleClient.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_uri_absolute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_response_object</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_retry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.get" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_uri_absolute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_response_object</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_retry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.get" title="Link to this definition">¶</a></dt>
 <dd><p>Gets the specified URI.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -430,6 +418,8 @@ if you specify a uri of <code class="docutils literal notranslate"><span class="
 <li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
 <li><p><strong>is_uri_absolute</strong> (<em>bool</em>) – if True, does not insert /org/{org_id} into the uri.</p></li>
 <li><p><strong>get_response_object</strong> (<em>bool</em>) – if True, returns entire response object.</p></li>
+<li><p><strong>skip_retry</strong> (<em>list</em>) – optional list of http status codes to skip retry operations</p></li>
+<li><p><strong>headers</strong> (<em>dict</em>) – optional dictionary of headers to include in the GET API call</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -503,7 +493,7 @@ if you specify a uri of <code class="docutils literal notranslate"><span class="
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient.co3.SimpleClient.get_put">
-<span class="sig-name descname"><span class="pre">get_put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.get_put" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_retry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.get_put" title="Link to this definition">¶</a></dt>
 <dd><p>Safely performs an update operation by a GET, calls your <code class="docutils literal notranslate"><span class="pre">apply_func</span></code> callback, then PUT
 with the updated value.  If the put call returns a <code class="docutils literal notranslate"><span class="pre">409</span></code> error, these steps are retried.</p>
 <div class="admonition note">
@@ -521,6 +511,7 @@ of the following form: <code class="docutils literal notranslate"><span class="p
 If your callback raises <a class="reference internal" href="#resilient.co3base.NoChange" title="resilient.co3base.NoChange"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.NoChange</span></code></a>, the update is skipped.</p></li>
 <li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
 <li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+<li><p><strong>skip_retry</strong> (<em>list</em>) – list of HTTP responses to skip throwing an exception</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -698,7 +689,7 @@ if you specify a uri of <code class="docutils literal notranslate"><span class="
 
 <dl class="py method">
 <dt class="sig sig-object py" id="resilient.co3.SimpleClient.search">
-<span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.search" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">co3_context_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient.search" title="Link to this definition">¶</a></dt>
 <dd><p>Posts to the <code class="docutils literal notranslate"><span class="pre">SearchExREST</span></code> endpoint.</p>
 <p>Endpoint for performing full text searches through incidents and incident child objects
 (tasks, incident comments, task comments, milestones, artifacts, incident attachments,
@@ -709,6 +700,7 @@ task attachments, and data tables).</p>
 <li><p><strong>payload</strong> (<em>dict</em>) – The SearchExInputDTO parameters for performing a search.</p></li>
 <li><p><strong>co3_context_token</strong> (<em>str</em>) – The <code class="docutils literal notranslate"><span class="pre">Co3ContextToken</span></code> from an Action Module message, if available.</p></li>
 <li><p><strong>timeout</strong> (<em>int</em>) – Optional timeout (seconds).</p></li>
+<li><p><strong>headers</strong> (<em>dict</em><em> | </em><em>None</em>) – key/value pairs for additional headers. ex: {“handle_format”: “names”}</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -727,19 +719,19 @@ task attachments, and data tables).</p>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="resilient.co3.SimpleHTTPException">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimpleHTTPException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleHTTPException" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimpleHTTPException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleHTTPException" title="Link to this definition">¶</a></dt>
 <dd><p>Exception for HTTP errors.</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="resilient.co3.PatchConflictException">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PatchConflictException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_status</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.PatchConflictException" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PatchConflictException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_status</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.PatchConflictException" title="Link to this definition">¶</a></dt>
 <dd><p>Exception for patch conflicts.</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="resilient.co3base.NoChange">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NoChange</span></span><a class="headerlink" href="#resilient.co3base.NoChange" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NoChange</span></span><a class="headerlink" href="#resilient.co3base.NoChange" title="Link to this definition">¶</a></dt>
 <dd><p>Exception that can be raised within a get/put handler or a patch callback
 to indicate ‘no change’ (which then just bypasses the update operation).</p>
 </dd></dl>
@@ -747,6 +739,17 @@ to indicate ‘no change’ (which then just bypasses the update operation).</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">¶</a></h2>
+<p><strong>2025-07: version 51.0.7.1</strong>
+* No major changes. Just bumping build number to coincide with other builds</p>
+<p><strong>2025-07: version 51.0.7.0</strong>
+* removed use of pkg_resources</p>
+<p><strong>2025-05: version 51.0.6.0</strong>
+* Added support for API headers with the <strong>search</strong> function
+* Added support for API headers with the <strong>get</strong> function</p>
+<p><strong>2025-02: version 51.0.5.0</strong>
+* No changes</p>
+<p><strong>2024-12: version 51.0.4.0</strong>
+* Bug fix when using get_put with skip_retry</p>
 <p><strong>2024-07: version 51.0.2.2</strong>
 * Update dependency version of setuptools version to 70.3.x to address CVE-2024-6345</p>
 <p><strong>2024-07: version 51.0.2.1</strong></p>
@@ -1139,10 +1142,10 @@ must be changed to import from <code class="docutils literal notranslate"><span 
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=975c56e2"></script>
-    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+</div><script src="../../_static/documentation_options.js?v=4b7ca7a2"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../../_static/scripts/furo.js?v=4e2eecee"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=a56c686a"></script>
     </body>
