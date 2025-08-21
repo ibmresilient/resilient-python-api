@@ -267,3 +267,7 @@ class SOARStompListener(stomp.ConnectionListener):
 
     def on_heartbeat_timeout(self):
         LOG.error("STOMP heartbeat timed-out...")
+        # Ideally this should be handled by the on_disconnected callback, however a heartbeat timeout will cause the
+        # stomp.py component to close the stomp connection and client transport so the callback is not called.
+        # Fire a Disconnect event to try and Reconnect.
+        self.component.fire(Disconnect(reconnect=True))
