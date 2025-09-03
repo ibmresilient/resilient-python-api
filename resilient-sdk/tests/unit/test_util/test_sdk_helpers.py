@@ -159,14 +159,20 @@ def test_has_permissions(fx_mk_temp_dir):
     # Set permissions to Read only
     os.chmod(temp_permissions_file, stat.S_IRUSR)
 
-    with pytest.raises(SDKException, match=r"User does not have WRITE permissions"):
+    if os.geteuid() == 0: # if user is root
         sdk_helpers.has_permissions(os.W_OK, temp_permissions_file)
+    else:
+        with pytest.raises(SDKException, match=r"User does not have WRITE permissions"):
+            sdk_helpers.has_permissions(os.W_OK, temp_permissions_file)
 
     # Set permissions to Write only
     os.chmod(temp_permissions_file, stat.S_IWUSR)
 
-    with pytest.raises(SDKException, match=r"User does not have READ permissions"):
+    if os.geteuid() == 0: # if user is root
         sdk_helpers.has_permissions(os.R_OK, temp_permissions_file)
+    else:
+        with pytest.raises(SDKException, match=r"User does not have READ permissions"):
+            sdk_helpers.has_permissions(os.R_OK, temp_permissions_file)
 
 
 def test_validate_file_paths(fx_mk_temp_dir):
