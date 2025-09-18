@@ -27,6 +27,20 @@ from resilient.co3 import SimpleClient
 from tests.shared_mock_data import mock_paths
 
 
+class MockComponent:
+    def __init__(self, reloading):
+        self.parent = MockParent()
+        self.parent.parent = MockGrandparent(reloading)
+
+class MockParent:
+    def __init__(self):
+        pass
+
+class MockGrandparent:
+    def __init__(self, reloading):
+        self.reloading = reloading
+
+
 @pytest.fixture
 def fx_simple_client():
     """
@@ -124,3 +138,7 @@ def fx_config_file(tmp_path_factory):
     yield app_config
     print("Removing temporary config file...")
     os.remove(app_config)
+
+@pytest.fixture
+def component():
+    return MockComponent(reloading=False)
