@@ -255,7 +255,7 @@ class SOARStompListener(stomp.ConnectionListener):
 
     def on_disconnected(self):
         LOG.error("STOMP disconnected. Firing disconnected event with reconnect=True")
-        #self.component.fire(Disconnect(reconnect=True))
+        self.component.fire(Disconnect(reconnect=True))
 
     def on_connected(self, frame):
         LOG.debug("STOMP connected!")
