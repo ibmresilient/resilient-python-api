@@ -6,9 +6,9 @@
 import logging
 import sys
 import traceback
-
 import stomp
-from circuits import BaseComponent
+
+from circuits import BaseComponent, Event, Timer
 from circuits.core.handlers import handler
 
 from resilient_circuits import constants
@@ -234,6 +234,7 @@ class SOARStompListener(stomp.ConnectionListener):
     def __init__(self, component):
         super(SOARStompListener, self).__init__()
         self.component = component
+        self.on_disconnected_fired = False
 
         LOG.debug("STOMP listener initiated and listening for STOMP events")
 
@@ -254,7 +255,7 @@ class SOARStompListener(stomp.ConnectionListener):
 
     def on_disconnected(self):
         LOG.error("STOMP disconnected. Firing disconnected event with reconnect=True")
-        self.component.fire(Disconnect(reconnect=True))
+        #self.component.fire(Disconnect(reconnect=True))
 
     def on_connected(self, frame):
         LOG.debug("STOMP connected!")
@@ -267,7 +268,9 @@ class SOARStompListener(stomp.ConnectionListener):
 
     def on_heartbeat_timeout(self):
         LOG.error("STOMP heartbeat timed-out...")
-        # Ideally this should be handled by the on_disconnected callback, however a heartbeat timeout will cause the
-        # stomp.py component to close the stomp connection and client transport so the callback is not called.
-        # Fire a Disconnect event to try and Reconnect.
-        self.component.fire(Disconnect(reconnect=True))
+        # Normally reconnect should be handled by the on_disconnected callback, however, on rare occasions a heartbeat
+        # timeout can occur which closes the stomp connection without the callback getting triggered.
+        reloading = getattr(self.component.parent.parent, "reloading", False)
+        if not reloading:
+            # Fire a 'reconnect' event STOMP_RECONNECT_INITIAL_DELAY from now to attempt a reconnect if required.
+            Timer(constants.STOMP_RECONNECT_INITIAL_DELAY, Event.create("reconnect")).register(self.component)
