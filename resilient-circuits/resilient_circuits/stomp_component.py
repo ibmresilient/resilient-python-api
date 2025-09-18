@@ -234,7 +234,6 @@ class SOARStompListener(stomp.ConnectionListener):
     def __init__(self, component):
         super(SOARStompListener, self).__init__()
         self.component = component
-        self.on_disconnected_fired = False
 
         LOG.debug("STOMP listener initiated and listening for STOMP events")
 
