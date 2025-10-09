@@ -792,7 +792,11 @@ class TestFunctionRequests(unittest.TestCase):
         resp = self.retry_function(rc.execute, "GET", "{0}/cookies".format(self.URL_TEST_HTTP_VERBS))
 
         assert "cookies" in resp.json()
-        assert resp.json()["cookies"] == {"foo": "bar", "jon": "snow"}
+        cookies = resp.json()["cookies"]
+
+        # ignore extras from cloudflare
+        assert cookies.get("foo") == "bar"
+        assert cookies.get("jon") == "snow"
 
         # Test again with normal RC object, where cookies won't persist
         rc = RequestsCommonWithoutSession()
