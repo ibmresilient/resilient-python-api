@@ -36,7 +36,7 @@ sync_branch() {
     target_branch=$2
 
     print_msg "Syncing INTERNAL '$source_branch' branch with PUBLIC '$target_branch' branch"
-    git clone --branch=$source_branch "https://$GITHUB_AUTH_TOKEN@github.ibm.com:/Resilient/resilient-python-api.git" "$source_branch-dir"
+    git clone --branch=$source_branch "https://$GITHUB_AUTH_TOKEN@github.ibm.com/Resilient/resilient-python-api.git" "$source_branch-dir"
     cd "$source_branch-dir"
     git checkout $source_branch
     git fetch && git pull
@@ -45,7 +45,11 @@ sync_branch() {
     for item in "${DO_NOT_SYNC[@]}"; do
         rm -f -R $item
     done
-    git push -f https://$GH_TOKEN_PUBLIC@github.com:/ibmresilient/resilient-python-api.git $source_branch:$target_branch
+
+    git add -A
+    git diff-index --quiet HEAD || git commit -m "Syncing external repository on $(date +%F)"
+
+    git push -f https://$GH_TOKEN_PUBLIC@github.com/ibmresilient/resilient-python-api.git $source_branch:$target_branch
 
     cd $TRAVIS_BUILD_DIR
 }
