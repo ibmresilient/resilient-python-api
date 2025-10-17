@@ -311,7 +311,7 @@ def fx_pip_install_bandit():
     After: if bandit wasn't already installed: pip uninstalls bandit
     """
     # TODO: once we support Python > 3.6 address this
-    FIXED_VERSION = "1.7.1"
+    FIXED_VERSION = "1.8.6"
 
     # bool values of whether bandit was already installed
     bandit_installed = False
