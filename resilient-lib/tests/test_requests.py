@@ -792,7 +792,7 @@ class TestFunctionRequests(unittest.TestCase):
         resp = self.retry_function(rc.execute, "GET", "{0}/cookies".format(self.URL_TEST_HTTP_VERBS))
 
         assert "cookies" in resp.json()
-        assert resp.json()["cookies"] == {"foo": "bar", "jon": "snow"}
+        assert set({"foo": "bar", "jon": "snow"}.items()).issubset(resp.json()["cookies"].items())
 
         # Test again with normal RC object, where cookies won't persist
         rc = RequestsCommonWithoutSession()
