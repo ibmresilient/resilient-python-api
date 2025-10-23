@@ -1,5 +1,10 @@
 #!/bin/bash -e
 
+# functions
+print_msg () {
+    printf "\n--------------------\n$1\n--------------------\n"
+}
+
 git clone --branch gh-pages "https://$GITHUB_AUTH_TOKEN@github.ibm.com/Resilient/resilient-python-api.git" gh-pages
 
 cd gh-pages

@@ -68,10 +68,12 @@ env:
 
   - DOCKER_IMAGE_NAME="soarapps-base-docker-image"
 
+  - PATH_DOWNLOAD_SCRIPT_SAVE_LOC="$TRAVIS_BUILD_DIR/download_common_scripts.py"
+
 # Install package deps
 before_install:
   - pip install -U pip setuptools requests retry2
-  - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO"
+  - $PATH_SCRIPTS_DIR/download_common_scripts.sh "$PATH_COMMON_SCRIPTS_DIR" "$GH_PATH_COMMON_SCRIPTS_REPO" "$PATH_DOWNLOAD_SCRIPT_SAVE_LOC" "$BRANCH_HYDRA_COMMON_SCRIPTS"
 
 notifications:
   slack:
