@@ -54,7 +54,7 @@ print_msg "Writing .pypirc file"
 # Write .pypirc file
 sed -e "s|{{ARTIFACTORY_PYPI_REPO_URL}}|$ARTIFACTORY_PYPI_REPO_URL|" \
 -e "s|{{ARTIFACTORY_USERNAME}}|$ARTIFACTORY_USERNAME|" \
--e "s|{{ARTIFACTORY_API_KEY}}|$ARTIFACTORY_API_KEY|" \
+-e "s|{{ARTIFACTORY_API_TOKEN}}|$ARTIFACTORY_API_TOKEN|" \
 -e "s|{{PYPI_API_KEY}}|$PYPI_API_KEY|" \
 $PATH_TEMPLATE_PYPIRC > $HOME/.pypirc
 
@@ -113,7 +113,7 @@ if [ "$deploy" = true ] ; then
         artifactory_path=$ARTIFACTORY_LIB_LOCATION/$package_name
         print_msg "copying $package_name to Artifactory at: $artifactory_path"
         # curl -H [header including the Artifactory API Key] -T [path to the file to upload to Artifactory] "https://na.artifactory.swg-devops.com/artifactory/<repo-name>/<path-in-repo>"
-        curl -H "Authorization: Bearer ${ARTIFACTORY_API_KEY}" -T $p "$artifactory_path"
+        curl -H "Authorization: Bearer ${ARTIFACTORY_API_TOKEN}" -T $p "$artifactory_path"
     done
 fi
 

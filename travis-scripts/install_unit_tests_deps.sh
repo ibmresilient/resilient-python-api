@@ -1,3 +1,3 @@
 #!/bin/bash -e
 
-pip install tox
+pip install -U pip setuptools requests retry2 tox

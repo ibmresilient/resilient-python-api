@@ -151,7 +151,7 @@ def test_generate_uuid_from_string():
     the_generated_uuid = sdk_helpers.generate_uuid_from_string(the_string)
     assert the_generated_uuid == the_uuid
 
-
+@pytest.mark.skipif(os.geteuid() == 0, reason="redundant if run as root e.g. on SPS")
 def test_has_permissions(fx_mk_temp_dir):
     temp_permissions_file = os.path.join(mock_paths.TEST_TEMP_DIR, "mock_permissions.txt")
     sdk_helpers.write_file(temp_permissions_file, mock_data.mock_file_contents)
