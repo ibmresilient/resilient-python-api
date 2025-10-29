@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -Eeuo pipefail
+set -euo pipefail
 
 # functions
 function print_msg () {
@@ -32,41 +32,19 @@ print_msg "Trigger type for GitHub branch $BRANCH: $TRIGGER_TYPE"
 # helper functions
 is_master_branch()      { [[ "$BRANCH" == "$GIT_MASTER_BRANCH" ]]; }
 is_release_branch()     { [[ "$BRANCH" =~ $GIT_RELEASE_BRANCH_REGEX ]]; }
-is_pr()                 { [[ "$(get_env pipeline_namespace)" == "pr" && "$TRIGGER_TYPE" == "scm" ]]; }
+is_pr()                 { [[ "$PIPELINE_NAMESPACE" == "pr" && "$TRIGGER_TYPE" == "scm" ]]; }
 is_pypi_branch()        { [[ "$BRANCH" =~ $GIT_PYPI_BRANCH_REGEX ]]; }
 is_pages_branch()       { [[ "$BRANCH" =~ $GIT_PAGES_BRANCH_REGEX ]]; }
 is_timer_trigger()      { [[ "$TRIGGER_TYPE" == "timer" ]]; }
 commit_has_sync_flag()  { [[ "$GIT_COMMIT_MESSAGE" =~ \[sync\] ]]; }
 
-# only for master and release branches
-should_build_branch() { 
-    is_master_branch || is_release_branch || is_pr
-}
-
-# only for master and release branches, not timed jobs
-should_deploy_artifactory() { 
-    ! is_timer_trigger && (is_master_branch || is_release_branch) && ! is_pr
-}
-
-# only for master, release/.. or pages/... branches, not timed jobs
-should_deploy_docs() {
-    ! is_timer_trigger && (is_master_branch || is_release_branch || is_pages_branch) && ! is_pr
-}
-
-# only for release/pypi/... branches
-should_release_pypi() {
-    is_pypi_branch && ! is_pr
-}
-
-# only for release/pypi/... branches OR timed jobs building master
-should_release_quay() {
-    is_pypi_branch || (is_timer_trigger && is_master_branch) && ! is_pr
-}
-
-# only for release/pypi/... branches OR master branch with “[sync]” commit
-should_sync_public_repo() {
-    is_pypi_branch || (is_master_branch && commit_has_sync_flag) && ! is_pr
-}
+is_core_branch() { is_master_branch || is_release_branch; }
+should_build_packages() { ! is_pages_branch; }                                                      # only for master, release branches and PRs
+should_deploy_artifactory() { ! is_timer_trigger && is_core_branch; }                               # only for master and release branches, not timed jobs
+should_deploy_docs() { ! is_timer_trigger && { is_pages_branch || is_core_branch; }; }              # only for master, release/.. or pages/... branches, not timed jobs
+should_release_pypi() { is_pypi_branch; }                                                           # only for release/pypi/... branches
+should_release_quay() { is_pypi_branch || { is_timer_trigger && is_master_branch; }; }              # only for release/pypi/... branches OR timed jobs building master
+should_sync_public_repo() { is_pypi_branch || { commit_has_sync_flag && is_master_branch; }; }      # only for release/pypi/... branches OR master branch with “[sync]” commit
 
 # paths
 app_repo_dir="$WORKSPACE/$(load_repo app-repo path)"
@@ -78,6 +56,7 @@ PATH_TEMPLATE_PYPIRC="$app_repo_dir/travis-scripts/template.pypirc"
 # docker config
 DOCKER_IMAGE_NAME="soarapps-base-docker-image"
 ARTIFACTORY_DOCKER_REPO_NAME="$(get_env ARTIFACTORY_DOCKER_REPO_NAME)"
+RESILIENT_ARTIFACTORY_DOCKER_REPO_NAME="$(get_env RESILIENT_ARTIFACTORY_DOCKER_REPO_NAME)"
 ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME="$(get_env ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME)"
 QUAY_USERNAME="ibmresilient"
 QUAY_PASSWORD="$(get_env QUAY_PASSWORD)"
@@ -106,19 +85,14 @@ PAGES_PUBLIC_LINK="https://ibm.biz/soar-python-docs"
 
 # build info
 LATEST_TAG=$(git describe --abbrev=0 --tags)
-echo "LATEST_TAG: $LATEST_TAG"
 IS_MASTER=$([[ "$BRANCH" != *"master"* ]]; echo $?)
-echo "IS_MASTER: $IS_MASTER"
 IS_RELEASE=$([[ "$BRANCH" != *"release/"* ]]; echo $?)
-echo "IS_RELEASE: $IS_RELEASE"
 LIB_VERSION=`if [[ $IS_RELEASE -eq 1 ]]; then echo $(echo ${BRANCH##*/} | cut -d "." -f 1,2,3,4); else echo $(echo $LATEST_TAG | cut -d "." -f 1,2,3,4); fi`
-echo "LIB_VERSION: $LIB_VERSION"
 NEW_VERSION="${LIB_VERSION}.${BUILD_NUMBER}"
-echo "NEW_VERSION: $NEW_VERSION"
 ARTIFACTORY_LIB_LOCATION="${ARTIFACTORY_REPO_URL}/${LIB_VERSION}/${NEW_VERSION}"
 SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
-echo "SETUPTOOLS_SCM_PRETEND_VERSION: $SETUPTOOLS_SCM_PRETEND_VERSION"
 DEBUG_PYTHON_ENVIRONMENT="$(get_env debug_python_environment)"
+PIPELINE_NAMESPACE="$(get_env pipeline_namespace)"
 
 # auth
 GITHUB_AUTH_TOKEN="$(get_env GITHUB_AUTH_TOKEN)"
@@ -126,6 +100,8 @@ NOTIFICATION_HOOK="$(get_env NOTIFICATION_HOOK)"
 
 export app_repo_dir
 export ARTIFACTORY_API_TOKEN
+export ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME
+export ARTIFACTORY_DOCKER_REPO_NAME
 export ARTIFACTORY_LIB_LOCATION
 export ARTIFACTORY_PYPI_REPO_URL
 export ARTIFACTORY_USERNAME
@@ -134,8 +110,10 @@ export GITHUB_AUTH_TOKEN
 export NOTIFICATION_HOOK
 export PATH_TEMPLATE_PYPIRC
 export PYPI_API_KEY
-export TRAVIS_BUILD_DIR # TODO: remove references to Travis
+export RESILIENT_ARTIFACTORY_DOCKER_REPO_NAME
 export SETUPTOOLS_SCM_PRETEND_VERSION
+export TRAVIS_BUILD_DIR # TODO: remove references to Travis
+export QUAY_DOCKER_REGISTRY_BASE_NAME
 
 # common scripts use python command rather than python3 - create a symbolic link
 sudo ln -s /usr/bin/python3 /usr/local/bin/python
@@ -152,51 +130,37 @@ pip install requests retry2 twine build jinja2 sphinx furo sphinx-copybutton
 git config --global user.name "soar-apps"
 git config --global user.email "soar-apps@ibm.com"
 
-# build Packages in Python 3.11
-if should_build_branch; then
+build_packages(){
     print_msg "Building packages in Python 3.11 for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
-    "$PATH_SCRIPTS_DIR"/build_and_deploy_packages.sh no_deploy
-else
-    print_msg "Skipping building packages in Python 3.11 for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
-fi
+    "$PATH_SCRIPTS_DIR"/build_and_deploy_packages.sh no_deploy    
+}
 
-# build base image for PR builds
-if is_pr; then
-    print_msg "Building Docker base image for PR builds, branch $BRANCH"
+build_and_deploy_base_images(){
+    print_msg "Building soarapps-base-docker-image"
     repo_login "${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}" "${ARTIFACTORY_USERNAME}" "${ARTIFACTORY_API_TOKEN}"
-    "$PATH_SCRIPTS_DIR"/build_pr_docker_base_image.sh "${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}/${ARTIFACTORY_DOCKER_REPO_NAME}" "${NEW_VERSION}"
-fi
+    repo_login "${QUAY_DOCKER_REGISTRY_BASE_NAME}" "${QUAY_USERNAME}" "${QUAY_PASSWORD}"
+    "$PATH_SCRIPTS_DIR"/build_docker_base_image.sh "${NEW_VERSION}" "$(should_deploy_artifactory; echo $?)" "$(should_release_quay; echo $?)"
+}
 
-# deploy packages to Artifactory and deploy Docker base image to Artifactory
-if should_deploy_artifactory; then
-    print_msg "Deploying packages to Artifactory and deploying Docker base image to Artifactory for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
+deploy_packages_to_artifactory(){
+    print_msg "Deploying packages to Artifactory for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
     "$PATH_SCRIPTS_DIR"/build_and_deploy_packages.sh do_deploy
 
     print_msg "Sending notification to Slack"
     PARSED_VERSION=$(echo "$NEW_VERSION" | cut -d "v" -f 2)
     "$PATH_COMMON_SCRIPTS_DIR"/send_slack_notification_sps.sh "Link to Artifactory - <$ARTIFACTORY_LIB_LOCATION|$NEW_VERSION> \n Install command - \`\`\`pip install -U <package-name>==$PARSED_VERSION -i https://<EMAIL_ADDRESS>:<ARTIFACTORY_ACCESS_TOKEN>@na.artifactory.swg-devops.com/artifactory/api/pypi/sec-resilient-team-integrations-pypi-virtual/simple\`\`\` " "success"
+}
 
-    print_msg "Building Docker base image and pushing to Artifactory"
-    repo_login "${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}" "${ARTIFACTORY_USERNAME}" "${ARTIFACTORY_API_TOKEN}"
-    "$PATH_SCRIPTS_DIR"/build_and_deploy_docker_base_image.sh "${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}/${ARTIFACTORY_DOCKER_REPO_NAME}" "${NEW_VERSION}"
-else
-    print_msg "Skipping deploying packages to Artifactory and deploying Docker base image to Artifactory for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
-fi
-
-# deploy documentation
-if should_deploy_docs; then
+deploy_internall_documentation(){
     print_msg "Deploying documentation internally for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
     "$PATH_SCRIPTS_DIR"/build_and_deploy_packages.sh no_deploy no_release deploy_docs
 
     print_msg "Deploying to GitHub Pages..."
     "$PATH_SCRIPTS_DIR"/deploy_documentation.sh
     "$PATH_COMMON_SCRIPTS_DIR"/send_slack_notification_sps.sh "INTERNAL Docs for $NEW_VERSION have been published and are available at <$PAGES_INTERNAL_LINK|$PAGES_INTERNAL_LINK>" "success";
-else
-    print_msg "Skipping deploying documentation for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
-fi
+}
 
-# release to Pypi
-if should_release_pypi; then
+release_to_pypi(){
     print_msg "Releasing to PYPI for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
     "$PATH_SCRIPTS_DIR"/build_and_deploy_packages.sh no_deploy do_release
 
@@ -210,26 +174,48 @@ if should_release_pypi; then
     cd $repo_dir
     git tag -a "$PYPI_GITHUB_TAG_NAME" -m "$PYPI_GITHUB_TAG_MESSAGE" && git push --follow-tags
     cd ../ && rm -r $repo_dir
+}
+
+sync_publi_repos(){
+    print_msg "Syncing public repo for GitHub branch $BRANCH, trigger $TRIGGER_TYPE, commit message $GIT_COMMIT_MESSAGE"
+    "$PATH_SCRIPTS_DIR"/sync_public_repo.sh "ALL"
+    "$PATH_COMMON_SCRIPTS_DIR"/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
+}
+
+# build Packages in Python 3.11
+if should_build_packages; then
+    build_packages
 else
-    print_msg "Skipping releasing to PYPI for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
+    print_msg "Skipping building packages in Python 3.11 for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
 fi
 
-# release to quay
-if should_release_quay; then
-    print_msg "Releasing to Quay for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
-    repo_login "${QUAY_URL}" "${QUAY_USERNAME}" "${QUAY_PASSWORD}"
+# build soarapps-base-docker-image
+build_and_deploy_base_images
 
-    print_msg "Building Docker base image and pushing to Quay"
-    "$PATH_SCRIPTS_DIR"/build_and_deploy_docker_base_image.sh "${QUAY_DOCKER_REGISTRY_BASE_NAME}" "${NEW_VERSION}"
+# deploy packages to Artifactory and deploy Docker base image to Artifactory
+if should_deploy_artifactory; then
+    deploy_packages_to_artifactory
+else
+    print_msg "Skipping deploying packages to Artifactory for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
+fi
+
+# deploy documentation
+if should_deploy_docs; then
+    deploy_internall_documentation
+else
+    print_msg "Skipping deploying documentation for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
+fi
+
+# release to Pypi
+if should_release_pypi; then
+    release_to_pypi
 else
     print_msg "Skipping releasing to PYPI for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
 fi
 
 # sync public repo
 if should_sync_public_repo; then
-    print_msg "Syncing public repo for GitHub branch $BRANCH, trigger $TRIGGER_TYPE, commit message $GIT_COMMIT_MESSAGE"
-    "$PATH_SCRIPTS_DIR"/sync_public_repo.sh "ALL"
-    "$PATH_COMMON_SCRIPTS_DIR"/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
+    sync_publi_repos
 else
     print_msg "Skipping syncing public repo for GitHub branch $BRANCH, trigger $TRIGGER_TYPE, commit message $GIT_COMMIT_MESSAGE"
 fi
