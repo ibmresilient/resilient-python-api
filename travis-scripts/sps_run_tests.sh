@@ -176,7 +176,6 @@ function create_code_coverage_report() {
 
 
 function main(){
-    echo "BRANCH: $BRANCH"
     set_up_environment
 
     run_python_39_unit_tests
