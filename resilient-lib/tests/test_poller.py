@@ -389,7 +389,7 @@ def test_get_last_poller_date():
         mock_time.return_value = datetime.datetime.fromtimestamp(1234)
 
         # NOTE: these hard coded timestamps are set to work with
-        # Travis's timezone so might not work locally
+        # SPS's timezone so might not work locally
         x = get_last_poller_date(20)
         assert str(x) == "1970-01-01 00:00:34"
 

@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-cd $TRAVIS_BUILD_DIR
+cd $app_repo_dir
 
 paths_all_dists=()
 
@@ -46,7 +46,7 @@ fi
 ###########
 
 print_msg "Installing app config plugins package"
-pip install $TRAVIS_BUILD_DIR/resilient-app-config-plugins
+pip install $app_repo_dir/resilient-app-config-plugins
 
 
 print_msg "Writing .pypirc file"
@@ -60,7 +60,7 @@ $PATH_TEMPLATE_PYPIRC > $HOME/.pypirc
 
 for p in "${package_names[@]}"; do
     # Get directory of package
-    dir=$(echo $TRAVIS_BUILD_DIR/$p)
+    dir=$(echo $app_repo_dir/$p)
     print_msg "Building source distribution of $dir"
 
     # Remove any old dist files.
@@ -103,7 +103,7 @@ for p in "${package_names[@]}"; do
 done
 
 # Go back to main directory when done building
-cd $TRAVIS_BUILD_DIR
+cd $app_repo_dir
 
 if [ "$deploy" = true ] ; then
     # Loop paths_all_dists and copy to Artifactory using curl
@@ -123,4 +123,4 @@ if [ "$deploy_docs" = true ] ; then
     touch docs/_build/.nojekyll
 fi
 
-cd $TRAVIS_BUILD_DIR
+cd $app_repo_dir

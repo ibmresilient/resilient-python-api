@@ -41,7 +41,7 @@ set -euo pipefail
 ##       - DOCKER_IMAGE_NAME
 ##       - QUAY_DOCKER_REGISTRY_BASE_NAME
 ##       - ARTIFACTORY_DOCKER_REPO_NAME
-##       - TRAVIS_BUILD_DIR - TODO: Remove references to Travis
+##       - app_repo_dir
 ##       - TRIGGER_TYPE (set by SPS)
 ## ----------------------------------------------------------------------------
 
@@ -72,7 +72,7 @@ build_and_tag_docker_image() {
         --quiet \
         --build-arg "RESILIENT_CIRCUITS_VERSION=${CIRCUITS_VERSION}" \
         --build-arg "PYTHON_VERSION=${python_version}" \
-        "${TRAVIS_BUILD_DIR}"
+        "${app_repo_dir}"
 }
 
 print_msg() {

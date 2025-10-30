@@ -32,7 +32,7 @@ def test_get_resilient_client(fx_mk_temp_dir, fx_mk_app_config, caplog):
     assert isinstance(res_client, SimpleClient)
     assert "Connecting to IBM Security SOAR at: 192.168.56.1" in caplog.text
 
-@pytest.mark.skip("Run locally, but can't run in Travis because no Linux Keyring backend")
+@pytest.mark.skip("Run locally, but can't run in SPS because no Linux Keyring backend")
 def test_get_resilient_client_with_keyring(fx_mk_temp_dir, fx_mk_app_config_with_keyring, caplog):
     res_client = sdk_helpers.get_resilient_client(path_config_file=fx_mk_app_config_with_keyring[0])
     assert isinstance(res_client, SimpleClient)
