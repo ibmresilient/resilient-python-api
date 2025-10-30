@@ -38,7 +38,7 @@ ARTIFACTORY_COV_LOCATION=$ARTIFACTORY_REPO_URL/coverage/$BUILD_NUMBER
 # environment variables
 export GITHUB_AUTH_TOKEN="$(get_env GITHUB_AUTH_TOKEN)"
 export ARTIFACTORY_API_TOKEN="$(get_env ARTIFACTORY_API_TOKEN)"
-export PATH_SCRIPTS_DIR="$app_repo_dir/travis-scripts"
+export PATH_SCRIPTS_DIR="$app_repo_dir/.scripts"
 export TEST_RESILIENT_APPLIANCE="staging2.internal.resilientsystems.com"
 
 function print_msg () {

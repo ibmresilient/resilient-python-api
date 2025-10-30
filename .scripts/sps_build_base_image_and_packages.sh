@@ -48,10 +48,9 @@ should_sync_public_repo() { is_pypi_branch || { commit_has_sync_flag && is_maste
 
 # paths
 app_repo_dir="$WORKSPACE/$(load_repo app-repo path)"
-TRAVIS_BUILD_DIR=$app_repo_dir # TODO: remove references to Travis
-PATH_SCRIPTS_DIR="$app_repo_dir/travis-scripts"
+PATH_SCRIPTS_DIR="$app_repo_dir/.scripts"
 PATH_COMMON_SCRIPTS_DIR="$app_repo_dir/common_scripts"
-PATH_TEMPLATE_PYPIRC="$app_repo_dir/travis-scripts/template.pypirc"
+PATH_TEMPLATE_PYPIRC="$PATH_SCRIPTS_DIR/template.pypirc"
 
 # docker config
 DOCKER_IMAGE_NAME="soarapps-base-docker-image"
@@ -112,7 +111,6 @@ export PATH_TEMPLATE_PYPIRC
 export PYPI_API_KEY
 export RESILIENT_ARTIFACTORY_DOCKER_REPO_NAME
 export SETUPTOOLS_SCM_PRETEND_VERSION
-export TRAVIS_BUILD_DIR # TODO: remove references to Travis
 export QUAY_DOCKER_REGISTRY_BASE_NAME
 
 # common scripts use python command rather than python3 - create a symbolic link
