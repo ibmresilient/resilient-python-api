@@ -48,7 +48,7 @@ sync_branch() {
     git add -A
     git diff-index --quiet HEAD || git commit -m "Syncing external repository on $(date +%F)"
 
-    git push -f https://$GH_TOKEN_PUBLIC@github.com/ibmresilient/resilient-python-api.git $source_branch:$target_branch
+    git push -f https://$GITHUB_AUTH_TOKEN_PUBLIC@github.com/ibmresilient/resilient-python-api.git $source_branch:$target_branch
 
     cd $app_repo_dir
 }

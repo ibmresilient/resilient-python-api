@@ -94,7 +94,8 @@ DEBUG_PYTHON_ENVIRONMENT="$(get_env debug_python_environment)"
 PIPELINE_NAMESPACE="$(get_env pipeline_namespace)"
 
 # auth
-GITHUB_AUTH_TOKEN="$(get_env GITHUB_AUTH_TOKEN)"
+GITHUB_AUTH_TOKEN="$(get_env GITHUB_AUTH_TOKEN)"                    # FID for github.ibm.com
+GITHUB_AUTH_TOKEN_PUBLIC="$(get_env GITHUB_AUTH_TOKEN_PUBLIC)"      # FID for github.com
 NOTIFICATION_HOOK="$(get_env NOTIFICATION_HOOK)"
 
 export app_repo_dir
@@ -106,6 +107,7 @@ export ARTIFACTORY_PYPI_REPO_URL
 export ARTIFACTORY_USERNAME
 export DOCKER_IMAGE_NAME
 export GITHUB_AUTH_TOKEN
+export GITHUB_AUTH_TOKEN_PUBLIC
 export NOTIFICATION_HOOK
 export PATH_TEMPLATE_PYPIRC
 export PYPI_API_KEY
