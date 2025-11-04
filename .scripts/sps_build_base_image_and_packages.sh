@@ -24,6 +24,8 @@ function debug_python_environment(){
 
 repo_login() {
     local registry="$1" user="$2" token="$3"
+
+    print_msg "Logging user ${user} into registry ${registry}"
     echo "$token" | docker login --password-stdin --username "$user" "https://${registry}/"
 }
 
@@ -54,6 +56,7 @@ DOCKER_IMAGE_NAME="soarapps-base-docker-image"
 ARTIFACTORY_DOCKER_REPO_NAME="$(get_env ARTIFACTORY_DOCKER_REPO_NAME)"
 RESILIENT_ARTIFACTORY_DOCKER_REPO_NAME="$(get_env RESILIENT_ARTIFACTORY_DOCKER_REPO_NAME)"
 ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME="$(get_env ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME)"
+RESILIENT_ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME="$(get_env RESILIENT_ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME)"
 QUAY_USERNAME="ibmresilient"
 QUAY_PASSWORD="$(get_env QUAY_PASSWORD)"
 QUAY_DOCKER_REGISTRY_BASE_NAME="$(get_env QUAY_DOCKER_REGISTRY_BASE_NAME)"
@@ -102,6 +105,7 @@ export NOTIFICATION_HOOK
 export PATH_TEMPLATE_PYPIRC
 export PYPI_API_KEY
 export RESILIENT_ARTIFACTORY_DOCKER_REPO_NAME
+export RESILIENT_ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME
 export SETUPTOOLS_SCM_PRETEND_VERSION
 export QUAY_DOCKER_REGISTRY_BASE_NAME
 
@@ -127,6 +131,7 @@ build_packages(){
 
 build_and_deploy_base_images(){
     print_msg "Building soarapps-base-docker-image"
+    repo_login "${RESILIENT_ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}" "${ARTIFACTORY_USERNAME}" "${ARTIFACTORY_API_TOKEN}"
     repo_login "${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}" "${ARTIFACTORY_USERNAME}" "${ARTIFACTORY_API_TOKEN}"
     repo_login "${QUAY_DOCKER_REGISTRY_BASE_NAME}" "${QUAY_USERNAME}" "${QUAY_PASSWORD}"
     "$PATH_SCRIPTS_DIR"/build_docker_base_image.sh "${NEW_VERSION}" "$(should_deploy_artifactory; echo $?)" "$(should_release_quay; echo $?)"

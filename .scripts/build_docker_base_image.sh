@@ -19,7 +19,7 @@ set -euo pipefail
 ##   ./build_docker_base_image.sh "v51.0.0.0.1234" 1 0
 ##
 ## Repositories:
-##   - docker-na-public.artifactory.swg-devops.com/sec-resilient-docker-local/ibmresilient/soarapps-base-docker-image
+##   - docker-eu.artifactory.swg-devops.com/sec-resilient-docker-local/ibmresilient/soarapps-base-docker-image
 ##   - quay.io/ibmresilient/soarapps-base-docker-image
 ##   - docker-na-public.artifactory.swg-devops.com/sec-isc-team-isc-icp-docker-local/soarapps-base-docker-image (CVE scanning only)
 ##
@@ -49,7 +49,7 @@ readonly CIRCUITS_VERSION="$1"
 readonly SHOULD_DEPLOY_ARTIFACTORY="$2"
 readonly SHOULD_RELEASE_QUAY="$3"
 
-readonly RESILIENT_ARTIFACTORY_REPOSITORY="${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}/${RESILIENT_ARTIFACTORY_DOCKER_REPO_NAME}/ibmresilient/${DOCKER_IMAGE_NAME}"
+readonly RESILIENT_ARTIFACTORY_REPOSITORY="${RESILIENT_ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}/${RESILIENT_ARTIFACTORY_DOCKER_REPO_NAME}/ibmresilient/${DOCKER_IMAGE_NAME}"
 readonly QUAY_REPOSITORY="${QUAY_DOCKER_REGISTRY_BASE_NAME}/ibmresilient/${DOCKER_IMAGE_NAME}"
 readonly ARTIFACTORY_REPOSITORY="${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}/${ARTIFACTORY_DOCKER_REPO_NAME}/${DOCKER_IMAGE_NAME}"  # only used for CVE scanning
 
