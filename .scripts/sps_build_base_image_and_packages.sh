@@ -32,19 +32,16 @@ print_msg "Trigger type for GitHub branch $BRANCH: $TRIGGER_TYPE"
 # helper functions
 is_master_branch()      { [[ "$BRANCH" == "$GIT_MASTER_BRANCH" ]]; }
 is_release_branch()     { [[ "$BRANCH" =~ $GIT_RELEASE_BRANCH_REGEX ]]; }
-is_pr()                 { [[ "$PIPELINE_NAMESPACE" == "pr" && "$TRIGGER_TYPE" == "scm" ]]; }
-is_pypi_branch()        { [[ "$BRANCH" =~ $GIT_PYPI_BRANCH_REGEX ]]; }
 is_pages_branch()       { [[ "$BRANCH" =~ $GIT_PAGES_BRANCH_REGEX ]]; }
 is_timer_trigger()      { [[ "$TRIGGER_TYPE" == "timer" ]]; }
-commit_has_sync_flag()  { [[ "$GIT_COMMIT_MESSAGE" =~ \[sync\] ]]; }
+is_scm_trigger()        { [[ "$TRIGGER_TYPE" == "scm" ]]; }
 
 is_core_branch() { is_master_branch || is_release_branch; }
 should_build_packages() { ! is_pages_branch; }                                                      # only for master, release branches and PRs
 should_deploy_artifactory() { ! is_timer_trigger && is_core_branch; }                               # only for master and release branches, not timed jobs
 should_deploy_docs() { ! is_timer_trigger && { is_pages_branch || is_core_branch; }; }              # only for master, release/.. or pages/... branches, not timed jobs
-should_release_pypi() { is_pypi_branch; }                                                           # only for release/pypi/... branches
-should_release_quay() { is_pypi_branch || { is_timer_trigger && is_master_branch; }; }              # only for release/pypi/... branches OR timed jobs building master
-should_sync_public_repo() { is_pypi_branch || { commit_has_sync_flag && is_master_branch; }; }      # only for release/pypi/... branches OR master branch with “[sync]” commit
+should_release_pypi() { is_scm_trigger && is_master_branch; }                                       # only for release/pypi/... branches
+should_release_quay() { should_release_pypi || { is_timer_trigger && is_master_branch; }; }         # only for release/pypi/... branches OR timed jobs building master
 
 # paths
 app_repo_dir="$WORKSPACE/$(load_repo app-repo path)"
@@ -67,17 +64,11 @@ ARTIFACTORY_API_TOKEN="$(get_env ARTIFACTORY_API_TOKEN)"
 ARTIFACTORY_PYPI_REPO_URL="$(get_env ARTIFACTORY_PYPI_REPO_URL)"
 ARTIFACTORY_REPO_URL=https://na.artifactory.swg-devops.com/artifactory/sec-resilient-team-integrations-generic-local/resilient-python-api
 PYPI_API_KEY="$(get_env PYPI_API_KEY)"
-# only required if building a "release/pypi/.." branch
-PYPI_GITHUB_TAG_NAME="$(get_env PYPI_GITHUB_TAG_NAME)"
-PYPI_GITHUB_TAG_MESSAGE="$(get_env PYPI_GITHUB_TAG_MESSAGE)"
 
 # git variables
 GIT_MASTER_BRANCH="master"
 GIT_RELEASE_BRANCH_REGEX="^release/.+"
-GIT_PYPI_BRANCH_REGEX="^release/pypi/.+"
 GIT_PAGES_BRANCH_REGEX="^pages/.+"
-GIT_COMMIT_ID="$(git log --no-merges -n 1 --pretty=format:%H)"
-GIT_COMMIT_MESSAGE="$(git log -n 1 --pretty=format:%s "$GIT_COMMIT_ID")"
 
 PAGES_INTERNAL_LINK="https://pages.github.ibm.com/Resilient/resilient-python-api/"
 PAGES_PUBLIC_LINK="https://ibm.biz/soar-python-docs"
@@ -91,7 +82,6 @@ NEW_VERSION="${LIB_VERSION}.${BUILD_NUMBER}"
 ARTIFACTORY_LIB_LOCATION="${ARTIFACTORY_REPO_URL}/${LIB_VERSION}/${NEW_VERSION}"
 SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
 DEBUG_PYTHON_ENVIRONMENT="$(get_env debug_python_environment)"
-PIPELINE_NAMESPACE="$(get_env pipeline_namespace)"
 
 # auth
 GITHUB_AUTH_TOKEN="$(get_env GITHUB_AUTH_TOKEN)"                    # FID for github.ibm.com
@@ -172,12 +162,12 @@ release_to_pypi(){
     git clone --branch "$BRANCH" "https://$GITHUB_AUTH_TOKEN@github.ibm.com/Resilient/resilient-python-api.git" $repo_dir
     
     cd $repo_dir
-    git tag -a "$PYPI_GITHUB_TAG_NAME" -m "$PYPI_GITHUB_TAG_MESSAGE" && git push --follow-tags
+    git tag -a "release/pypi/${NEW_VERSION}" -m "Releasing version ${NEW_VERSION} to PyPi" && git push --follow-tags
     cd ../ && rm -r $repo_dir
 }
 
 sync_publi_repos(){
-    print_msg "Syncing public repo for GitHub branch $BRANCH, trigger $TRIGGER_TYPE, commit message $GIT_COMMIT_MESSAGE"
+    print_msg "Syncing public repo for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
     "$PATH_SCRIPTS_DIR"/sync_public_repo.sh "ALL"
     "$PATH_COMMON_SCRIPTS_DIR"/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
 }
@@ -206,16 +196,10 @@ else
     print_msg "Skipping deploying documentation for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
 fi
 
-# release to Pypi
+# release to Pypi and sync public repos
 if should_release_pypi; then
     release_to_pypi
-else
-    print_msg "Skipping releasing to PYPI for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
-fi
-
-# sync public repo
-if should_sync_public_repo; then
     sync_publi_repos
 else
-    print_msg "Skipping syncing public repo for GitHub branch $BRANCH, trigger $TRIGGER_TYPE, commit message $GIT_COMMIT_MESSAGE"
+    print_msg "Skipping releasing to PYPI and syncing public repo for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
 fi
