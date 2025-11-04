@@ -138,5 +138,5 @@ fi
 # docker push "${python_311_tag_to_scan}"
 # docker push "${python_312_tag_to_scan}"
 
-# save_artifact "${python_311_tag_to_scan}" type=image "name=${python_311_tag_to_scan}" "digest=${python_311_digest}" "${CIRCUITS_VERSION}-python-311"
-# save_artifact "${python_312_tag_to_scan}" type=image "name=${python_312_tag_to_scan}" "digest=${python_312_digest}" "${CIRCUITS_VERSION}-python-312"
+# save_artifact "${python_311_tag_to_scan}" type=image "name=${python_311_tag_to_scan}" "digest=${python311_digest}" "${CIRCUITS_VERSION}-python-311"
+# save_artifact "${python_312_tag_to_scan}" type=image "name=${python_312_tag_to_scan}" "digest=${python312_digest}" "${CIRCUITS_VERSION}-python-312"

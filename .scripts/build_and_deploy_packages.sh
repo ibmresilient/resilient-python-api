@@ -5,7 +5,7 @@ cd $app_repo_dir
 paths_all_dists=()
 
 readonly package_names=(
-    "resilient-app-config-plugins" # uncomment if there are app-config-plugin updates to release
+    # "resilient-app-config-plugins" # uncomment if there are app-config-plugin updates to release
     "resilient"
     "resilient-lib"
     "resilient-circuits"
