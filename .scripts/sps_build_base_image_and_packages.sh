@@ -77,10 +77,7 @@ PAGES_INTERNAL_LINK="https://pages.github.ibm.com/Resilient/resilient-python-api
 PAGES_PUBLIC_LINK="https://ibm.biz/soar-python-docs"
 
 # build info
-LATEST_TAG=$(git describe --abbrev=0 --tags)
-IS_MASTER=$([[ "$BRANCH" != *"master"* ]]; echo $?)
-IS_RELEASE=$([[ "$BRANCH" != *"release/"* ]]; echo $?)
-LIB_VERSION=`if [[ $IS_RELEASE -eq 1 ]]; then echo $(echo ${BRANCH##*/} | cut -d "." -f 1,2,3,4); else echo $(echo $LATEST_TAG | cut -d "." -f 1,2,3,4); fi`
+LIB_VERSION=$("${PATH_SCRIPTS_DIR}/get_lib_version.sh")
 NEW_VERSION="${LIB_VERSION}.${BUILD_NUMBER}"
 ARTIFACTORY_LIB_LOCATION="${ARTIFACTORY_REPO_URL}/${LIB_VERSION}/${NEW_VERSION}"
 SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
