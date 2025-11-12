@@ -157,7 +157,7 @@ release_to_pypi(){
     "$PATH_SCRIPTS_DIR"/build_and_deploy_packages.sh no_deploy do_release
 
     print_msg "Sending notification to Slack"
-    "$PATH_COMMON_SCRIPTS_DIR"/send_slack_notification.sh "Successfully released $NEW_VERSION to PyPi" "success"
+    "$PATH_COMMON_SCRIPTS_DIR"/send_slack_notification_sps.sh "Successfully released $NEW_VERSION to PyPi" "success"
 
     # create GitHub tag
     repo_dir="resilient-python-api-directory"
@@ -171,7 +171,7 @@ release_to_pypi(){
 sync_publi_repos(){
     print_msg "Syncing public repo for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
     "$PATH_SCRIPTS_DIR"/sync_public_repo.sh "ALL"
-    "$PATH_COMMON_SCRIPTS_DIR"/send_slack_notification.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
+    "$PATH_COMMON_SCRIPTS_DIR"/send_slack_notification_sps.sh "PUBLIC Docs for $NEW_VERSION have been published and are available at <$PAGES_PUBLIC_LINK|$PAGES_PUBLIC_LINK>" "success";
 }
 
 # build Packages in Python 3.11
