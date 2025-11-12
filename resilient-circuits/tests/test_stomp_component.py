@@ -8,8 +8,10 @@ import pytest
 from mock import MagicMock, patch
 from stomp.exception import ConnectFailedException, StompException
 
+import stomp
+from stomp.listener import TestListener
 from resilient_circuits import constants
-from resilient_circuits.stomp_component import StompClient
+from resilient_circuits.stomp_component import StompClient, SOARStompListener
 
 
 def test_stomp_reconnect_two_consecutive_failures(caplog):
@@ -174,4 +176,31 @@ def test_stomp_client_logging_ack_frame_error(caplog):
         with pytest.raises(StompException):
             client.ack_frame(mock_evt, mock_frame)
         assert "Error sending ack" in caplog.text
+
+
+def test_on_heartbeat_timeout_when_not_reloading(component):
+    """Test the on_heartbeat_timeout function when the grandparent component (app_restartable) has reloading = True."""
+    with patch("resilient_circuits.stomp_component.StompClient") as mock_stomp_client:
+        with patch('resilient_circuits.stomp_component.LOG.error') as mock_log_error:
+            with patch('resilient_circuits.stomp_component.Timer') as mock_timer:
+                mock_stomp_client.parent = MagicMock()
+                mock_stomp_client.parent.parent = MagicMock()
+                mock_stomp_client.parent.parent.reloading = False
+                soar_stomp_lsnr = SOARStompListener(mock_stomp_client)
+                soar_stomp_lsnr.on_heartbeat_timeout()
+                mock_log_error.assert_called_once_with("STOMP heartbeat timed-out...")
+                mock_timer.assert_called()
+
+def test_on_heartbeat_timeout_when_reloading(component):
+    """Test the on_heartbeat_timeout function when the grandparent component (app_restartable) has reloading = False."""
+    with patch("resilient_circuits.stomp_component.StompClient") as mock_stomp_client:
+        with patch('resilient_circuits.stomp_component.LOG.error') as mock_log_error:
+            with patch('circuits.Timer') as mock_timer:
+                mock_stomp_client.parent = MagicMock()
+                mock_stomp_client.parent.parent = MagicMock()
+                mock_stomp_client.parent.parent.reloading = True
+                soar_stomp_lsnr = SOARStompListener(mock_stomp_client)
+                soar_stomp_lsnr.on_heartbeat_timeout()
+                mock_log_error.assert_called_once_with("STOMP heartbeat timed-out...")
+                mock_timer.assert_not_called()
 

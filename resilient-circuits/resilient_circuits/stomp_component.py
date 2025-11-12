@@ -6,9 +6,9 @@
 import logging
 import sys
 import traceback
-
 import stomp
-from circuits import BaseComponent
+
+from circuits import BaseComponent, Event, Timer
 from circuits.core.handlers import handler
 
 from resilient_circuits import constants
@@ -267,3 +267,9 @@ class SOARStompListener(stomp.ConnectionListener):
 
     def on_heartbeat_timeout(self):
         LOG.error("STOMP heartbeat timed-out...")
+        # Normally reconnect should be handled by the on_disconnected callback, however, on rare occasions a heartbeat
+        # timeout can occur which closes the stomp connection without the callback getting triggered.
+        reloading = getattr(self.component.parent.parent, "reloading", False)
+        if not reloading:
+            # Fire a 'reconnect' event STOMP_RECONNECT_INITIAL_DELAY from now to attempt a reconnect if required.
+            Timer(constants.STOMP_RECONNECT_INITIAL_DELAY, Event.create("reconnect")).register(self.component)
