@@ -38,8 +38,13 @@ ARTIFACTORY_COV_LOCATION=$ARTIFACTORY_REPO_URL/coverage/$BUILD_NUMBER
 # environment variables
 export GITHUB_AUTH_TOKEN="$(get_env GITHUB_AUTH_TOKEN)"
 export ARTIFACTORY_API_TOKEN="$(get_env ARTIFACTORY_API_TOKEN)"
-export PATH_SCRIPTS_DIR="$app_repo_dir/travis-scripts"
+export PATH_SCRIPTS_DIR="$app_repo_dir/.scripts"
 export TEST_RESILIENT_APPLIANCE="staging2.internal.resilientsystems.com"
+
+# build info
+LIB_VERSION=$("${PATH_SCRIPTS_DIR}/get_lib_version.sh")
+NEW_VERSION="${LIB_VERSION}.${BUILD_NUMBER}"
+export SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
 
 function print_msg () {
     local msg=$1
@@ -176,7 +181,6 @@ function create_code_coverage_report() {
 
 
 function main(){
-    echo "BRANCH: $BRANCH"
     set_up_environment
 
     run_python_39_unit_tests

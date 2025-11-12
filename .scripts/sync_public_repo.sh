@@ -9,15 +9,14 @@ BRANCHES_TO_SYNC=$1
 
 DO_NOT_SYNC=(
 '.github'
-'travis-scripts'
+'.scripts'
 '.pre-commit-config.yaml'
 '.secrets.baseline'
-'.travis.yml'
 '.whitesource'
 'sonar-project.properties'
 )
 
-cd $TRAVIS_BUILD_DIR
+cd $app_repo_dir
 
 ###############
 ## Functions ##
@@ -30,7 +29,7 @@ sync_branch() {
     # param $1: source branch name to sync from
     # param $2: target branch name to sync to
 
-    cd $TRAVIS_BUILD_DIR
+    cd $app_repo_dir
 
     source_branch=$1
     target_branch=$2
@@ -49,9 +48,9 @@ sync_branch() {
     git add -A
     git diff-index --quiet HEAD || git commit -m "Syncing external repository on $(date +%F)"
 
-    git push -f https://$GH_TOKEN_PUBLIC@github.com/ibmresilient/resilient-python-api.git $source_branch:$target_branch
+    git push -f https://$GITHUB_AUTH_TOKEN_PUBLIC@github.com/ibmresilient/resilient-python-api.git $source_branch:$target_branch
 
-    cd $TRAVIS_BUILD_DIR
+    cd $app_repo_dir
 }
 
 ###########
@@ -69,4 +68,4 @@ if [ "$BRANCHES_TO_SYNC" == "ALL" ] || [ "$BRANCHES_TO_SYNC" == "gh-pages" ] ; t
     sync_branch "gh-pages" "gh-pages"
 fi
 
-cd $TRAVIS_BUILD_DIR
+cd $app_repo_dir
