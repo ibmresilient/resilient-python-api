@@ -379,12 +379,14 @@ class TestWriteAttachments:
         file_name = "test-for-attachment.txt"
         file_content = b"this is test data"
         bytes_content = BytesIO(file_content)
+        description = "test description"
 
         # Post file to Resilient
-        response = write_file_attachment(client, file_name, bytes_content, inc['id'])
+        response = write_file_attachment(client, file_name, bytes_content, inc['id'], description=description)
 
         assert response
         assert response['name'] == file_name
+        assert response['description'] == description
 
 class TestGetArtifacts:
     @pytest.mark.livetest
