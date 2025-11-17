@@ -421,7 +421,7 @@ def get_file_attachment_name(res_client, incident_id=None, artifact_id=None, tas
     return name
 
 
-def write_file_attachment(res_client, file_name, datastream, incident_id, task_id=None, content_type=None):
+def write_file_attachment(res_client, file_name, datastream, incident_id, task_id=None, content_type=None, description=None):
     """
     Add a file attachment to SOAR using the REST API
     to an Incident or a Task
@@ -445,6 +445,8 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
     :type task_id: int|str
     :param content_type: (optional) MIME type of attachment. Default is ``"application/octet-stream"``
     :param content_type: str
+    :description: (optional) description of the attachment
+    :description: dict
     :return: metadata of new attachment created
     :rtype: dict
     """
@@ -465,10 +467,15 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
     else:
         attachment_uri = "/incidents/{}/attachments".format(incident_id)
 
+    description_data = {
+        "description": description['content'] if isinstance(description, dict) else ""
+    }
+
     new_attachment = res_client.post_attachment(attachment_uri,
                                                 None,
                                                 filename=file_name,
                                                 mimetype=content_type,
+                                                data=description_data,
                                                 bytes_handle=datastream)
 
     if isinstance(new_attachment, list):
