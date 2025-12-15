@@ -502,7 +502,7 @@ def readable_datetime(timestamp, milliseconds=True, rtn_format='%Y-%m-%dT%H:%M:%
     else:
         ts = timestamp
 
-    return datetime.datetime.fromtimestamp(ts, datetime.timezone.utc).strftime(rtn_format)
+    return datetime.datetime.fromtimestamp(ts).strftime(rtn_format)
 
 
 def str_to_bool(value):
