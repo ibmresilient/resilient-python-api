@@ -628,7 +628,7 @@ def iso8601(val):
     :return: ISO8601 datetime
     :rtype: str
     """
-    dt = datetime.datetime.utcfromtimestamp(int(int(val)/1000))
+    dt = datetime.datetime.fromtimestamp(int(int(val)/1000))
     return pytz.UTC.localize(dt).isoformat()
 
 
