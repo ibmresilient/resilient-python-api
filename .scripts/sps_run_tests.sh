@@ -86,8 +86,8 @@ function set_up_environment(){
 
     # install python to call script to upload .tgz file to artifactory
     source "$WORKSPACE/$PIPELINE_CONFIG_REPO_PATH/scripts/utilities/python_utils.sh"
-    install_python3 "3.9"
-    debug_python_environment "3.9"
+    install_python3 "3.11"
+    debug_python_environment "3.11"
 
     pip install requests retry2
     print_msg "Downloading hydra-common-scripts with parameters"
@@ -108,17 +108,6 @@ function upload_coverage_reports_to_artifactory(){
     "$app_repo_dir/resilient-lib/cov_resilient_lib.xml" \
     "$app_repo_dir/resilient-circuits/cov_resilient_circuits.xml" \
     "$app_repo_dir/resilient-sdk/cov_resilient_sdk.xml"
-}
-
-run_python_39_unit_tests(){
-    export RUN_TYPE=unit_test
-    export TOXENV=py39
-
-    print_msg "Starting Python 3.9 Tests"
-    run_python_unit_tests
-
-    # remove python 3.9 in tox directory
-    delete_python_from_tox $TOXENV
 }
 
 function run_python_311_unit_tests(){
@@ -182,8 +171,6 @@ function create_code_coverage_report() {
 
 function main(){
     set_up_environment
-
-    run_python_39_unit_tests
 
     run_python_311_unit_tests
 
