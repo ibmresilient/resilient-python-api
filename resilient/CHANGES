@@ -1,3 +1,7 @@
+**2026-04: version 1.0.4**
+* Updated minimum python version to 3.11+
+* Pinned setuptools to version 81
+
 **2025-10: version 51.0.7.2**
 * No major changes. Just bumping build number to coincide with other builds
 
