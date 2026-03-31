@@ -6,6 +6,7 @@ import io
 import json
 import os
 import shutil
+import subprocess
 import sys
 
 import pytest
@@ -15,7 +16,6 @@ from resilient_sdk.util import constants
 from resilient_sdk.util import package_file_helpers as package_helpers
 from resilient_sdk.util import sdk_helpers
 from resilient_sdk.util.sdk_exception import SDKException
-from setuptools import sandbox as use_setuptools
 
 
 def test_get_setup_callable():
@@ -193,7 +193,8 @@ def test_create_extension_display_name(fx_copy_fn_main_mock_integration):
     path_apiky_permissions_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
     output_dir = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_DIST_DIR)
 
-    use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
+    subprocess.run([sys.executable, path_setup_py_file, "sdist", "--formats=gztar"],
+                   cwd=path_fn_main_mock_integration, check=True)
 
     path_app_zip = package_helpers.create_extension(path_setup_py_file, path_apiky_permissions_file, output_dir)
     app_json = json.loads(sdk_helpers.read_zip_file(path_app_zip, "app.json"))
@@ -211,7 +212,8 @@ def test_create_extension_image_hash(fx_copy_fn_main_mock_integration):
     path_apiky_permissions_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
     output_dir = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_DIST_DIR)
 
-    use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
+    subprocess.run([sys.executable, path_setup_py_file, "sdist", "--formats=gztar"],
+                   cwd=path_fn_main_mock_integration, check=True)
 
     path_app_zip = package_helpers.create_extension(path_setup_py_file, path_apiky_permissions_file, output_dir, image_hash=mock_image_hash)
     app_json = json.loads(sdk_helpers.read_zip_file(path_app_zip, "app.json"))
@@ -229,7 +231,8 @@ def test_create_extension_invalid_image_hash(fx_copy_fn_main_mock_integration):
     path_apiky_permissions_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
     output_dir = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_DIST_DIR)
 
-    use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
+    subprocess.run([sys.executable, path_setup_py_file, "sdist", "--formats=gztar"],
+                   cwd=path_fn_main_mock_integration, check=True)
 
     with pytest.raises(SDKException, match=r"image_hash 'xxx' is not a valid SHA256 hash\nIt must be a valid hexadecimal and 64 characters long"):
         package_helpers.create_extension(path_setup_py_file, path_apiky_permissions_file, output_dir, image_hash=mock_image_hash)
@@ -243,7 +246,8 @@ def test_create_extension_minimum_resilient_version(fx_copy_fn_main_mock_integra
     path_apiky_permissions_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
     output_dir = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_DIST_DIR)
 
-    use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
+    subprocess.run([sys.executable, path_setup_py_file, "sdist", "--formats=gztar"],
+                   cwd=path_fn_main_mock_integration, check=True)
 
     path_app_zip = package_helpers.create_extension(path_setup_py_file, path_apiky_permissions_file, output_dir)
     app_json = json.loads(sdk_helpers.read_zip_file(path_app_zip, "app.json"))
@@ -258,7 +262,8 @@ def test_create_extension_minimum_resilient_version_new_style(fx_copy_fn_main_mo
     path_apiky_permissions_file = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_APIKEY_PERMS_FILE)
     output_dir = os.path.join(path_fn_main_mock_integration, package_helpers.BASE_NAME_DIST_DIR)
 
-    use_setuptools.run_setup(setup_script=path_setup_py_file, args=["sdist", "--formats=gztar"])
+    subprocess.run([sys.executable, path_setup_py_file, "sdist", "--formats=gztar"],
+                   cwd=path_fn_main_mock_integration, check=True)
 
     path_app_zip = package_helpers.create_extension(path_setup_py_file, path_apiky_permissions_file, output_dir)
     app_json = json.loads(sdk_helpers.read_zip_file(path_app_zip, "app.json"))
