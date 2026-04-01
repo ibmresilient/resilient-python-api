@@ -1,3 +1,6 @@
+**2026-04: version 1.0.4**
+* Updated minimum python version to 3.11+
+
 **2025-10: version 1.0.3**
 * Updated requests-pkcs12 dependency to 1.27 for py3.6+
 
