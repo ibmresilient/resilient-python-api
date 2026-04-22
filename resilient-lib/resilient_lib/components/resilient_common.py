@@ -9,6 +9,7 @@ import mimetypes
 import os
 import sys
 import tempfile
+
 if sys.version_info.major >= 3:
     from urllib.parse import quote
 else:
@@ -17,8 +18,9 @@ else:
 import resilient
 from bs4 import BeautifulSoup
 from cachetools import TTLCache, cached
-from resilient_lib.util import constants
 from six import string_types
+
+from resilient_lib.util import constants
 
 CP4S_PREFIX = "cases-rest."
 CP4S_RESOURCE_PREFIX = "app/respond"
@@ -59,7 +61,11 @@ def build_incident_url(url, incidentId, orgId=None):
     """
 
     if not isinstance(url, string_types):
-        LOG.warning("Called 'build_incident_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(type(url)))
+        LOG.warning(
+            "Called 'build_incident_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(
+                type(url)
+            )
+        )
         return url
 
     # determine if host url needs http/s prefix
@@ -75,15 +81,15 @@ def build_incident_url(url, incidentId, orgId=None):
         # so we insert if missing
         # otherwise we have to assume this is a standalone instance link
         if CP4S_RESOURCE_PREFIX not in url:
-            url = '/'.join([url, CP4S_RESOURCE_PREFIX])
+            url = "/".join([url, CP4S_RESOURCE_PREFIX])
 
     if CP4S_RESOURCE_PREFIX in url:
         fragment = CASE_FRAGMENT
     else:
         fragment = INCIDENT_FRAGMENT
 
-    link = '/'.join([url, fragment, str(incidentId)])
-    
+    link = "/".join([url, fragment, str(incidentId)])
+
     if orgId and isinstance(orgId, (str, int)):
         orgId = quote(str(orgId))
         link += "?orgId={0}".format(orgId)
@@ -114,10 +120,19 @@ def build_task_url(url, incident_id, task_id, org_id):
     """
 
     if not isinstance(url, string_types):
-        LOG.warning("Called 'build_task_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(type(url)))
+        LOG.warning(
+            "Called 'build_task_url' with a '{0}'  but was expecting a 'str' URL value. Returning original value.".format(
+                type(url)
+            )
+        )
         return url
 
-    url = "{0}&{1}{2}&{3}".format(build_incident_url(url, incident_id, orgId=org_id), TASK_FRAGMENT, str(task_id), TASK_DETAILS_FRAGMENT)
+    url = "{0}&{1}{2}&{3}".format(
+        build_incident_url(url, incident_id, orgId=org_id),
+        TASK_FRAGMENT,
+        str(task_id),
+        TASK_DETAILS_FRAGMENT,
+    )
 
     return url
 
@@ -137,7 +152,11 @@ def build_resilient_url(host, port):
     """
 
     if not isinstance(host, string_types):
-        LOG.warning("Called 'build_resilient_url' with a '{0}'  but was expecting a 'str' host value. Returning original value.".format(type(host)))
+        LOG.warning(
+            "Called 'build_resilient_url' with a '{0}'  but was expecting a 'str' host value. Returning original value.".format(
+                type(host)
+            )
+        )
         return host
 
     # determine if host url needs http/s prefix
@@ -174,7 +193,7 @@ def clean_html(html_fragment):
 
     s = BeautifulSoup(unescape(html_fragment), "html.parser")
 
-    return ' '.join(s.strings)
+    return " ".join(s.strings)
 
 
 def unescape(data):
@@ -194,12 +213,14 @@ def unescape(data):
     if sys.version_info.major < 3:
         # In PY 2, unescape is part of HTMLParser
         from HTMLParser import HTMLParser
+
         h = HTMLParser()
         return h.unescape(data)
 
     else:
         # In PY 3, unescape is in html library
         import html
+
         return html.unescape(data)
 
 
@@ -244,18 +265,27 @@ def validate_fields(field_list, kwargs):
     if isinstance(mandatory_fields, string_types):
         mandatory_fields = [mandatory_fields]
 
-    if not isinstance(mandatory_fields, list) and not isinstance(mandatory_fields, tuple):
-        raise ValueError("'field_list' must be of type list/tuple, not {0}".format(type(mandatory_fields)))
+    if not isinstance(mandatory_fields, list) and not isinstance(
+        mandatory_fields, tuple
+    ):
+        raise ValueError(
+            "'field_list' must be of type list/tuple, not {0}".format(
+                type(mandatory_fields)
+            )
+        )
 
     if not isinstance(provided_fields, dict):
         try:
             provided_fields = provided_fields._asdict()
         except AttributeError:
-            raise ValueError("'kwargs' must be of type dict or namedtuple, not {0}".format(type(provided_fields)))
+            raise ValueError(
+                "'kwargs' must be of type dict or namedtuple, not {0}".format(
+                    type(provided_fields)
+                )
+            )
 
     # Validate that mandatory fields exist + are not equal to their placeholder values
     for field in mandatory_fields:
-
         placeholder_value = None
 
         if isinstance(field, dict):
@@ -273,11 +303,12 @@ def validate_fields(field_list, kwargs):
         if placeholder_value and field_value == placeholder_value:
             raise ValueError(
                 "'{0}' is mandatory and still has its placeholder value of '{1}'. You must set this value correctly to run this function".format(
-                    field, placeholder_value))
+                    field, placeholder_value
+                )
+            )
 
     # Loop provided fields and get their value
     for field_name, field_value in provided_fields.items():
-
         # Handle if Select Function Input type
         if isinstance(field_value, dict) and field_value.get("name"):
             field_value = field_value.get("name")
@@ -291,14 +322,18 @@ def validate_fields(field_list, kwargs):
         # Handle if Multi-Select Function Input type
         # There is a chance the list has already been "normalized", so just append as is
         elif isinstance(field_value, list):
-            field_value = [f.get("name") if isinstance(f, dict) else f for f in field_value]
+            field_value = [
+                f.get("name") if isinstance(f, dict) else f for f in field_value
+            ]
 
             provided_fields[field_name] = field_value
 
     return provided_fields
 
 
-def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
+def get_file_attachment(
+    res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None
+):
     """
     Call the SOAR REST API to get the attachment or artifact data for
     an Incident or a Task
@@ -335,12 +370,18 @@ def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None,
     """
 
     if incident_id and artifact_id:
-        data_uri = "/incidents/{}/artifacts/{}/contents".format(incident_id, artifact_id)
+        data_uri = "/incidents/{}/artifacts/{}/contents".format(
+            incident_id, artifact_id
+        )
     elif attachment_id:
         if task_id:
-            data_uri = "/tasks/{}/attachments/{}/contents".format(task_id, attachment_id)
+            data_uri = "/tasks/{}/attachments/{}/contents".format(
+                task_id, attachment_id
+            )
         elif incident_id:
-            data_uri = "/incidents/{}/attachments/{}/contents".format(incident_id, attachment_id)
+            data_uri = "/incidents/{}/attachments/{}/contents".format(
+                incident_id, attachment_id
+            )
         else:
             raise ValueError("task_id or incident_id must be specified with attachment")
     else:
@@ -350,7 +391,9 @@ def get_file_attachment(res_client, incident_id, artifact_id=None, task_id=None,
     return res_client.get_content(data_uri)
 
 
-def get_file_attachment_metadata(res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None):
+def get_file_attachment_metadata(
+    res_client, incident_id, artifact_id=None, task_id=None, attachment_id=None
+):
     """
     Call the SOAR REST API to get the attachment or artifact attachment metadata
 
@@ -376,16 +419,24 @@ def get_file_attachment_metadata(res_client, incident_id, artifact_id=None, task
         if task_id:
             metadata_url = "/tasks/{}/attachments/{}".format(task_id, attachment_id)
         elif incident_id:
-            metadata_url = "/incidents/{}/attachments/{}".format(incident_id, attachment_id)
+            metadata_url = "/incidents/{}/attachments/{}".format(
+                incident_id, attachment_id
+            )
         else:
-            raise ValueError("If attachment_id is defined, you must specify task_id OR incident_id")
+            raise ValueError(
+                "If attachment_id is defined, you must specify task_id OR incident_id"
+            )
 
         return res_client.get(metadata_url)
 
-    raise ValueError("artifact_id AND incident_id, OR attachment_id AND (task_id OR incident_id) must be specified")
+    raise ValueError(
+        "artifact_id AND incident_id, OR attachment_id AND (task_id OR incident_id) must be specified"
+    )
 
 
-def get_file_attachment_name(res_client, incident_id=None, artifact_id=None, task_id=None, attachment_id=None):
+def get_file_attachment_name(
+    res_client, incident_id=None, artifact_id=None, task_id=None, attachment_id=None
+):
     """
     Call the SOAR REST API to get the attachment or artifact attachment name
 
@@ -421,7 +472,15 @@ def get_file_attachment_name(res_client, incident_id=None, artifact_id=None, tas
     return name
 
 
-def write_file_attachment(res_client, file_name, datastream, incident_id, task_id=None, content_type=None, description=None):
+def write_file_attachment(
+    res_client,
+    file_name,
+    datastream,
+    incident_id,
+    task_id=None,
+    content_type=None,
+    description=None,
+):
     """
     Add a file attachment to SOAR using the REST API
     to an Incident or a Task
@@ -451,9 +510,11 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
     :rtype: dict
     """
 
-    content_type = content_type \
-                   or mimetypes.guess_type(file_name or "")[0] \
-                   or "application/octet-stream"
+    content_type = (
+        content_type
+        or mimetypes.guess_type(file_name or "")[0]
+        or "application/octet-stream"
+    )
 
     """
     Writing to temp path so that the REST API client can use this file path
@@ -468,15 +529,19 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
         attachment_uri = "/incidents/{}/attachments".format(incident_id)
 
     description_data = {
-        "description": description['content'] if isinstance(description, dict) else ""
+        "description": description.get("content", "")
+        if isinstance(description, dict)
+        else ""
     }
 
-    new_attachment = res_client.post_attachment(attachment_uri,
-                                                None,
-                                                filename=file_name,
-                                                mimetype=content_type,
-                                                data=description_data,
-                                                bytes_handle=datastream)
+    new_attachment = res_client.post_attachment(
+        attachment_uri,
+        None,
+        filename=file_name,
+        mimetype=content_type,
+        data=description_data,
+        bytes_handle=datastream,
+    )
 
     if isinstance(new_attachment, list):
         new_attachment = new_attachment[0]
@@ -484,7 +549,7 @@ def write_file_attachment(res_client, file_name, datastream, incident_id, task_i
     return new_attachment
 
 
-def readable_datetime(timestamp, milliseconds=True, rtn_format='%Y-%m-%dT%H:%M:%SZ'):
+def readable_datetime(timestamp, milliseconds=True, rtn_format="%Y-%m-%dT%H:%M:%SZ"):
     """
     Convert an epoch timestamp to a string using a format
 
@@ -518,7 +583,7 @@ def str_to_bool(value):
     :rtype: bool
     """
     value = str(value).lower()
-    return value in ('1', 'true', 'yes', 'y', 'on', 'confirm', 'agree')
+    return value in ("1", "true", "yes", "y", "on", "confirm", "agree")
 
 
 def write_to_tmp_file(data, tmp_file_name=None, path_tmp_dir=None):
@@ -622,7 +687,11 @@ def close_incident(res_client, incident_id, kwargs, handle_names=False):
 
     missing_fields = [field for field in required_fields if field not in kwargs]
     if missing_fields:
-        raise ValueError("Missing mandatory field(s) to close an incident: {0}".format(missing_fields))
+        raise ValueError(
+            "Missing mandatory field(s) to close an incident: {0}".format(
+                missing_fields
+            )
+        )
 
     # check for known mandatory field "plan_status" if not in kwargs add it
     mandatory_fields = kwargs.copy()
@@ -630,7 +699,9 @@ def close_incident(res_client, incident_id, kwargs, handle_names=False):
         mandatory_fields["plan_status"] = "C"
 
     # API call to the SOAR REST API to patch the incident data (close incident)
-    response = _patch_to_close_incident(res_client, incident_id, mandatory_fields, handle_names)
+    response = _patch_to_close_incident(
+        res_client, incident_id, mandatory_fields, handle_names
+    )
 
     return response
 
@@ -641,7 +712,9 @@ def _get_required_fields(res_client):
     :return: list
     """
     fields = _get_incident_fields(res_client)
-    fields_required = [field for field in fields if fields[field].get("required") == "close"]
+    fields_required = [
+        field for field in fields if fields[field].get("required") == "close"
+    ]
 
     return fields_required
 
@@ -684,26 +757,29 @@ def _patch_to_close_incident(res_client, incident_id, close_fields, handle_names
 
     return response
 
+
 def get_artifacts(res_client, incident_id, query_filters=None, headers=None):
-    """ This functions makes it easy to replace API calls to GET /incidents/{inc_id}/artifacts
+    """This functions makes it easy to replace API calls to GET /incidents/{inc_id}/artifacts
         It uses query_paged capabilities which are the supported way to get artifacts
 
     :param res_client: SimpleClient
     :type res_client: SimpleClient
     :param incident_id: incident id
     :type incident_id: int
-    :param query_filters: any query parameters 
+    :param query_filters: any query parameters
     :type query_filters: None | dict
-    :param headers: any headers to include, such as handle_format=names 
+    :param headers: any headers to include, such as handle_format=names
     :type headers: None | dict
     :return: list of returned artifacts
     :rtype: list
     """
     uri = "/incidents/{}/artifacts/query_paged".format(incident_id)
 
-    result = res_client.post(uri, query_filters if query_filters else {}, headers=headers)
+    result = res_client.post(
+        uri, query_filters if query_filters else {}, headers=headers
+    )
 
     if result and isinstance(result, dict):
         return result.get("data", [])
-    
+
     return None
