@@ -1,3 +1,6 @@
+**2026-06: version 51.0.8.1**
+* No changes, bumping to bring in CVE fixes for base image
+
 **2026-04: version 51.0.8.0**
 * Updated minimum python version to 3.11+
 * Pinned setuptools to version 81
@@ -13,7 +16,7 @@
 * convert datetime.utcfromtimestamp to datetime.fromtimestamp
 
 **2025-05: version 51.0.6.0**
-* Changes to message about use of email and password for authentication. They are permitted, but api_key and api_key_secret are preferred. 
+* Changes to message about use of email and password for authentication. They are permitted, but api_key and api_key_secret are preferred.
 
 **2025-02: version 51.0.5.0**
 * Changes for low code functionality. No additional changes for normal function use.
