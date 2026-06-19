@@ -73,7 +73,7 @@ ENV APP_CONFIG_FILE=/etc/${PATH_RESILIENT_CIRCUITS}/app.config
 ENV APP_LOG_DIR /var/log/${PATH_RESILIENT_CIRCUITS}
 
 # update yum and pip
-RUN yum -y update && yum clean all && pip install --upgrade pip
+RUN yum -y update && yum clean all && pip install --upgrade pip setuptools
 
 # copy over the built packages and install them then immediately remove them
 COPY --from=builder /tmp/builder_packages/wheels /tmp/packages
