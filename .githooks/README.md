@@ -128,6 +128,7 @@ Install the pre-commit framework:
 ```bash
 pip install pre-commit
 ```
+Ensure githooks is not set as it will complain. Set after installation of pre-commit.
 
 ### Version tag script not found
 
