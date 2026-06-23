@@ -7,7 +7,6 @@
 
 # Example 1: 'epic/SOARAPPS-0000/fn_my_package'
 # Example 2: 'story/SOARAPPS-0000/fn_my_package/new_feature'
-# Example 3: 'bug/SOARAPPS-0000/fn_my_package/fix_unicode_error'
 # Example 4: 'task/SOARAPPS-0000/fn_my_package/update_docs'
 # Example 5: 'rebuild/SOARAPPS-0000/ALL'
 
