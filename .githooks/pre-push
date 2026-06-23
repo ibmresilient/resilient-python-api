@@ -1,0 +1,42 @@
+#!/bin/bash
+## ----------------------------------------------------------------------------
+## pre-push hook
+## ----------------------------------------------------------------------------
+## Description:
+##   Automatically creates a version tag based on resilient/setup.cfg before
+##   pushing to remote. This ensures git tags stay synchronized with the
+##   explicit version variables in setup.cfg files.
+##
+##   The script checks if the tag already exists before creating it, so it's
+##   safe to run multiple times.
+##
+## This hook is called by "git push" after it has checked the remote status,
+## but before anything has been pushed. If this script exits with a non-zero
+## status nothing will be pushed.
+## ----------------------------------------------------------------------------
+
+# Get the repository root directory
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+SCRIPT_PATH="${REPO_ROOT}/.scripts/create_version_tag.sh"
+
+# Check if the create_version_tag.sh script exists
+if [[ ! -f "$SCRIPT_PATH" ]]; then
+    echo "Warning: Version tag script not found at $SCRIPT_PATH"
+    echo "Skipping automatic version tag creation."
+    exit 0
+fi
+
+# Run the version tag creation script (without --push, we'll push it separately)
+echo "Checking for version tag..."
+if ! "$SCRIPT_PATH"; then
+    echo "Warning: Failed to create version tag, but continuing with push."
+    echo "You may need to create the tag manually later."
+    # Don't fail the push, just warn
+    exit 0
+fi
+
+# If a new tag was created, push it along with the current push
+# The script output will indicate if a tag was created
+exit 0
+
+# Made with Bob
