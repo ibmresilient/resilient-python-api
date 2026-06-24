@@ -94,19 +94,21 @@ repositories=(
     "$QUAY_REPOSITORY"
 )
 
-python311_tags=(
-    "${CIRCUITS_VERSION}"
-    "${CIRCUITS_VERSION}-python-311"
-    "python-311"
-    "latest"
-)
+# Todo: remove this when we have a Python 3.13 images and UBI10 base
+# python311_tags=(
+#     "${CIRCUITS_VERSION}"
+#     "${CIRCUITS_VERSION}-python-311"
+#     "python-311"
+#     "latest"
+# )
 
 python312_tags=(
     "${CIRCUITS_VERSION}-python-312"
     "python-312"
 )
 
-python311_digest=$(build_and_tag_docker_image "python-311" "${python311_tags[@]}")
+# Todo: remove this when we have a Python 3.13 images and UBI10 base
+# python311_digest=$(build_and_tag_docker_image "python-311" "${python311_tags[@]}")
 python312_digest=$(build_and_tag_docker_image "python-312" "${python312_tags[@]}")
 
 print_msg "Docker images built..."
@@ -117,10 +119,14 @@ tags_to_push=()
 echo "TRIGGER_TYPE: ${TRIGGER_TYPE}"
 if [[ "${TRIGGER_TYPE}" == "timer" ]]; then
     # when running on a timed build, only push the latest, and two Python versions
-    tags_to_push=("latest" "python-311" "python-312")
+    # Todo: remove this when we have a Python 3.13 images and UBI10 base
+    #tags_to_push=("latest" "python-311" "python-312")
+    tags_to_push=("latest" "python-312")
 else
     # push all versions to their tagged location
-    tags_to_push=("${python311_tags[@]}" "${python312_tags[@]}")
+    # Todo: remove this when we have a Python 3.13 images and UBI10 base
+    # tags_to_push=("${python311_tags[@]}" "${python312_tags[@]}")
+    tags_to_push=("${python312_tags[@]}")
 fi
 
 if [[ "$SHOULD_DEPLOY_ARTIFACTORY" -eq 0 ]]; then
