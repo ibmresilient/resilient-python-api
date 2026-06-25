@@ -74,6 +74,8 @@ ENV APP_LOG_DIR /var/log/${PATH_RESILIENT_CIRCUITS}
 
 # update yum and pip
 RUN yum -y update && yum clean all && pip install --upgrade pip setuptools
+RUN yum -y remove httpd httpd-tools httpd-core httpd-filesystem httpd-devel \
+              mod_ssl mod_lua mod_ldap mod_session mod_http2 mod_auth_gssapi 
 
 # copy over the built packages and install them then immediately remove them
 COPY --from=builder /tmp/builder_packages/wheels /tmp/packages
