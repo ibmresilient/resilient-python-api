@@ -26,17 +26,17 @@ if [[ ! -f "$SCRIPT_PATH" ]]; then
     exit 0
 fi
 
-# Run the version tag creation script (without --push, we'll push it separately)
+# Run the version tag creation script with --push so the tag reaches remote
+# immediately. create_version_tag.sh skips creation if the tag already exists,
+# so this is safe to run on every push.
 echo "Checking for version tag..."
-if ! "$SCRIPT_PATH"; then
-    echo "Warning: Failed to create version tag, but continuing with push."
-    echo "You may need to create the tag manually later."
+if ! "$SCRIPT_PATH" --push; then
+    echo "Warning: Failed to create/push version tag, but continuing with push."
+    echo "You may need to create and push the tag manually: .scripts/create_version_tag.sh --push"
     # Don't fail the push, just warn
     exit 0
 fi
 
-# If a new tag was created, push it along with the current push
-# The script output will indicate if a tag was created
 exit 0
 
 # Made with Bob
