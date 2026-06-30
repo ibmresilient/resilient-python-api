@@ -212,6 +212,92 @@ def test_render_jinja_mapping(fx_mk_temp_dir):
     assert set(['        "functions": [\n','            u"fn_mock_function_1",\n','            u"fn_mock_function_2"\n','        ],\n']).issubset(set(customize_py))
 
 
+def test_render_jinja_mapping_with_path_object(fx_mk_temp_dir):
+    """
+    Test that render_jinja_mapping correctly handles Path objects
+    (both PosixPath and WindowsPath) as file entries in the mapping dict.
+    This verifies the fix for the bug where WindowsPath objects were not
+    recognized as file paths and caused:
+    TypeError: 'WindowsPath' object is not subscriptable
+    """
+
+    mock_jinja_data = {
+        "functions": [{"x_api_name": "fn_mock_function_1"}],
+        "export_data": {"server_version": {"version": "35.0.0"}}
+    }
+
+    jinja_env = sdk_helpers.setup_jinja_env(constants.PACKAGE_TEMPLATE_PATH)
+
+    # Use Path() objects directly (will be PosixPath on Linux/Mac, WindowsPath on Windows)
+    # This is the same type returned by importlib.resources.files().joinpath()
+    icon_path = Path(str(package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO))
+    screenshot_path = Path(str(package_helpers.PATH_DEFAULT_SCREENSHOT))
+
+    jinja_mapping_dict = {
+        "MANIFEST.in": ("MANIFEST.in.jinja2", mock_jinja_data),
+        "icons": {
+            "company_logo.png": icon_path,
+        },
+        "doc": {
+            "screenshots": {
+                "main.png": screenshot_path
+            }
+        },
+    }
+
+    new_files, skipped_files = CmdCodegen.render_jinja_mapping(
+        jinja_mapping_dict, jinja_env, mock_paths.TEST_TEMP_DIR, mock_paths.TEST_TEMP_DIR)
+
+    # Assert files were generated (not skipped due to TypeError)
+    files_in_dir = sorted(os.listdir(mock_paths.TEST_TEMP_DIR))
+    assert "MANIFEST.in" in files_in_dir
+    assert "icons" in files_in_dir
+    assert "doc" in files_in_dir
+
+    # Assert Path-referenced files were copied correctly
+    files_in_icons_dir = os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "icons"))
+    assert "company_logo.png" in files_in_icons_dir
+
+    files_in_screenshots_dir = os.listdir(os.path.join(mock_paths.TEST_TEMP_DIR, "doc", "screenshots"))
+    assert "main.png" in files_in_screenshots_dir
+
+    # Verify the Path-referenced files appear in newly generated list
+    assert any("company_logo.png" in f for f in new_files)
+    assert any("main.png" in f for f in new_files)
+
+
+def test_render_jinja_mapping_path_object_existing_file_skipped(fx_mk_temp_dir):
+    """
+    Test that render_jinja_mapping correctly skips Path-referenced files
+    that already exist in the target directory, rather than raising a TypeError.
+    """
+
+    jinja_env = sdk_helpers.setup_jinja_env(constants.PACKAGE_TEMPLATE_PATH)
+
+    icon_path = Path(str(package_helpers.PATH_DEFAULT_ICON_COMPANY_LOGO))
+
+    # Create the target directory and pre-existing file
+    icons_dir = os.path.join(mock_paths.TEST_TEMP_DIR, "icons")
+    os.makedirs(icons_dir)
+    target_file = os.path.join(icons_dir, "company_logo.png")
+    # Create a dummy file at target location
+    with open(target_file, "w") as f:
+        f.write("existing")
+
+    jinja_mapping_dict = {
+        "icons": {
+            "company_logo.png": icon_path,
+        },
+    }
+
+    new_files, skipped_files = CmdCodegen.render_jinja_mapping(
+        jinja_mapping_dict, jinja_env, mock_paths.TEST_TEMP_DIR, mock_paths.TEST_TEMP_DIR)
+
+    # The file should be skipped since it already exists
+    assert any("company_logo.png" in f for f in skipped_files)
+    assert not any("company_logo.png" in f for f in new_files)
+
+
 def test_gen_package_with_playbooks(fx_get_sub_parser, fx_reset_argv, fx_mk_temp_dir, fx_add_dev_env_var):
     """
     This tests that when a package is generated with codegen

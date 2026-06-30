@@ -10,7 +10,7 @@ import os
 import re
 import shutil
 from datetime import datetime
-from pathlib import PosixPath
+from pathlib import Path
 
 from resilient import ensure_unicode
 from resilient_sdk.cmds.base_cmd import BaseCmd
@@ -134,7 +134,7 @@ class CmdCodegen(BaseCmd):
                 newly_generated_files += new_files
                 files_skipped += skipped_files
 
-            elif (isinstance(file_info, str) or isinstance(file_info, PosixPath)) and os.path.isfile(str(file_info)):
+            elif (isinstance(file_info, str) or isinstance(file_info, Path)) and os.path.isfile(str(file_info)):
                 # It is just a path to a file, copy it to the target_file
                 target_file = os.path.join(target_dir, file_name)
                 if os.path.exists(target_file):
