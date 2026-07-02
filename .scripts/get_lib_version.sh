@@ -13,7 +13,8 @@ set -euo pipefail
 ## ----------------------------------------------------------------------------
 
 LATEST_TAG=$(git describe --abbrev=0 --tags)
-CLEAN_TAG=${LATEST_TAG##*/} # strip any prefix
+CLEAN_TAG=${LATEST_TAG##*/} # strip any prefix (e.g. "release/pypi/")
+CLEAN_TAG=${CLEAN_TAG#v}    # strip leading "v"
 IS_MASTER=$([[ "$BRANCH" != *"master"* ]]; echo $?)
 IS_RELEASE=$([[ "$BRANCH" != *"release/"* ]]; echo $?)
 
