@@ -37,13 +37,14 @@ is_release_branch()     { [[ "$BRANCH" =~ $GIT_RELEASE_BRANCH_REGEX ]]; }
 is_pages_branch()       { [[ "$BRANCH" =~ $GIT_PAGES_BRANCH_REGEX ]]; }
 is_timer_trigger()      { [[ "$TRIGGER_TYPE" == "timer" ]]; }
 is_scm_trigger()        { [[ "$TRIGGER_TYPE" == "scm" ]]; }
+is_release_merge()      { git log -1 --merges --pretty=format:"%s" | grep -qE "Merge pull request #[0-9]+ from .+/release/"; }
 
 is_core_branch() { is_master_branch || is_release_branch; }
 should_build_packages() { ! is_pages_branch; }                                                      # only for master, release branches and PRs
 should_deploy_artifactory() { ! is_timer_trigger && is_core_branch; }                               # only for master and release branches, not timed jobs
 should_deploy_docs() { ! is_timer_trigger && { is_pages_branch || is_core_branch; }; }              # only for master, release/.. or pages/... branches, not timed jobs
-should_release_pypi() { is_scm_trigger && is_master_branch; }                                       # only for release/pypi/... branches
-should_release_quay() { should_release_pypi || { is_timer_trigger && is_master_branch; }; }         # only for release/pypi/... branches OR timed jobs building master
+should_release_pypi() { is_scm_trigger && is_master_branch && is_release_merge; }                   # only when a release/... branch is merged to master
+should_release_quay() { is_scm_trigger && is_master_branch || { is_timer_trigger && is_master_branch; }; }  # on every master merge or timed job
 
 # paths
 app_repo_dir="$WORKSPACE/$(load_repo app-repo path)"
