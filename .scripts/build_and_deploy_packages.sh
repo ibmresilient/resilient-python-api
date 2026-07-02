@@ -75,14 +75,14 @@ for p in "${package_names[@]}"; do
     # if deploy to artifactory
     if [ "$deploy" = true ] ; then
         print_msg "uploading $p to Artifactory with 'twine upload'"
-        twine upload --config-file $HOME/.pypirc -r artifactory $dir/dist/*
+        twine upload --verbose --config-file $HOME/.pypirc -r artifactory $dir/dist/*
         print_msg "uploaded $p to Artifactory"
     fi
 
     # if release to PyPi
     if [ "$do_release" = true ] ; then
         print_msg "uploading $p to PyPi with 'twine upload'"
-        twine upload --config-file $HOME/.pypirc $dir/dist/*
+        twine upload --verbose --config-file $HOME/.pypirc $dir/dist/*
         print_msg "released $p to PyPi"
     fi
 
