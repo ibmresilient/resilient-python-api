@@ -6,10 +6,10 @@
 
 # REQUIRED: set RESILIENT_CIRCUITS_VERSION when you build by passing: --build-arg RESILIENT_CIRCUITS_VERSION=<version>
 ARG RESILIENT_CIRCUITS_VERSION
-# OPTIONAL: set PYTHON_VERSION when you build by passing: --build-arg PYTHON_VERSION=python-39|python-311
-# default: python-311
-ARG PYTHON_VERSION=python-311
-# OPTIONAL: set UBI_VERSION when you build by passing: --build-arg UBI_VERSION=ubi8|ubi9|ubi10
+# OPTIONAL: set PYTHON_VERSION when you build by passing: --build-arg PYTHON_VERSION=python-312
+# default: python-312
+ARG PYTHON_VERSION=python-312
+# OPTIONAL: set UBI_VERSION when you build by passing: --build-arg UBI_VERSION=ubi9|ubi10
 # default: ubi9
 ARG UBI_VERSION=ubi9
 
@@ -74,6 +74,8 @@ ENV APP_LOG_DIR /var/log/${PATH_RESILIENT_CIRCUITS}
 
 # update yum and pip
 RUN yum -y update && yum clean all && pip install --upgrade pip setuptools
+RUN yum -y remove httpd httpd-tools httpd-core httpd-filesystem httpd-devel \
+              mod_ssl mod_lua mod_ldap mod_session mod_http2 mod_auth_gssapi 
 
 # copy over the built packages and install them then immediately remove them
 COPY --from=builder /tmp/builder_packages/wheels /tmp/packages
