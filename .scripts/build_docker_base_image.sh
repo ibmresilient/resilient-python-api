@@ -103,8 +103,10 @@ repositories=(
 # )
 
 python312_tags=(
+    "${CIRCUITS_VERSION}"
     "${CIRCUITS_VERSION}-python-312"
     "python-312"
+    "latest"
 )
 
 # Todo: remove this when we have a Python 3.13 images and UBI10 base
