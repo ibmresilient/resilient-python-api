@@ -72,7 +72,7 @@ ENV APP_HOST_CONTAINER=1
 ENV APP_CONFIG_FILE=/etc/${PATH_RESILIENT_CIRCUITS}/app.config
 ENV APP_LOG_DIR /var/log/${PATH_RESILIENT_CIRCUITS}
 
-# update yum only — do not upgrade pip here as it will be removed after install
+# update yum
 RUN yum -y update && yum clean all
 RUN yum -y remove httpd httpd-tools httpd-core httpd-filesystem httpd-devel \
               mod_ssl mod_lua mod_ldap mod_session mod_http2 mod_auth_gssapi
