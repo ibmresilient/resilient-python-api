@@ -72,15 +72,17 @@ ENV APP_HOST_CONTAINER=1
 ENV APP_CONFIG_FILE=/etc/${PATH_RESILIENT_CIRCUITS}/app.config
 ENV APP_LOG_DIR /var/log/${PATH_RESILIENT_CIRCUITS}
 
-# update yum and pip
-RUN yum -y update && yum clean all && pip install --upgrade pip setuptools
+# update yum only — do not upgrade pip here as it will be removed after install
+RUN yum -y update && yum clean all
 RUN yum -y remove httpd httpd-tools httpd-core httpd-filesystem httpd-devel \
-              mod_ssl mod_lua mod_ldap mod_session mod_http2 mod_auth_gssapi 
+              mod_ssl mod_lua mod_ldap mod_session mod_http2 mod_auth_gssapi
 
-# copy over the built packages and install them then immediately remove them
+# copy over the built packages, install them, remove temp files, then remove pip
 COPY --from=builder /tmp/builder_packages/wheels /tmp/packages
-RUN pip install /tmp/packages/*${RESILIENT_CIRCUITS_VERSION}*.whl && \
-    rm -rf /tmp/packages
+RUN pip install --upgrade pip setuptools && \
+    pip install /tmp/packages/*${RESILIENT_CIRCUITS_VERSION}*.whl && \
+    rm -rf /tmp/packages && \
+    pip uninstall -y pip setuptools
 
 # copy over and set the entrypoint
 COPY docker_template_entrypoint.sh /opt/${PATH_RESILIENT_CIRCUITS}/entrypoint.sh
