@@ -373,8 +373,11 @@ def test_parse_dockerfile_new():
         "APPLICATION=fn_main_mock_integration"
     ]
     env_list = []
-    user_list = []
-    run_list = ["pip install /tmp/packages/${APPLICATION}-*.tar.gz"]
+    user_list = ["0", "1001"]
+    run_list = [
+        "yum -y update && yum clean all",
+        "python3 -m ensurepip --upgrade && \\"
+    ]
     copy_list = ["./dist /tmp/packages"]
     entrypoint_list = []
 
