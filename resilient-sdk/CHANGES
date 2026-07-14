@@ -1,3 +1,6 @@
+**2026-07: version 51.0.8.3**
+* Updated `Dockerfile` template to use `python3 -m ensurepip` and remove `pip` and `setuptools` after installation.
+
 **2026-06: version 51.0.8.2**
 * Added explicit version variable to setup.cfg to prevent version mismatches with PyPI
 * This ensures version is controlled independently of git tags

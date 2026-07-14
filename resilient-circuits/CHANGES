@@ -1,3 +1,6 @@
+**2026-07: version 51.0.8.3**
+* Bumped `filelock` dependency to `~= 3.29`
+
 **2026-06: version 51.0.8.2**
 * Added explicit version variable to setup.cfg to prevent version mismatches with PyPI
 * This ensures version is controlled independently of git tags

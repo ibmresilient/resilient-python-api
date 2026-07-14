@@ -9,4 +9,10 @@ ARG APPLICATION=fn_main_mock_integration
 
 # install the base package
 COPY ./dist /tmp/packages
-RUN pip install /tmp/packages/${APPLICATION}-*.tar.gz
+USER 0
+RUN yum -y update && yum clean all
+# pip is bootstrapped via ensurepip and removed after install to resolve PRISMA-2022-0168 (CVE-2018-20225)
+RUN python3 -m ensurepip --upgrade && \
+    python3 -m pip install /tmp/packages/${APPLICATION}-*.tar.gz && \
+    python3 -m pip uninstall -y pip setuptools
+USER 1001
