@@ -31,3 +31,4 @@ _build
 !/resilient-sdk/tests/shared_mock_data/*.log
 dist
 .sdk_settings.json
+.bob
