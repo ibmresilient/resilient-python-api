@@ -2198,7 +2198,7 @@ increase its <em>random</em> probability</p></li>
 </dd>
 </dl>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">2018</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;timezoneID&quot;</span><span class="p">:</span> <span class="s2">&quot;CET&quot;</span><span class="p">})</span>
-<span class="go">1533078000000</span>
+<span class="go">1533074400000</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">(</span><span class="n">Undefined</span><span class="p">())</span>
 <span class="go">&#39;null&#39;</span>
@@ -2279,6 +2279,9 @@ identifying the type of error</p>
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">¶</a></h2>
+<p><strong>2026-07: version 51.0.9.0</strong>
+* Added explicit compatibility with Python versions 3.13 and 3.14
+* Replace legacy pytz with native zoneinfo</p>
 <p><strong>2026-07: version 51.0.8.3</strong>
 * No changes, bumping to align with other packages</p>
 <p><strong>2026-06: version 51.0.8.2</strong>
