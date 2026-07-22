@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# (c) Copyright IBM Corp. 2025. All Rights Reserved.
+# (c) Copyright IBM Corp. 2026. All Rights Reserved.
 # pragma pylint: disable=unused-argument, no-self-use
 
 import datetime
@@ -567,7 +567,8 @@ def readable_datetime(timestamp, milliseconds=True, rtn_format="%Y-%m-%dT%H:%M:%
     else:
         ts = timestamp
 
-    return datetime.datetime.fromtimestamp(ts).strftime(rtn_format)
+    # epoch Z-suffixed string should always be UTC
+    return datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc).strftime(rtn_format)
 
 
 def str_to_bool(value):

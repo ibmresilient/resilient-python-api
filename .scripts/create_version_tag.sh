@@ -36,7 +36,8 @@ get_version_from_setup_cfg() {
     fi
     
     # Extract version line from setup.cfg
-    local version=$(grep -E "^version\s*=\s*" "$setup_cfg_path" | sed -E 's/^version\s*=\s*//' | tr -d ' ')
+    # Replacing \s with [[:space:]] is a POSIX-standard and works on both BSD (MacOS) and GNU (Linux) regex
+    local version=$(awk -F'=' '/^version[[:space:]]*=/{gsub(/[[:space:]]/, "", $2); print $2; exit}' "$setup_cfg_path")
     
     if [[ -z "$version" ]]; then
         echo "ERROR: No version found in $setup_cfg_path" >&2

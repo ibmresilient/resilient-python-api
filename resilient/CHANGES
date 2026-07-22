@@ -1,3 +1,6 @@
+**2026-07: version 51.0.9.0**
+* Added explicit compatibility with Python versions 3.13 and 3.14
+
 **2026-07: version 51.0.8.3**
 * Bumped `requests` dependency to `~= 2.34`
 

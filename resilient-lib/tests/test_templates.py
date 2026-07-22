@@ -135,6 +135,8 @@ def test_render():
 
     assert render('template={{value|timestamp}}', {"value":{"year":2015, "month":7, "day":15}}) == u'template=1436918400000'
 
+    assert render('template={{value|timestamp}}', {"value":{"year":2018, "month":8, "day":1, "timezoneID":"CET"}}) == u'template=1533074400000'
+
     assert render('template={{value|timestamp}}', {"value":datetime.datetime(2015, 7, 15)}) == u'template=1436918400000'
 
     assert render('{"description": "DN={{dn}}, mail={{attributes.mail[0]}}"}', TEST_ATTRIBUTES) == \
