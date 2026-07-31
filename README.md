@@ -22,10 +22,9 @@ For our API Documentation on these libraries, please see [ibm.biz/soar-python-do
 
 Please report issues using the [Issues](https://github.com/ibmresilient/resilient-python-api/issues) tab on GitHub.
 
-Contributions are welcome.  Please read the [CONTRIBUTING](CONTRIBUTING.md) guidelines for more about the process.
+Contributions are welcome. Please read the [CONTRIBUTING](CONTRIBUTING.md) guidelines for more about the process.
 
 
 # Open Source @ IBM
 
 [Find more open source projects on the IBM Github Page](http://ibm.github.io/)
-

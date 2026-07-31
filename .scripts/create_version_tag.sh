@@ -5,9 +5,9 @@ set -euo pipefail
 ## create_version_tag.sh
 ## ----------------------------------------------------------------------------
 ## Description:
-##   Reads the version from resilient/setup.cfg and creates a git tag if it
-##   doesn't already exist. This ensures version tags are synchronized with
-##   the explicit version variables in setup.cfg files.
+##   Reads the version from resilient/pyproject.toml and creates a git tag if
+##   it doesn't already exist. This ensures version tags are synchronized with
+##   the explicit version variables in pyproject.toml files.
 ##
 ## Usage:
 ##   ./create_version_tag.sh [--push]
@@ -26,24 +26,25 @@ if [[ "${1:-}" == "--push" ]]; then
     SHOULD_PUSH=true
 fi
 
-# Function to extract version from setup.cfg
-get_version_from_setup_cfg() {
-    local setup_cfg_path="$1"
-    
-    if [[ ! -f "$setup_cfg_path" ]]; then
-        echo "ERROR: setup.cfg not found at: $setup_cfg_path" >&2
+# Function to extract version from pyproject.toml
+get_version_from_pyproject() {
+    local pyproject_path="$1"
+
+    if [[ ! -f "$pyproject_path" ]]; then
+        echo "ERROR: pyproject.toml not found at: $pyproject_path" >&2
         return 1
     fi
-    
-    # Extract version line from setup.cfg
-    # Replacing \s with [[:space:]] is a POSIX-standard and works on both BSD (MacOS) and GNU (Linux) regex
-    local version=$(awk -F'=' '/^version[[:space:]]*=/{gsub(/[[:space:]]/, "", $2); print $2; exit}' "$setup_cfg_path")
-    
+
+    # Extract the static `version = "..."` line under [project]
+    # Replacing \s with [[:space:]] is POSIX-standard and works on both BSD (macOS) and GNU (Linux) awk
+    local version
+    version=$(awk -F'"' '/^version[[:space:]]*=/{print $2; exit}' "$pyproject_path")
+
     if [[ -z "$version" ]]; then
-        echo "ERROR: No version found in $setup_cfg_path" >&2
+        echo "ERROR: No version found in $pyproject_path" >&2
         return 1
     fi
-    
+
     echo "$version"
 }
 
@@ -71,15 +72,16 @@ create_tag() {
 main() {
     cd "$REPO_ROOT"
     
-    # Get version from resilient/setup.cfg
-    local version=$(get_version_from_setup_cfg "${REPO_ROOT}/resilient/setup.cfg")
-    
+    # Get version from resilient/pyproject.toml
+    local version
+    version=$(get_version_from_pyproject "${REPO_ROOT}/resilient/pyproject.toml")
+
     if [[ -z "$version" ]]; then
-        echo "ERROR: Could not determine version from resilient/setup.cfg" >&2
+        echo "ERROR: Could not determine version from resilient/pyproject.toml" >&2
         exit 1
     fi
-    
-    echo "Version from setup.cfg: $version"
+
+    echo "Version from pyproject.toml: $version"
     
     # Create tag name with 'v' prefix
     local tag="v${version}"

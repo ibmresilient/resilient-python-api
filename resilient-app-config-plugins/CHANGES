@@ -1,5 +1,7 @@
 **2026-07: version 1.1.0**
 * Added explicit compatibility with Python versions 3.13 and 3.14
+* Migrated packaging from `setup.cfg`/`setup.py` to `pyproject.toml` (PEP 621)
+* Fixed `cachetools` dependency marker (`python_version > "3.11"` → `>= "3.11"`)
 
 **2026-07: version 1.0.6**
 * No changes, bumping to align with other packages
