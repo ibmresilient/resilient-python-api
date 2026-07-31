@@ -115,6 +115,9 @@ source "$WORKSPACE/$PIPELINE_CONFIG_REPO_PATH/scripts/utilities/python_utils.sh"
 install_python3 "3.11"
 debug_python_environment "3.11"
 
+# clean up stale .pth files from previous builds that can corrupt the subprocess pip environment
+find /usr/local/lib/python3.11/site-packages/ -name "*nspkg.pth" -delete 2>/dev/null || true
+
 # required python packages
 pip install requests retry2 twine build jinja2 sphinx furo sphinx-copybutton
 
