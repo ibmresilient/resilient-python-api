@@ -625,7 +625,7 @@ class CmdCodegen(BaseCmd):
             # Regenerate the package
             path_reloaded = CmdCodegen._gen_package(args, setup_py_attributes=setup_py_attributes)
 
-            LOG.info("\nNOTE: Ensure the Dockerfile has the latest template introduced in v51.0.1.0")
+            LOG.info("\nNOTE: Ensure the Dockerfile has the latest template introduced in v51.0.8.3")
             LOG.info("NOTE: Ensure the MANIFEST.in file includes line:\n      recursive-include %s/util *\n", args.package)
             LOG.debug("'codegen._reload_reload' complete for '%s'", args.package)
 
