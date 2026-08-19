@@ -260,7 +260,7 @@ created in the default location: <code class="docutils literal notranslate"><spa
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Commands that interact with the SOAR platform support the <code class="docutils literal notranslate"><span class="pre">--config|-c</span></code> argument, which precedes the default location. For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ resilient-sdk clone -r &quot;Display name of Rule&quot; &quot;Cloned Rule display name&quot; -c path/to/my/custom_file.config
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ resilient-sdk clone -r "Display name of Rule" "Cloned Rule display name" -c path/to/my/custom_file.config
 </pre></div>
 </div>
 </div>
@@ -347,14 +347,14 @@ appear when the app is installed in SOAR.</p>
 │   ├── __init__.py
 │   ├── components
 │   │   ├── __init__.py
-│   │   └── func_fn_my_function.py  // the function&#39;s implementation
+│   │   └── func_fn_my_function.py  // the function's implementation
 │   └── util
 │       ├── __init__.py
 │       ├── config.py               // the configuration section of this app in app.config
 │       ├── customize.py
 │       ├── data
 │       │   └── export.res
-│       └── selftest.py             // implementation of this app&#39;s configuration test
+│       └── selftest.py             // implementation of this app's configuration test
 ├── icons
 │   ├── app_logo.png                // icons displayed when installed on app host
 │   └── company_logo.png
@@ -500,7 +500,7 @@ options:
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">validate</span></code> also has the ability to accept an <code class="docutils literal notranslate"><span class="pre">app.config</span></code> file in any location. For example:</p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ resilient-sdk validate -p &lt;path_to_package&gt; --selftest -c &#39;/usr/custom_app.config&#39;
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ resilient-sdk validate -p &lt;path_to_package&gt; --selftest -c '/usr/custom_app.config'
 </pre></div>
 </div>
 <ul class="simple">
@@ -732,8 +732,8 @@ The setting for <code class="docutils literal notranslate"><span class="pre">cop
 with the current year by placing <code class="docutils literal notranslate"><span class="pre">{0}</span></code> in the location which you wish to include the year. Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">//</span> <span class="o">.</span><span class="n">sdk_settings</span><span class="o">.</span><span class="n">json</span><span class="p">:</span>
 <span class="p">{</span>
-  <span class="s2">&quot;codegen&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;copyright&quot;</span><span class="p">:</span> <span class="s2">&quot;(c) Copyright My Inc. </span><span class="si">{0}</span><span class="s2">. All Rights Reserved.&quot;</span>
+  <span class="s2">"codegen"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">"copyright"</span><span class="p">:</span> <span class="s2">"(c) Copyright My Inc. </span><span class="si">{0}</span><span class="s2">. All Rights Reserved."</span>
   <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>

@@ -249,7 +249,7 @@
 <p>To use it within your App development, <strong>import</strong> it like any other Python Package:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">readable_datetime</span>
 
-<span class="n">created_date</span> <span class="o">=</span> <span class="n">readable_datetime</span><span class="p">(</span><span class="n">fn_inputs</span><span class="o">.</span><span class="n">inc_create_date</span><span class="p">,</span> <span class="n">rtn_format</span><span class="o">=</span><span class="s2">&quot;%m-</span><span class="si">%d</span><span class="s2">-%Y %H:%M:%S&quot;</span><span class="p">)</span>
+<span class="n">created_date</span> <span class="o">=</span> <span class="n">readable_datetime</span><span class="p">(</span><span class="n">fn_inputs</span><span class="o">.</span><span class="n">inc_create_date</span><span class="p">,</span> <span class="n">rtn_format</span><span class="o">=</span><span class="s2">"%m-</span><span class="si">%d</span><span class="s2">-%Y %H:%M:%S"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -424,7 +424,7 @@ set <code class="docutils literal notranslate"><span class="pre">handle_names</s
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">res</span> <span class="o">=</span> <span class="n">close_incident</span><span class="p">(</span>
     <span class="n">res_client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rest_client</span><span class="p">(),</span>
     <span class="n">incident_id</span><span class="o">=</span><span class="n">fn_inputs</span><span class="o">.</span><span class="n">incident_id</span><span class="p">,</span>
-    <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;resolution_id&quot;</span><span class="p">:</span> <span class="s2">&quot;Duplicate&quot;</span><span class="p">,</span> <span class="s2">&quot;resolution_summary&quot;</span><span class="p">:</span> <span class="s2">&quot;This ticket is a duplicate&quot;</span><span class="p">},</span>
+    <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"resolution_id"</span><span class="p">:</span> <span class="s2">"Duplicate"</span><span class="p">,</span> <span class="s2">"resolution_summary"</span><span class="p">:</span> <span class="s2">"This ticket is a duplicate"</span><span class="p">},</span>
     <span class="n">handle_names</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)</span>
 </pre></div>
@@ -490,7 +490,7 @@ raise a <code class="docutils literal notranslate"><span class="pre">resilient.S
 <p><strong>Example:</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">artifact_data</span> <span class="o">=</span> <span class="n">get_file_attachment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rest_client</span><span class="p">(),</span> <span class="n">incident_id</span><span class="o">=</span><span class="mi">2001</span><span class="p">,</span> <span class="n">artifact_id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;malware.eml&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"malware.eml"</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">artifact_data</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -666,8 +666,8 @@ returns a list of the <code class="docutils literal notranslate"><span class="pr
 <dd><p>Add a file attachment to SOAR using the REST API
 to an Incident or a Task</p>
 <p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;malware.eml&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">data_stream</span><span class="p">:</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="n">write_file_attachment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rest_client</span><span class="p">(),</span> <span class="s2">&quot;malware.eml&quot;</span><span class="p">,</span> <span class="n">data_stream</span><span class="p">,</span> <span class="mi">2001</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"malware.eml"</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">data_stream</span><span class="p">:</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">write_file_attachment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rest_client</span><span class="p">(),</span> <span class="s2">"malware.eml"</span><span class="p">,</span> <span class="n">data_stream</span><span class="p">,</span> <span class="mi">2001</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -715,7 +715,7 @@ in the <code class="docutils literal notranslate"><span class="pre">finally</spa
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="n">path_tmp_file</span><span class="p">,</span> <span class="n">path_tmp_dir</span> <span class="o">=</span> <span class="n">write_to_tmp_file</span><span class="p">(</span><span class="n">attachment_contents</span><span class="p">,</span> <span class="n">tmp_file_name</span><span class="o">=</span><span class="n">attachment_metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">))</span>
+    <span class="n">path_tmp_file</span><span class="p">,</span> <span class="n">path_tmp_dir</span> <span class="o">=</span> <span class="n">write_to_tmp_file</span><span class="p">(</span><span class="n">attachment_contents</span><span class="p">,</span> <span class="n">tmp_file_name</span><span class="o">=</span><span class="n">attachment_metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">))</span>
 
 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
     <span class="k">yield</span> <span class="n">FunctionError</span><span class="p">()</span>
@@ -750,10 +750,10 @@ in the <code class="docutils literal notranslate"><span class="pre">finally</spa
 <p><strong>Example:</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">MarkdownParser</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="s2">&quot;&lt;div class=&#39;rte&#39;&gt;&lt;div&gt;&lt;strong&gt;&lt;u&gt;underline and strong&lt;/u&gt;&lt;/strong&gt;&lt;/div&gt;&lt;/div&gt;&quot;</span>
-<span class="n">markdown</span> <span class="o">=</span> <span class="s2">&quot;*_underline and strong_*&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="s2">"&lt;div class='rte'&gt;&lt;div&gt;&lt;strong&gt;&lt;u&gt;underline and strong&lt;/u&gt;&lt;/strong&gt;&lt;/div&gt;&lt;/div&gt;"</span>
+<span class="n">markdown</span> <span class="o">=</span> <span class="s2">"*_underline and strong_*"</span>
 
-<span class="n">parser</span> <span class="o">=</span> <span class="n">MarkdownParser</span><span class="p">(</span><span class="n">bold</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">underline</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">)</span> <span class="c1"># override defaults</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">MarkdownParser</span><span class="p">(</span><span class="n">bold</span><span class="o">=</span><span class="s2">"*"</span><span class="p">,</span> <span class="n">underline</span><span class="o">=</span><span class="s2">"_"</span><span class="p">)</span> <span class="c1"># override defaults</span>
 <span class="n">converted</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">converted</span><span class="p">,</span> <span class="n">markdown</span><span class="p">)</span>
 </pre></div>
@@ -792,16 +792,16 @@ It also attempts to keep track of the token and refresh it as needed.</p>
 <p><strong>Example:</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">,</span> <span class="n">RequestsCommon</span>
 
-<span class="n">api1</span> <span class="o">=</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">(</span><span class="s1">&#39;https://example1.com/&lt;tenant_id&gt;/oauth/v2/&#39;</span><span class="p">,</span> <span class="n">client_id</span><span class="o">=</span><span class="s1">&#39;xxx&#39;</span><span class="p">,</span> <span class="n">client_secret</span><span class="o">=</span><span class="s1">&#39;xxx&#39;</span><span class="p">)</span>
-<span class="n">api2</span> <span class="o">=</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">(</span><span class="s1">&#39;https://example2.com/&lt;tenant_id&gt;/oauth/v2/&#39;</span><span class="p">,</span> <span class="n">client_id</span><span class="o">=</span><span class="s1">&#39;xxx&#39;</span><span class="p">,</span> <span class="n">client_secret</span><span class="o">=</span><span class="s1">&#39;xxx&#39;</span><span class="p">)</span>
+<span class="n">api1</span> <span class="o">=</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">(</span><span class="s1">'https://example1.com/&lt;tenant_id&gt;/oauth/v2/'</span><span class="p">,</span> <span class="n">client_id</span><span class="o">=</span><span class="s1">'xxx'</span><span class="p">,</span> <span class="n">client_secret</span><span class="o">=</span><span class="s1">'xxx'</span><span class="p">)</span>
+<span class="n">api2</span> <span class="o">=</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">(</span><span class="s1">'https://example2.com/&lt;tenant_id&gt;/oauth/v2/'</span><span class="p">,</span> <span class="n">client_id</span><span class="o">=</span><span class="s1">'xxx'</span><span class="p">,</span> <span class="n">client_secret</span><span class="o">=</span><span class="s1">'xxx'</span><span class="p">)</span>
 
-<span class="n">api1</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;https://example1.com/v4/me/messages&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span> <span class="c1"># use as a regular requests session object</span>
+<span class="n">api1</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">'https://example1.com/v4/me/messages'</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{})</span> <span class="c1"># use as a regular requests session object</span>
 
-<span class="n">api2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://example2.com/v2/me/updates&#39;</span><span class="p">)</span>
+<span class="n">api2</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'https://example2.com/v2/me/updates'</span><span class="p">)</span>
 
 <span class="c1"># When writing an integration, use RequestsCommon to get the proxies defined in in your app.config file.</span>
 <span class="n">rc</span> <span class="o">=</span> <span class="n">RequestsCommon</span><span class="p">(</span><span class="n">opts</span><span class="p">,</span> <span class="n">function_opts</span><span class="p">)</span>
-<span class="n">api3</span> <span class="o">=</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">(</span><span class="s1">&#39;https://example3.com/</span><span class="si">{}</span><span class="s1">/test&#39;</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">get_proxies</span><span class="p">())</span>
+<span class="n">api3</span> <span class="o">=</span> <span class="n">OAuth2ClientCredentialsSession</span><span class="p">(</span><span class="s1">'https://example3.com/</span><span class="si">{}</span><span class="s1">/test'</span><span class="p">,</span> <span class="n">proxies</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">get_proxies</span><span class="p">())</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -814,8 +814,8 @@ It also attempts to keep track of the token and refresh it as needed.</p>
 <li><p><strong>proxies</strong> (<em>dict</em>) – <p>(optional) Dictionary mapping protocol to the URL of the proxy.
 The mapping protocol must be in the format:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="s2">&quot;https_proxy&quot;</span><span class="p">:</span> <span class="s2">&quot;https://localhost:8080,</span>
-    <span class="s2">&quot;http_proxy&quot;</span><span class="p">:</span> <span class="s2">&quot;http://localhost:8080</span>
+    <span class="s2">"https_proxy"</span><span class="p">:</span> <span class="s2">"https://localhost:8080,</span>
+    <span class="s2">"http_proxy"</span><span class="p">:</span> <span class="s2">"http://localhost:8080</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -848,13 +848,13 @@ body of the request</strong></p>
 <p>For example, <em>Cloud Foundry</em> asking <code class="docutils literal notranslate"><span class="pre">grant_type</span></code> to be <code class="docutils literal notranslate"><span class="pre">password</span></code> and API key to be passed in <code class="docutils literal notranslate"><span class="pre">password</span></code>.</p>
 <p>The default is:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">post_data</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;client_id&#39;</span><span class="p">:</span> <span class="n">client_id</span><span class="p">,</span>
-    <span class="s1">&#39;client_secret&#39;</span><span class="p">:</span> <span class="n">client_secret</span><span class="p">,</span>
-    <span class="s1">&#39;grant_type&#39;</span><span class="p">:</span> <span class="s1">&#39;client_credentials&#39;</span>
+    <span class="s1">'client_id'</span><span class="p">:</span> <span class="n">client_id</span><span class="p">,</span>
+    <span class="s1">'client_secret'</span><span class="p">:</span> <span class="n">client_secret</span><span class="p">,</span>
+    <span class="s1">'grant_type'</span><span class="p">:</span> <span class="s1">'client_credentials'</span>
 <span class="p">}</span>
 
 <span class="k">if</span> <span class="n">scope</span><span class="p">:</span>
-    <span class="n">post_data</span><span class="p">[</span><span class="s1">&#39;scope&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scope</span>
+    <span class="n">post_data</span><span class="p">[</span><span class="s1">'scope'</span><span class="p">]</span> <span class="o">=</span> <span class="n">scope</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -929,7 +929,7 @@ for use by all functions using this library.</p>
 <p class="admonition-title">Note</p>
 <p>In the Atomic Function template, as of version 41.1, <a class="reference internal" href="#resilient_lib.components.requests_common.RequestsCommon" title="resilient_lib.components.requests_common.RequestsCommon"><code class="xref py py-class docutils literal notranslate"><span class="pre">RequestsCommon</span></code></a> is instantiated and available
 in a class that inherits <a class="reference internal" href="../resilient-circuits/resilient-circuits.html#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a> as an <code class="docutils literal notranslate"><span class="pre">rc</span></code> attribute:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rc</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s2">&quot;ibm.com&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rc</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">"GET"</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="s2">"ibm.com"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -965,8 +965,8 @@ section of your app.config for the <code class="docutils literal notranslate"><s
 <li><p><strong>proxies</strong> (<em>dict</em>) – <p>(Optional) Dictionary mapping protocol to the URL of the proxy.
 The mapping protocol must be in the format:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="s2">&quot;https_proxy&quot;</span><span class="p">:</span> <span class="s2">&quot;https://localhost:8080,</span>
-    <span class="s2">&quot;http_proxy&quot;</span><span class="p">:</span> <span class="s2">&quot;http://localhost:8080</span>
+    <span class="s2">"https_proxy"</span><span class="p">:</span> <span class="s2">"https://localhost:8080,</span>
+    <span class="s2">"http_proxy"</span><span class="p">:</span> <span class="s2">"http://localhost:8080</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -981,10 +981,10 @@ unless the <code class="docutils literal notranslate"><span class="pre">callback
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntegrationError</span><span class="p">,</span> <span class="n">RequestsCommon</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">custom_callback</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; custom callback function to handle 400 error codes &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">""" custom callback function to handle 400 error codes """</span>
     <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&gt;=</span> <span class="mi">400</span> <span class="ow">and</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&lt;</span> <span class="mi">500</span><span class="p">:</span>
         <span class="c1"># raise ValueError which will be retried</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;retry me&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"retry me"</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># all other status codes should return normally</span>
         <span class="c1"># note this bypasses the normal rc.execute logic which</span>
@@ -994,7 +994,7 @@ unless the <code class="docutils literal notranslate"><span class="pre">callback
 <span class="n">rc</span> <span class="o">=</span> <span class="n">RequestsCommon</span><span class="p">()</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="c1"># will retry 3 times then will raise IntegrationError</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;https://postman-echo.com/status/404&quot;</span><span class="p">,</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">"GET"</span><span class="p">,</span> <span class="s2">"https://postman-echo.com/status/404"</span><span class="p">,</span>
                                <span class="n">callback</span><span class="o">=</span><span class="n">custom_callback</span><span class="p">,</span> <span class="n">retry_tries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
                                <span class="n">retry_exceptions</span><span class="o">=</span><span class="ne">ValueError</span><span class="p">)</span>
 <span class="k">except</span> <span class="n">IntegrationError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
@@ -1195,7 +1195,7 @@ is called, this class will use <code class="docutils literal notranslate"><span 
 <span class="kn">from</span><span class="w"> </span><span class="nn">resilient_circuits</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppFunctionComponent</span><span class="p">,</span> <span class="n">is_this_a_selftest</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">poller</span><span class="p">,</span> <span class="n">get_last_poller_date</span>
 
-<span class="n">PACKAGE_NAME</span> <span class="o">=</span> <span class="s2">&quot;fn_my_app&quot;</span>
+<span class="n">PACKAGE_NAME</span> <span class="o">=</span> <span class="s2">"fn_my_app"</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -1208,17 +1208,17 @@ is called, this class will use <code class="docutils literal notranslate"><span 
         <span class="n">last_poller_time</span> <span class="o">=</span> <span class="n">get_last_poller_date</span><span class="p">(</span><span class="mi">120</span><span class="p">)</span> <span class="c1"># look back 2 hours</span>
 
         <span class="k">if</span> <span class="n">is_this_a_selftest</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Running selftest -- disabling poller&quot;</span><span class="p">)</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Running selftest -- disabling poller"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">poller_thread</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">)</span>
             <span class="n">poller_thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="n">poller_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
-    <span class="nd">@poller</span><span class="p">(</span><span class="s1">&#39;polling_interval&#39;</span><span class="p">,</span> <span class="s1">&#39;last_poller_time&#39;</span><span class="p">)</span>
+    <span class="nd">@poller</span><span class="p">(</span><span class="s1">'polling_interval'</span><span class="p">,</span> <span class="s1">'last_poller_time'</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="c1"># poll endpoint</span>
-        <span class="n">query_results</span> <span class="o">=</span> <span class="n">query_entities_since_last_poll</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;last_poller_time&#39;</span><span class="p">])</span>
+        <span class="n">query_results</span> <span class="o">=</span> <span class="n">query_entities_since_last_poll</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">'last_poller_time'</span><span class="p">])</span>
 
         <span class="c1"># process any results to create, update, or close case in SOAR</span>
         <span class="k">if</span> <span class="n">query_results</span><span class="p">:</span>
@@ -1275,9 +1275,9 @@ column name and value pairs</p>
 <span class="n">soar_common</span> <span class="o">=</span> <span class="n">SOARCommon</span><span class="p">(</span><span class="n">res_client</span><span class="p">)</span>
 
 <span class="n">case_id</span> <span class="o">=</span> <span class="n">get_case_id</span><span class="p">()</span>
-<span class="n">rowdata</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;column_1_api_name&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;column_2_api_name&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<span class="n">rowdata</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"column_1_api_name"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"column_2_api_name"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
 
-<span class="n">soar_common</span><span class="o">.</span><span class="n">create_datatable_row</span><span class="p">(</span><span class="n">case_id</span><span class="p">,</span> <span class="s2">&quot;my_dt&quot;</span><span class="p">,</span> <span class="n">rowdata</span><span class="p">)</span>
+<span class="n">soar_common</span><span class="o">.</span><span class="n">create_datatable_row</span><span class="p">(</span><span class="n">case_id</span><span class="p">,</span> <span class="s2">"my_dt"</span><span class="p">,</span> <span class="n">rowdata</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -1481,7 +1481,7 @@ endpoint solution.</p>
 
 <span class="n">soar_common</span> <span class="o">=</span> <span class="n">SOARCommon</span><span class="p">(</span><span class="n">res_client</span><span class="p">)</span>
 <span class="n">found_id</span> <span class="o">=</span> <span class="n">get_id_from_endpoint_query_result</span><span class="p">()</span>
-<span class="n">cases</span> <span class="o">=</span> <span class="n">soar_common</span><span class="o">.</span><span class="n">get_soar_cases</span><span class="p">({</span> <span class="s2">&quot;endpoint_id&quot;</span><span class="p">:</span> <span class="n">found_id</span> <span class="p">},</span> <span class="n">open_cases</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">cases</span> <span class="o">=</span> <span class="n">soar_common</span><span class="o">.</span><span class="n">get_soar_cases</span><span class="p">({</span> <span class="s2">"endpoint_id"</span><span class="p">:</span> <span class="n">found_id</span> <span class="p">},</span> <span class="n">open_cases</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -1576,18 +1576,18 @@ config file that will eventually need to evaluated as JSON elsewhere in the code
 <p><strong>Example:</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">eval_mapping</span>
 
-<span class="n">config_value</span> <span class="o">=</span> <span class="n">app_configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;some_config&quot;</span><span class="p">)</span>
-<span class="c1"># Assume that &#39;config_value&#39; has a value of</span>
-<span class="c1"># &#39;&quot;source&quot;:&quot;A&quot;,&quot;tags&quot;:[&quot;tagA&quot;],&quot;priorities&quot;:[40,50]&#39;</span>
+<span class="n">config_value</span> <span class="o">=</span> <span class="n">app_configs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"some_config"</span><span class="p">)</span>
+<span class="c1"># Assume that 'config_value' has a value of</span>
+<span class="c1"># '"source":"A","tags":["tagA"],"priorities":[40,50]'</span>
 
 <span class="c1"># parse the values to a dict, using a dictionary wrapper:</span>
-<span class="n">parsed_config</span> <span class="o">=</span> <span class="n">eval_mapping</span><span class="p">(</span><span class="n">config_value</span><span class="p">,</span> <span class="s2">&quot;{{ </span><span class="si">{}</span><span class="s2"> }}&quot;</span><span class="p">)</span>
+<span class="n">parsed_config</span> <span class="o">=</span> <span class="n">eval_mapping</span><span class="p">(</span><span class="n">config_value</span><span class="p">,</span> <span class="s2">"{{ </span><span class="si">{}</span><span class="s2"> }}"</span><span class="p">)</span>
 
 <span class="c1"># the returned value is a dict like:</span>
 <span class="c1"># {</span>
-<span class="c1">#   &quot;source&quot;: &quot;A&quot;,</span>
-<span class="c1">#   &quot;tags&quot;: [&quot;tagA&quot;],</span>
-<span class="c1">#   &quot;priorities&quot;: [40, 50]</span>
+<span class="c1">#   "source": "A",</span>
+<span class="c1">#   "tags": ["tagA"],</span>
+<span class="c1">#   "priorities": [40, 50]</span>
 <span class="c1"># }</span>
 </pre></div>
 </div>
@@ -1620,8 +1620,8 @@ config file that will eventually need to evaluated as JSON elsewhere in the code
 <p class="admonition-title">Note</p>
 <p>Normally a template is in JSON format:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;{{ alert_name }}&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;severity&quot;</span><span class="p">:</span> <span class="s2">&quot;{{ alert_severity }}&quot;</span>
+    <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"{{ alert_name }}"</span><span class="p">,</span>
+    <span class="s2">"severity"</span><span class="p">:</span> <span class="s2">"{{ alert_severity }}"</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -1636,11 +1636,11 @@ value of <code class="docutils literal notranslate"><span class="pre">DEFAULT_TE
 <span class="kn">from</span><span class="w"> </span><span class="nn">resilient_circuits</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppFunctionComponent</span><span class="p">,</span> <span class="n">FunctionResult</span><span class="p">,</span> <span class="n">app_function</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_payload_from_template</span>
 
-<span class="n">PACKAGE_NAME</span> <span class="o">=</span> <span class="s2">&quot;my_app&quot;</span>
-<span class="n">FN_NAME</span> <span class="o">=</span> <span class="s2">&quot;my_function_using_jinja&quot;</span>
+<span class="n">PACKAGE_NAME</span> <span class="o">=</span> <span class="s2">"my_app"</span>
+<span class="n">FN_NAME</span> <span class="o">=</span> <span class="s2">"my_function_using_jinja"</span>
 
 <span class="c1"># Creating an absolute path to the template</span>
-<span class="n">DEFAULT_TEMPLATE_PATH</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="n">PACKAGE_NAME</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;util/templates/&lt;default_name&gt;.jinja2&quot;</span><span class="p">)</span>
+<span class="n">DEFAULT_TEMPLATE_PATH</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="n">PACKAGE_NAME</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">"util/templates/&lt;default_name&gt;.jinja2"</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FunctionComponent</span><span class="p">(</span><span class="n">AppFunctionComponent</span><span class="p">):</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
@@ -1648,48 +1648,48 @@ value of <code class="docutils literal notranslate"><span class="pre">DEFAULT_TE
 
     <span class="nd">@app_function</span><span class="p">(</span><span class="n">FN_NAME</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_app_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn_inputs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">'''</span>
 <span class="sd">        Function: A function showing how to use Jinja templates</span>
 <span class="sd">        Inputs:</span>
 <span class="sd">            -   fn_inputs.alert_severity</span>
 <span class="sd">            -   fn_inputs.device_id</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        '''</span>
 
-        <span class="n">custom_template_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_configs</span><span class="o">.</span><span class="n">custom_template_path</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app_configs</span><span class="p">,</span> <span class="s2">&quot;custom_template_path&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">custom_template_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_configs</span><span class="o">.</span><span class="n">custom_template_path</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app_configs</span><span class="p">,</span> <span class="s2">"custom_template_path"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">""</span>
 
         <span class="n">template_rendered</span> <span class="o">=</span> <span class="n">make_payload_from_template</span><span class="p">(</span>
             <span class="n">template_override</span><span class="o">=</span><span class="n">custom_template_path</span><span class="p">,</span>
             <span class="n">default_template</span><span class="o">=</span><span class="n">DEFAULT_TEMPLATE_PATH</span><span class="p">,</span>
             <span class="n">payload</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">&quot;alert_name&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Malware found on device </span><span class="si">{</span><span class="n">fn_inputs</span><span class="o">.</span><span class="n">device_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;alert_severity&quot;</span><span class="p">:</span> <span class="n">fn_inputs</span><span class="o">.</span><span class="n">alert_severity</span>
+                <span class="s2">"alert_name"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Malware found on device </span><span class="si">{</span><span class="n">fn_inputs</span><span class="o">.</span><span class="n">device_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="s2">"alert_severity"</span><span class="p">:</span> <span class="n">fn_inputs</span><span class="o">.</span><span class="n">alert_severity</span>
             <span class="p">},</span>
             <span class="n">return_json</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">template_rendered</span><span class="p">)</span>
 
-        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;template_rendered&quot;</span><span class="p">:</span> <span class="n">template_rendered</span><span class="p">}</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"template_rendered"</span><span class="p">:</span> <span class="n">template_rendered</span><span class="p">}</span>
 
         <span class="k">yield</span> <span class="n">FunctionResult</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">INFO</span> <span class="p">[</span><span class="n">my_function_using_jinja</span><span class="p">]</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Malware found on device 303&#39;</span><span class="p">,</span> <span class="s1">&#39;severity&#39;</span><span class="p">:</span> <span class="s1">&#39;High&#39;</span><span class="p">}</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">INFO</span> <span class="p">[</span><span class="n">my_function_using_jinja</span><span class="p">]</span> <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'Malware found on device 303'</span><span class="p">,</span> <span class="s1">'severity'</span><span class="p">:</span> <span class="s1">'High'</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>4. Update your <code class="docutils literal notranslate"><span class="pre">README.md</span></code> documentation file to include relevant information about the templates,
 for example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>## Templates for SOAR Cases
-It may necessary to modify the templates used to create SOAR cases based on a customer&#39;s required custom fields.
-Below are the default templates used which can be copied, modified and used with app.config&#39;s
+It may necessary to modify the templates used to create SOAR cases based on a customer's required custom fields.
+Below are the default templates used which can be copied, modified and used with app.config's
 `custom_template_path` setting to override the default template.
 
 ### custom_template.jinja
 ```
 {
-    &quot;name&quot;: &quot;{{ alert_name }}&quot;,
-    &quot;severity&quot;: &quot;{{ alert_severity }}&quot;
+    "name": "{{ alert_name }}",
+    "severity": "{{ alert_severity }}"
 }
 ```
 </pre></div>
@@ -1734,7 +1734,7 @@ Below are the default templates used which can be copied, modified and used with
 </dd>
 </dl>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">This</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">in</span> <span class="n">camel</span> <span class="n">case</span><span class="p">:</span> <span class="p">{{</span> <span class="n">a</span><span class="c1">#bc_def | camel }}</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="s1">&#39;ABcDef&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s1">'ABcDef'</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1759,7 +1759,7 @@ This environment can be expanded upon to add additional custom filters.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient</span><span class="o">-</span><span class="n">lib</span> <span class="kn">import</span><span class="w"> </span><span class="nn">global_jinja_env</span>
 
 <span class="n">addl_custom_filters</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;filter_name&quot;</span><span class="p">:</span> <span class="n">method_name</span>
+    <span class="s2">"filter_name"</span><span class="p">:</span> <span class="n">method_name</span>
 <span class="p">}</span>
 <span class="n">env</span> <span class="o">=</span> <span class="n">global_jinja_env</span><span class="p">()</span>
 <span class="n">env</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">addl_custom_filters</span><span class="p">)</span>
@@ -1983,41 +1983,41 @@ valid JSON</p>
 </dd>
 </dl>
 <p><strong>Examples:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s2">&quot;template {{value}}&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span><span class="s2">&quot;123&quot;</span><span class="p">})</span>
-<span class="go">u&#39;template 123&#39;</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s2">"template {{value}}"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s2">"123"</span><span class="p">})</span>
+<span class="go">u'template 123'</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">({</span><span class="s2">&quot;template&quot;</span><span class="p">:</span> <span class="s2">&quot;{{value}}&quot;</span><span class="p">},</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span><span class="s2">&quot;123&quot;</span><span class="p">})</span>
-<span class="go">u&#39;{&quot;template&quot;: &quot;123&quot;}&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">({</span><span class="s2">"template"</span><span class="p">:</span> <span class="s2">"{{value}}"</span><span class="p">},</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s2">"123"</span><span class="p">})</span>
+<span class="go">u'{"template": "123"}'</span>
 
-<span class="go">You can escape values using the &#39;json&#39; filter,</span>
-<span class="go">or the &#39;url&#39; or &#39;html&#39; or &#39;ldap&#39; filters.</span>
+<span class="go">You can escape values using the 'json' filter,</span>
+<span class="go">or the 'url' or 'html' or 'ldap' filters.</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">&#39;{&quot;template&quot;: {{value|json}} }&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span><span class="s1">&#39;1&quot;23&#39;</span><span class="p">})</span>
-<span class="go">u&#39;{&quot;template&quot;: &quot;1\\&quot;23&quot; }&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'{"template": {{value|json}} }'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'1"23'</span><span class="p">})</span>
+<span class="go">u'{"template": "1\\"23" }'</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">&#39;{&quot;template&quot;: &quot;{{value|js}}&quot; }&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span><span class="s1">&#39;1&quot;23&#39;</span><span class="p">})</span>
-<span class="go">u&#39;{&quot;template&quot;: &quot;1\\&quot;23&quot; }&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'{"template": "{{value|js}}" }'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'1"23'</span><span class="p">})</span>
+<span class="go">u'{"template": "1\\"23" }'</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">&#39;{&quot;template&quot;: {{value|ldap}} }&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span><span class="s1">&#39;1*23&#39;</span><span class="p">})</span>
-<span class="go">u&#39;{&quot;template&quot;: 1\\2a23 }&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'{"template": {{value|ldap}} }'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'1*23'</span><span class="p">})</span>
+<span class="go">u'{"template": 1\\2a23 }'</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">&#39;shell &quot;{{value|ps}}&quot;&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span><span class="s1">&#39;$&quot;foo&quot;&#39;</span><span class="p">})</span>
-<span class="go">u&#39;shell &quot;`$`&quot;foo`&quot;&quot;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'shell "{{value|ps}}"'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'$"foo"'</span><span class="p">})</span>
+<span class="go">u'shell "`$`"foo`""'</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">&#39;shell &quot;{{value|sh}}&quot;&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span><span class="s1">&#39;$&quot;foo&quot;&#39;</span><span class="p">})</span>
-<span class="go">u&#39;shell &quot;\\$\\&quot;foo\\&quot;&quot;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'shell "{{value|sh}}"'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="s1">'$"foo"'</span><span class="p">})</span>
+<span class="go">u'shell "\\$\\"foo\\""'</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">&#39;template={{value|timestamp}}&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">})</span>
-<span class="go">u&#39;template=0&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'template={{value|timestamp}}'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="mi">0</span><span class="p">})</span>
+<span class="go">u'template=0'</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">&#39;template={{value|timestamp}}&#39;</span><span class="p">,</span> <span class="p">{})</span>
-<span class="go">u&#39;template=null&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'template={{value|timestamp}}'</span><span class="p">,</span> <span class="p">{})</span>
+<span class="go">u'template=null'</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">&#39;template={{value|timestamp}}&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span><span class="mi">2015</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span><span class="mi">7</span><span class="p">,</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span><span class="mi">15</span><span class="p">}})</span>
-<span class="go">u&#39;template=1436918400000&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'template={{value|timestamp}}'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:{</span><span class="s2">"year"</span><span class="p">:</span><span class="mi">2015</span><span class="p">,</span> <span class="s2">"month"</span><span class="p">:</span><span class="mi">7</span><span class="p">,</span> <span class="s2">"day"</span><span class="p">:</span><span class="mi">15</span><span class="p">}})</span>
+<span class="go">u'template=1436918400000'</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">&#39;template={{value|timestamp}}&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">15</span><span class="p">)})</span>
-<span class="go">u&#39;template=1436918400000&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render</span><span class="p">(</span><span class="s1">'template={{value|timestamp}}'</span><span class="p">,</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">15</span><span class="p">)})</span>
+<span class="go">u'template=1436918400000'</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -2042,13 +2042,13 @@ Also clean up any “really bad” control characters to avoid failure.</p>
 </dd>
 </dl>
 <p><strong>Examples:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;the&quot;</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;new&quot;</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;thing&quot;</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render_json</span><span class="p">(</span><span class="s1">&#39;{&quot;result&quot;:&quot;{{value}}&quot;}&#39;</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
-<span class="go">{u&#39;result&#39;: u&#39;the new thing&#39;}</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span> <span class="s2">"the"</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"new"</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"thing"</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render_json</span><span class="p">(</span><span class="s1">'{"result":"{{value}}"}'</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<span class="go">{u'result': u'the new thing'}</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;the&quot;</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;new&quot;</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;thing&quot;</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">render_json</span><span class="p">(</span><span class="s1">&#39;{&quot;result&quot;:&quot;{{value}}&quot;}&#39;</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
-<span class="go">{u&#39;result&#39;: u&#39;the new thing&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">:</span> <span class="s2">"the"</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"new"</span> <span class="o">+</span> <span class="nb">chr</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"thing"</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">render_json</span><span class="p">(</span><span class="s1">'{"result":"{{value}}"}'</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<span class="go">{u'result': u'the new thing'}</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -2104,8 +2104,8 @@ increase its <em>random</em> probability</p></li>
 <li><p><strong>value</strong> (<em>str</em>) – The UTC date string</p></li>
 <li><p><strong>date_format</strong> (<em>str</em>) – <em>(optional)</em> Conversion format. Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;%Y-%m-%dT%H:%M:%S&quot;</span></code></p></li>
 <li><p><strong>split_at</strong> (<em>str</em>) – <p><em>(optional)</em> Character to split the date field to scope the date field</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">split_at</span><span class="o">=</span><span class="s1">&#39;.&#39;</span> <span class="n">to</span> <span class="n">remove</span> <span class="n">milliseconds</span> <span class="k">for</span> <span class="s2">&quot;2021-10-22T20:53:53.913Z&quot;</span>
-<span class="n">split_at</span><span class="o">=</span><span class="s1">&#39;+&#39;</span> <span class="n">to</span> <span class="n">remove</span> <span class="n">tz</span> <span class="n">information</span> <span class="s2">&quot;2021-10-22T20:53:53+00:00&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">split_at</span><span class="o">=</span><span class="s1">'.'</span> <span class="n">to</span> <span class="n">remove</span> <span class="n">milliseconds</span> <span class="k">for</span> <span class="s2">"2021-10-22T20:53:53.913Z"</span>
+<span class="n">split_at</span><span class="o">=</span><span class="s1">'+'</span> <span class="n">to</span> <span class="n">remove</span> <span class="n">tz</span> <span class="n">information</span> <span class="s2">"2021-10-22T20:53:53+00:00"</span>
 </pre></div>
 </div>
 </p></li>
@@ -2197,16 +2197,16 @@ increase its <em>random</em> probability</p></li>
 <dd class="field-odd"><p>int</p>
 </dd>
 </dl>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">2018</span><span class="p">,</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;timezoneID&quot;</span><span class="p">:</span> <span class="s2">&quot;CET&quot;</span><span class="p">})</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">({</span><span class="s2">"year"</span><span class="p">:</span> <span class="mi">2018</span><span class="p">,</span> <span class="s2">"month"</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">"day"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"timezoneID"</span><span class="p">:</span> <span class="s2">"CET"</span><span class="p">})</span>
 <span class="go">1533074400000</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">(</span><span class="n">Undefined</span><span class="p">())</span>
-<span class="go">&#39;null&#39;</span>
+<span class="go">'null'</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">(</span><span class="s2">&quot;now&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1530000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">(</span><span class="s2">"now"</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1530000000000</span>
 <span class="go">True</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">(</span><span class="s2">&quot;now&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2000000000000</span> <span class="c1"># 2033</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">timestamp</span><span class="p">(</span><span class="s2">"now"</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2000000000000</span> <span class="c1"># 2033</span>
 <span class="go">False</span>
 </pre></div>
 </div>
@@ -2234,11 +2234,11 @@ increase its <em>random</em> probability</p></li>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">uniq</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">]))</span>
 <span class="go">[1, 2, 3]</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">uniq</span><span class="p">([</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">},</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">}]))</span>
-<span class="go">[{&#39;a&#39;: 1}, {&#39;a&#39;: 2}, {&#39;a&#39;: 3}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">uniq</span><span class="p">([</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">3</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">2</span><span class="p">}]))</span>
+<span class="go">[{'a': 1}, {'a': 2}, {'a': 3}]</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">uniq</span><span class="p">([</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">},</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">},</span> <span class="ne">Exception</span><span class="p">()],</span> <span class="s2">&quot;a&quot;</span><span class="p">))</span>
-<span class="go">[{&#39;a&#39;: 1}, {&#39;a&#39;: 2}, {&#39;a&#39;: 3}, Exception()]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">uniq</span><span class="p">([</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">3</span><span class="p">},</span> <span class="p">{</span><span class="s2">"a"</span><span class="p">:</span><span class="mi">2</span><span class="p">},</span> <span class="ne">Exception</span><span class="p">()],</span> <span class="s2">"a"</span><span class="p">))</span>
+<span class="go">[{'a': 1}, {'a': 2}, {'a': 3}, Exception()]</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -2271,7 +2271,7 @@ increase its <em>random</em> probability</p></li>
 identifying the type of error</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_lib</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntegrationError</span>
 
-<span class="k">raise</span> <span class="n">IntegrationError</span><span class="p">(</span><span class="s2">&quot;Example raising custom error&quot;</span><span class="p">)</span>
+<span class="k">raise</span> <span class="n">IntegrationError</span><span class="p">(</span><span class="s2">"Example raising custom error"</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>

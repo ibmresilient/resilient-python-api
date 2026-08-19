@@ -245,13 +245,13 @@
 <dt class="sig sig-object py" id="resilient.co3.SimpleClient">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">SimpleClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_ttl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">240</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">certauth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_headers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient.co3.SimpleClient" title="Link to this definition">¶</a></dt>
 <dd><p>Python helper class for using the IBM SOAR REST API.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="sd">&#39;&#39;&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="sd">'''</span>
 <span class="sd">An example script showing how to connect and get</span>
 <span class="sd">incidents with IBM Security SOAR</span>
 
 <span class="sd">Example Usage:</span>
-<span class="sd">python sample_connect.py &quot;https://&lt;host&gt;&quot;, &quot;&lt;org_name&gt;&quot;, &quot;&lt;api_key_id&gt;&quot;, &quot;&lt;api_key_secret&gt;&quot;, &quot;&lt;path_to_ca_file&gt;|False&quot;</span>
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">python sample_connect.py "https://&lt;host&gt;", "&lt;org_name&gt;", "&lt;api_key_id&gt;", "&lt;api_key_secret&gt;", "&lt;path_to_ca_file&gt;|False"</span>
+<span class="sd">'''</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -289,22 +289,22 @@
 
     <span class="c1"># Setup the request payload</span>
     <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;filters&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"filters"</span><span class="p">:</span> <span class="p">[</span>
             <span class="p">{</span>
-                <span class="s2">&quot;conditions&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;field_name&quot;</span><span class="p">:</span> <span class="s2">&quot;plan_status&quot;</span><span class="p">,</span> <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;equals&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;A&quot;</span><span class="p">}]</span>
+                <span class="s2">"conditions"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"field_name"</span><span class="p">:</span> <span class="s2">"plan_status"</span><span class="p">,</span> <span class="s2">"method"</span><span class="p">:</span> <span class="s2">"equals"</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"A"</span><span class="p">}]</span>
             <span class="p">}</span>
         <span class="p">]</span>
     <span class="p">}</span>
 
     <span class="c1"># Invoke the request</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="n">res_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/incidents/query_paged?return_level=full&quot;</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">)</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">res_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/incidents/query_paged?return_level=full"</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">)</span>
 
     <span class="c1"># Print results</span>
-    <span class="k">for</span> <span class="n">incident</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="p">[]):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">: </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">incident</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">),</span> <span class="n">incident</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">incident</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"data"</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="si">{0}</span><span class="s2">: </span><span class="si">{1}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">incident</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">),</span> <span class="n">incident</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)))</span>
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 </div>
