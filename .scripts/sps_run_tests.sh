@@ -130,6 +130,11 @@ function run_python_312_unit_tests(){
     # https://ibm-security.slack.com/archives/C06L36NUEP4/p1750845211295349?thread_ts=1750785640.445799&cid=C06L36NUEP4
     # install_python3 "3.12" 
 
+    # The python3.12 RPM on RHEL 8 ships a pyexpat.cpython-312.so that requires
+    # XML_SetBillionLaughsAttackProtectionMaximumAmplification, a symbol only present
+    # in expat >= 2.4.0. Upgrade expat first so the symbol is available before
+    # python3.12 and its pip are loaded.
+    yum update -yq expat
     yum install -yq python3.12 python3.12-pip python3.12-devel
     unlink /usr/bin/python3
 
