@@ -1,7 +1,10 @@
 # Generated with resilient-sdk v{{ sdk_version }}
 # docker build -t ibmresilient/{{package_name}}:{{version}} .
 ARG BASE_IMAGE_REPO=quay.io
-# BASE_IMAGE_TAG options: latest, python-312. See https://quay.io/repository/ibmresilient/soarapps-base-docker-image?tab=tags for all options
+# BASE_IMAGE_TAG options:
+#   UBI9-minimal (default): latest, ubi9-min-py312
+#   UBI10-minimal (opt-in): ubi10-min-py312, ubi10-min-py313, ubi10-min-py314
+# See https://quay.io/repository/ibmresilient/soarapps-base-docker-image?tab=tags for all options
 # use --build-arg BASE_IMAGE_TAG=<tag> to set base image to be built from
 ARG BASE_IMAGE_TAG=latest
 

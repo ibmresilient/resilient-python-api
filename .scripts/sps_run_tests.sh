@@ -128,7 +128,7 @@ function run_python_311_unit_tests(){
 function run_python_312_unit_tests(){
     # TODO: revist when install_python3 supports python3.12
     # https://ibm-security.slack.com/archives/C06L36NUEP4/p1750845211295349?thread_ts=1750785640.445799&cid=C06L36NUEP4
-    # install_python3 "3.12" 
+    # install_python3 "3.12"
 
     # The python3.12 RPM on RHEL 8 ships a pyexpat.cpython-312.so that requires
     # XML_SetBillionLaughsAttackProtectionMaximumAmplification, a symbol only present

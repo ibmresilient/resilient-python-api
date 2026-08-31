@@ -1,31 +1,67 @@
-# docker build -t quay.io/ibmresilient/soarapps-base-docker-image:${NEW_VERSION} -t quay.io/ibmresilient/soarapps-base-docker-image:latest --build-arg RESILIENT_CIRCUITS_VERSION=${NEW_VERSION} --build-arg PYTHON_SHORT_VERSION=3.12 --build-arg UBI_VERSION=ubi9-minimal .
+# UBI9  (default): docker build ... --build-arg RESILIENT_CIRCUITS_VERSION=${NEW_VERSION} --build-arg PYTHON_VERSION=3.12.14 --build-arg ARTIFACTORY_API_TOKEN=<token> .
+# UBI10 (opt-in):  docker build ... --build-arg UBI_VERSION=ubi10-minimal --build-arg PYTHON_VERSION=3.13.15 --build-arg ARTIFACTORY_API_TOKEN=<token> --build-arg RESILIENT_CIRCUITS_VERSION=${NEW_VERSION} .
+
+# REQUIRED: set RESILIENT_CIRCUITS_VERSION when you build by passing: --build-arg RESILIENT_CIRCUITS_VERSION=<version>
+ARG RESILIENT_CIRCUITS_VERSION
+# OPTIONAL: set UBI_VERSION when you build by passing: --build-arg UBI_VERSION=ubi9-minimal|ubi10-minimal
+# default: ubi9-minimal (ubi10-minimal opt-in; enables Python 3.13 and 3.14)
+ARG UBI_VERSION=ubi9-minimal
+# OPTIONAL: Python version to install — always pass the full patch version, e.g. 3.12.14 or 3.13.15.
+# Python is installed from a UBI-specific Artifactory tarball; check Artifactory for available versions.
+ARG PYTHON_VERSION=3.12.14
+
+############################
+### START PYTHON BASE    ###
+############################
+
+# Installs Python from a UBI-specific Artifactory tarball (e.g. python3.12.14-ubi9-minimal-x86_64.tar.gz).
+# PYMINOR is derived from PYTHON_VERSION (e.g. 3.12.14 -> 3.12) and used for binary paths.
+# bzip2-libs libffi expat sqlite-libs are runtime deps for the tarball-installed Python.
+# curl-minimal is pre-installed on UBI9/UBI10; tar and gzip are installed temporarily and removed after extraction.
+FROM registry.access.redhat.com/${UBI_VERSION}:latest AS python-base
+
+ARG UBI_VERSION=ubi9-minimal
+ARG PYTHON_VERSION=3.12.14
+ARG ARTIFACTORY_API_TOKEN
+
+USER 0
+
+RUN if [ -z "${ARTIFACTORY_API_TOKEN}" ]; then \
+        echo "ERROR: ARTIFACTORY_API_TOKEN build arg is required but was not set." >&2; \
+        exit 1; \
+    fi && \
+    PYMINOR=$(echo ${PYTHON_VERSION} | cut -d. -f1,2) && \
+    PYBIN=/usr/local/bin/python${PYMINOR} && \
+    PIPBIN=/usr/local/bin/pip${PYMINOR} && \
+    microdnf install -y bzip2-libs libffi expat sqlite-libs tar gzip && \
+    microdnf clean all && \
+    curl --fail -L \
+        -H "Authorization: Bearer ${ARTIFACTORY_API_TOKEN}" \
+        -o /tmp/python.tar.gz \
+        "https://na.artifactory.swg-devops.com/artifactory/sec-resilient-team-integrations-generic-local/python_tarballs/python${PYTHON_VERSION}-${UBI_VERSION}-x86_64.tar.gz" && \
+    tar xzf /tmp/python.tar.gz -C /usr/local && \
+    rm /tmp/python.tar.gz && \
+    microdnf remove -y tar gzip && microdnf clean all && \
+    if [ ! -x "${PYBIN}" ] || [ ! -x "${PIPBIN}" ]; then \
+        echo "ERROR: Python ${PYTHON_VERSION} could not be installed from Artifactory." >&2; \
+        exit 1; \
+    fi && \
+    alternatives --install /usr/bin/python3 python3 ${PYBIN} 1 && \
+    alternatives --install /usr/bin/python  python  ${PYBIN} 1 && \
+    alternatives --install /usr/bin/pip     pip     ${PIPBIN} 1
+
+##########################
+### END PYTHON BASE     ###
+##########################
 
 ###########################
 ### START BUILDER IMAGE ###
 ###########################
 
-# REQUIRED: set RESILIENT_CIRCUITS_VERSION when you build by passing: --build-arg RESILIENT_CIRCUITS_VERSION=<version>
-ARG RESILIENT_CIRCUITS_VERSION
-# OPTIONAL: set UBI_VERSION when you build by passing: --build-arg UBI_VERSION=ubi9|ubi10
-# default: ubi9-minimal
-ARG UBI_VERSION=ubi9-minimal
-
 # Builder image (this stage only used to build circuits and its dependencies)
-FROM registry.access.redhat.com/${UBI_VERSION}:latest AS builder
+FROM python-base AS builder
 
 ARG RESILIENT_CIRCUITS_VERSION
-ARG PYTHON_SHORT_VERSION=3.12
-
-# use root user to build
-USER 0
-
-# install python and pip
-# NOTE: python3.12 is available via microdnf on ubi9-minimal; python3.13+ is not — upgrading PYTHON_SHORT_VERSION
-# will require pulling a tarball from Artifactory and building from source instead of this microdnf install
-RUN microdnf install -y python${PYTHON_SHORT_VERSION} python${PYTHON_SHORT_VERSION}-pip && microdnf clean all && \
-    alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_SHORT_VERSION} 1 && \
-    alternatives --install /usr/bin/python python /usr/bin/python${PYTHON_SHORT_VERSION} 1 && \
-    alternatives --install /usr/bin/pip pip /usr/bin/pip${PYTHON_SHORT_VERSION} 1
 
 # copy all packages and contents over to temporary build packages folder
 COPY . /tmp/builder_packages/resilient-python-api
@@ -49,22 +85,17 @@ RUN mkdir /tmp/builder_packages/wheels && \
 ### START MAIN IMAGE ###
 ########################
 
-# Base image using Red Hat's universal base image with python installed
-FROM registry.access.redhat.com/${UBI_VERSION}:latest
+# Base image using Red Hat's UBI minimal image (ubi9-minimal by default, ubi10-minimal opt-in)
+FROM python-base
 
+ARG RESILIENT_CIRCUITS_VERSION
 ARG PATH_RESILIENT_CIRCUITS=rescircuits
-ARG PYTHON_SHORT_VERSION=3.12
+# PYTHON_VERSION must be the same as the version used in PYTHON-BASE stage
+ARG PYTHON_VERSION=3.12.14 
 
-# root priviledges to set up the structure
-USER 0
-
-# install python; symlink yum -> microdnf so app Dockerfiles need no changes
-# NOTE: python3.12 is available via microdnf on ubi9-minimal; python3.13+ is not — upgrading PYTHON_SHORT_VERSION
-# will require pulling a tarball from Artifactory and building from source instead of this microdnf install
-RUN microdnf install -y python${PYTHON_SHORT_VERSION} python${PYTHON_SHORT_VERSION}-pip shadow-utils && microdnf clean all && \
-    alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_SHORT_VERSION} 1 && \
-    alternatives --install /usr/bin/python python /usr/bin/python${PYTHON_SHORT_VERSION} 1 && \
-    alternatives --install /usr/bin/pip pip /usr/bin/pip${PYTHON_SHORT_VERSION} 1 && \
+# Install shadow-utils and procps-ng; symlink yum -> microdnf for downstream app Dockerfiles.
+RUN microdnf install -y shadow-utils procps-ng && \
+    microdnf clean all && \
     ln -s /usr/bin/microdnf /usr/bin/yum
 
 # create arbitrary group and user 1001 (ubi9-minimal has no 'default' user pre-created)
@@ -95,16 +126,18 @@ RUN microdnf -y remove httpd httpd-tools httpd-core httpd-filesystem httpd-devel
               mod_ssl mod_lua mod_ldap mod_session mod_http2 mod_auth_gssapi || true
 
 # copy over the built packages, install them, remove temp files, then remove pip
-# purge the RPM-owned pip files so app Dockerfiles can cleanly re-bootstrap pip via ensurepip
+# purge pip files so app Dockerfiles can cleanly re-bootstrap pip via ensurepip
+# /tmp/packages contains exactly the four wheels built in this run — no version glob needed
 COPY --from=builder /tmp/builder_packages/wheels /tmp/packages
-RUN pip install --upgrade pip setuptools && \
-    pip install /tmp/packages/*${RESILIENT_CIRCUITS_VERSION}*.whl && \
+RUN PYMINOR=$(echo ${PYTHON_VERSION} | cut -d. -f1,2) && \
+    pip install --upgrade pip setuptools && \
+    pip install /tmp/packages/*.whl && \
     rm -rf /tmp/packages && \
     pip uninstall -y pip setuptools && \
-    rm -rf /usr/lib/python${PYTHON_SHORT_VERSION}/site-packages/pip \
-           /usr/lib/python${PYTHON_SHORT_VERSION}/site-packages/pip-*.dist-info \
-           /usr/lib/python${PYTHON_SHORT_VERSION}/site-packages/pip-*.egg-info \
-           /usr/bin/pip /usr/bin/pip3 /usr/bin/pip${PYTHON_SHORT_VERSION} /usr/bin/pip-${PYTHON_SHORT_VERSION}
+    rm -rf /usr/local/lib/python${PYMINOR}/site-packages/pip \
+           /usr/local/lib/python${PYMINOR}/site-packages/pip-*.dist-info \
+           /usr/local/lib/python${PYMINOR}/site-packages/pip-*.egg-info \
+           /usr/bin/pip /usr/bin/pip3
 
 # copy over and set the entrypoint
 COPY docker_template_entrypoint.sh /opt/${PATH_RESILIENT_CIRCUITS}/entrypoint.sh
