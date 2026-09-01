@@ -29,48 +29,89 @@ each library's individual page.
 Version 51.0.9.0
 -----------------
 
-*Released July 2026*
+*Released July–August 2026*
 
 This release adds official support for Python 3.13 and 3.14 across all four
-libraries. It also removes a long-standing dependency on the third-party
-``pytz`` library in ``resilient-lib``, replacing it with the standard library
-``zoneinfo`` module introduced in Python 3.9.
+libraries, removes the ``pytz`` dependency in ``resilient-lib`` in favour of
+the standard library ``zoneinfo`` module, migrates all package metadata to
+``pyproject.toml`` (PEP 621), and updates the ``soarapps-base-docker-image``
+to UBI9-minimal with a new UBI10-minimal opt-in build target.
 
 **Package versions**
 
-+---------------------+-----------+
-| Package             | Version   |
-+=====================+===========+
-| resilient           | 51.0.9.0  |
-+---------------------+-----------+
-| resilient-circuits  | 51.0.9.0  |
-+---------------------+-----------+
-| resilient-lib       | 51.0.9.0  |
-+---------------------+-----------+
-| resilient-sdk       | 51.0.9.0  |
-+---------------------+-----------+
++------------------------------+-----------+
+| Package                      | Version   |
++==============================+===========+
+| resilient                    | 51.0.9.0  |
++------------------------------+-----------+
+| resilient-circuits           | 51.0.9.0  |
++------------------------------+-----------+
+| resilient-lib                | 51.0.9.0  |
++------------------------------+-----------+
+| resilient-sdk                | 51.0.9.0  |
++------------------------------+-----------+
+| pytest-resilient-circuits    | 51.0.9.0  |
++------------------------------+-----------+
+| resilient-app-config-plugins | 1.1.0     |
++------------------------------+-----------+
 
 **What changed**
 
 *All packages* — Test coverage has been extended to include Python 3.13 and
 3.14. This confirms that the libraries are compatible with these newer Python
 runtimes. Note that the published ``soarapps-base-docker-image`` container
-continues to ship **Python 3.12** — this change is a testing extension only
-and does not affect the Python version used in production containers or on
-App Host. Python 3.12 remains the recommended and supported runtime for
-deployed apps.
+continues to ship **Python 3.12** by default — this change is a testing
+extension only and does not affect the Python version used in production
+containers or on App Host. Python 3.12 remains the recommended and supported
+runtime for deployed apps.
+
+*All packages* — Package metadata has been migrated from ``setup.cfg`` /
+``setup.py`` to ``pyproject.toml`` (PEP 621). This is an internal build
+tooling change only; published packages on PyPI are unaffected and the
+installation experience is identical.
 
 *resilient-lib* — The ``pytz`` dependency has been replaced with the built-in
 ``zoneinfo`` module. ``pytz`` is no longer maintained and has been superseded
 by ``zoneinfo`` (PEP 615) since Python 3.9. This change removes an external
 dependency and aligns timezone handling with the Python standard library.
 
+*resilient-app-config-plugins* — Fixed an incorrect ``cachetools`` dependency
+marker (``python_version > "3.11"`` corrected to ``>= "3.11"``).
+
+*soarapps-base-docker-image* — The base image has been migrated from
+``ubi9-minimal`` with ``microdnf``-installed Python to a tarball-based Python
+installation sourced from Artifactory. This decouples the Python version from
+what is available in the UBI package repository, enabling precise version
+pinning and faster future upgrades. A new **UBI10-minimal** build target has
+also been added as an opt-in, supporting Python 3.13 and later.
+
+.. warning::
+
+   **Breaking change for teams that build the base image directly.**
+
+   The ``docker build`` command now requires an additional build argument:
+
+   .. code-block:: bash
+
+      --build-arg ARTIFACTORY_API_TOKEN=<token>
+
+   Builds without this argument will fail immediately with an explicit error.
+   The token is used to download the Python tarball from the internal
+   Artifactory registry. Refer to the ``Dockerfile`` comments for the full
+   build command.
+
+   The ``--build-arg PYTHON_SHORT_VERSION`` argument has been replaced by
+   ``--build-arg PYTHON_VERSION``, which now expects a full patch version
+   (e.g. ``3.12.14``) rather than a minor version (e.g. ``3.12``). Update
+   any custom build scripts accordingly.
+
 **Upgrade notes**
 
 - **Standard app developers:** no action required. The base container image
   and App Host continue to run Python 3.12. The ``pytz`` removal in
   ``resilient-lib`` is handled internally and does not affect the public API
-  of any function.
+  of any function. The ``pyproject.toml`` migration is transparent to
+  consumers.
 - **Apps that import ``pytz`` directly:** if your own app code imports
   ``pytz`` directly (rather than through ``resilient-lib``), ``pytz`` will no
   longer be installed as a transitive dependency after upgrading. Add
@@ -86,6 +127,12 @@ dependency and aligns timezone handling with the Python standard library.
      # After (Python 3.9+)
      from zoneinfo import ZoneInfo
      tz = ZoneInfo("America/New_York")
+
+- **Teams building the base image:** see the warning above. Update your build
+  scripts to pass ``ARTIFACTORY_API_TOKEN`` and switch
+  ``PYTHON_SHORT_VERSION`` to ``PYTHON_VERSION`` with the full patch version.
+  To use the new UBI10 build, pass ``--build-arg UBI_VERSION=ubi10-minimal``
+  and set ``PYTHON_VERSION`` to a 3.13+ patch version (e.g. ``3.13.15``).
 
 ----
 
