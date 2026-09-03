@@ -54,7 +54,7 @@ fi
 ###########
 
 print_msg "Installing app config plugins package"
-python3 -m pip install $app_repo_dir/resilient-app-config-plugins
+python3 -m pip install --no-build-isolation $app_repo_dir/resilient-app-config-plugins
 
 
 print_msg "Writing .pypirc file"
