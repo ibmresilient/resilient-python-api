@@ -1,5 +1,13 @@
 #!/bin/bash -e
 
+########
+# TODO: Additional Logging, remove when done.
+set -e
+set -x
+
+trap 'rc=$?; echo "[ERROR] Exit code $rc at line $LINENO: $BASH_COMMAND"' ERR
+########
+
 cd $app_repo_dir
 
 paths_all_dists=()
@@ -46,7 +54,7 @@ fi
 ###########
 
 print_msg "Installing app config plugins package"
-pip install $app_repo_dir/resilient-app-config-plugins
+python3 -m pip install $app_repo_dir/resilient-app-config-plugins
 
 
 print_msg "Writing .pypirc file"
@@ -87,8 +95,8 @@ for p in "${package_names[@]}"; do
     fi
 
     if [ "$deploy_docs" = true ] ; then
-        print_msg "Docs are required so pip installing '$p' with version $SETUPTOOLS_SCM_PRETEND_VERSION"
-        pip install .
+        print_msg "Docs are required so python3 -m pip installing '$p' with version $SETUPTOOLS_SCM_PRETEND_VERSION"
+        python3 -m pip install .
     fi
 
     # Append path to sdist to paths_all_dists array
