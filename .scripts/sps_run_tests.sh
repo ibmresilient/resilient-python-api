@@ -130,6 +130,7 @@ function run_python_312_unit_tests(){
     # https://ibm-security.slack.com/archives/C06L36NUEP4/p1750845211295349?thread_ts=1750785640.445799&cid=C06L36NUEP4
     # install_python3 "3.12" 
 
+    yum update -yq expat
     yum install -yq python3.12 python3.12-pip python3.12-devel
     unlink /usr/bin/python3
 
