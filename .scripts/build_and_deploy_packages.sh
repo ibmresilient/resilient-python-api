@@ -1,13 +1,5 @@
 #!/bin/bash -e
 
-########
-# TODO: Additional Logging, remove when done.
-set -e
-set -x
-
-trap 'rc=$?; echo "[ERROR] Exit code $rc at line $LINENO: $BASH_COMMAND"' ERR
-########
-
 cd $app_repo_dir
 
 paths_all_dists=()
