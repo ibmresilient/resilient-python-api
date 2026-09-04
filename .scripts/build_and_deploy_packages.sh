@@ -54,6 +54,7 @@ fi
 ###########
 
 print_msg "Installing app config plugins package"
+python3 -m pip install --no-build-isolation wheel setuptools
 python3 -m pip install --no-build-isolation $app_repo_dir/resilient-app-config-plugins
 
 
