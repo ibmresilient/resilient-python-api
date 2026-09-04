@@ -36,8 +36,8 @@ ARTIFACTORY_REPO_URL=$ARTIFACTORY_BASE_URL/sec-resilient-team-integrations-gener
 ARTIFACTORY_COV_LOCATION=$ARTIFACTORY_REPO_URL/coverage/$BUILD_NUMBER
 
 # environment variables
-export GITHUB_AUTH_TOKEN="$(get_env GITHUB_AUTH_TOKEN)"
-export ARTIFACTORY_API_TOKEN="$(get_env ARTIFACTORY_API_TOKEN)"
+export GITHUB_AUTH_TOKEN="$(get_secret GITHUB_AUTH_TOKEN)"
+export ARTIFACTORY_API_TOKEN="$(get_secret ARTIFACTORY_API_TOKEN)"
 export PATH_SCRIPTS_DIR="$app_repo_dir/.scripts"
 export TEST_RESILIENT_APPLIANCE="staging2.internal.resilientsystems.com"
 
@@ -130,6 +130,7 @@ function run_python_312_unit_tests(){
     # https://ibm-security.slack.com/archives/C06L36NUEP4/p1750845211295349?thread_ts=1750785640.445799&cid=C06L36NUEP4
     # install_python3 "3.12" 
 
+    yum update -yq expat
     yum install -yq python3.12 python3.12-pip python3.12-devel
     unlink /usr/bin/python3
 
