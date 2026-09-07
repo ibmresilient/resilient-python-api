@@ -46,10 +46,50 @@ LIB_VERSION=$("${PATH_SCRIPTS_DIR}/get_lib_version.sh")
 NEW_VERSION="${LIB_VERSION}.${BUILD_NUMBER}"
 export SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
 
+# Full patch versions matching the tarballs uploaded to Artifactory.
+# Update these when new patch tarballs are uploaded.
+# See: build_docker_base_image.sh PYTHON_312_VERSION / PYTHON_313_VERSION / PYTHON_314_VERSION
+PYTHON_312_VERSION="3.12.14"
+PYTHON_313_VERSION="3.13.15"
+PYTHON_314_VERSION="3.14.7"
+# UBI flavour used to select the correct tarball filename (must match the SPS RHEL 8 environment)
+PYTHON_TARBALL_UBI_VERSION="ubi8-minimal"
+ARTIFACTORY_PYTHON_TARBALLS_URL="$ARTIFACTORY_BASE_URL/sec-resilient-team-integrations-generic-local/python_tarballs"
+
 function print_msg () {
     local msg=$1
 
     printf "\n--------------------\n%s\n--------------------\n" "$msg"
+}
+
+function install_python_from_artifactory(){
+    local full_version=$1   # e.g. 3.13.15
+    local minor_version     # e.g. 3.13
+    minor_version=$(echo "$full_version" | cut -d. -f1,2)
+
+    local tarball="python${full_version}-${PYTHON_TARBALL_UBI_VERSION}-x86_64.tar.gz"
+    local url="$ARTIFACTORY_PYTHON_TARBALLS_URL/${tarball}"
+
+    echo "Downloading Python ${full_version} from Artifactory..."
+    curl --fail -L \
+        -H "Authorization: Bearer ${ARTIFACTORY_API_TOKEN}" \
+        -o /tmp/python.tar.gz \
+        "$url"
+
+    tar xzf /tmp/python.tar.gz -C /usr/local
+    rm /tmp/python.tar.gz
+
+    local pybin="/usr/local/bin/python${minor_version}"
+    local pipbin="/usr/local/bin/pip${minor_version}"
+
+    if [[ ! -x "$pybin" ]] || [[ ! -x "$pipbin" ]]; then
+        echo "ERROR: Python ${full_version} could not be installed from Artifactory tarball." >&2
+        exit 1
+    fi
+
+    # update the python3 / pip3 symlinks to point at the newly installed version
+    ln -sf "$pybin" /usr/bin/python3
+    ln -sf "$pipbin" /usr/bin/pip3
 }
 
 function debug_python_environment(){
@@ -126,24 +166,7 @@ function run_python_311_unit_tests(){
 }
 
 function run_python_312_unit_tests(){
-    # TODO: revist when install_python3 supports python3.12
-    # https://ibm-security.slack.com/archives/C06L36NUEP4/p1750845211295349?thread_ts=1750785640.445799&cid=C06L36NUEP4
-    # install_python3 "3.12"
-
-    # The python3.12 RPM on RHEL 8 ships a pyexpat.cpython-312.so that requires
-    # XML_SetBillionLaughsAttackProtectionMaximumAmplification, a symbol only present
-    # in expat >= 2.4.0. Upgrade expat first so the symbol is available before
-    # python3.12 and its pip are loaded.
-    yum update -yq expat
-    yum install -yq python3.12 python3.12-pip python3.12-devel
-    unlink /usr/bin/python3
-
-    # prevent errors when pip3 is not available
-    unlink /usr/bin/pip3 || true
-
-    ln -s /usr/bin/python3.12 /usr/bin/python3
-    ln -s /usr/bin/pip3.12 /usr/bin/pip3
-
+    install_python_from_artifactory "$PYTHON_312_VERSION"
     debug_python_environment "3.12"
 
     export RUN_TYPE=unit_test
@@ -153,6 +176,34 @@ function run_python_312_unit_tests(){
     run_python_unit_tests
 
     # remove python 3.12 in tox directory
+    delete_python_from_tox $TOXENV
+}
+
+function run_python_313_unit_tests(){
+    install_python_from_artifactory "$PYTHON_313_VERSION"
+    debug_python_environment "3.13"
+
+    export RUN_TYPE=unit_test
+    export TOXENV=py313
+
+    echo "Starting Python 3.13 Tests"
+    run_python_unit_tests
+
+    # remove python 3.13 in tox directory
+    delete_python_from_tox $TOXENV
+}
+
+function run_python_314_unit_tests(){
+    install_python_from_artifactory "$PYTHON_314_VERSION"
+    debug_python_environment "3.14"
+
+    export RUN_TYPE=unit_test
+    export TOXENV=py314
+
+    echo "Starting Python 3.14 Tests"
+    run_python_unit_tests
+
+    # remove python 3.14 in tox directory
     delete_python_from_tox $TOXENV
 }
 
@@ -178,8 +229,9 @@ function main(){
     set_up_environment
 
     run_python_311_unit_tests
-
     run_python_312_unit_tests
+    run_python_313_unit_tests
+    run_python_314_unit_tests
 
     create_code_coverage_report
 }
