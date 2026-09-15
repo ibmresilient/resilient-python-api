@@ -45,8 +45,11 @@ fi
 ## Start ##
 ###########
 
+# clean up stale sphinxcontrib_jsmath nspkg.pth that corrupts the pip subprocess environment
+find /usr/local/lib/python3.*/site-packages -name "sphinxcontrib_jsmath*nspkg.pth" -delete 2>/dev/null || true
+
 print_msg "Installing app config plugins package"
-python3 -m pip install --no-build-isolation wheel setuptools
+python3 -m pip install -U setuptools wheel
 python3 -m pip install --no-build-isolation $app_repo_dir/resilient-app-config-plugins
 
 
@@ -89,7 +92,7 @@ for p in "${package_names[@]}"; do
 
     if [ "$deploy_docs" = true ] ; then
         print_msg "Docs are required so python3 -m pip installing '$p' with version $SETUPTOOLS_SCM_PRETEND_VERSION"
-        python3 -m pip install .
+        python3 -m pip install --no-build-isolation .
     fi
 
     # Append path to sdist to paths_all_dists array
