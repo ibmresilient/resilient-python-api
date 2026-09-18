@@ -7,6 +7,7 @@ IBM SOAR Python Libraries
 .. toctree::
    :maxdepth: 2
 
+   pages/release-notes/release-notes
    pages/resilient/resilient
    pages/resilient-circuits/resilient-circuits
    pages/resilient-lib/resilient-lib

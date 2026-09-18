@@ -198,6 +198,7 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../release-notes/release-notes.html">Release Notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../resilient/resilient.html">resilient</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">resilient-circuits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../resilient-lib/resilient-lib.html">resilient-lib</a></li>
@@ -265,217 +266,25 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>resilient-circuits<span class="w"> </span>config<span class="w"> </span>-u
 </pre></div>
 </div>
-<p>Contains the class <a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a>
+<p>Contains the class <code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code>
 that gets generated using the <a class="reference internal" href="../resilient-sdk/resilient-sdk.html#codegen"><span class="std std-ref">codegen</span></a> command in the <a class="reference internal" href="../resilient-sdk/resilient-sdk.html#resilient-sdk"><span class="std std-ref">resilient-sdk</span></a></p>
 </section>
 </section>
 <section id="components">
 <h2>Components<a class="headerlink" href="#components" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> also provides the high level Python API which each app function is built off of.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="resilient_circuits.app_function_component.AppFunctionComponent">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">AppFunctionComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="Link to this definition">¶</a></dt>
-<dd><p>Each package that has been generated with the <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span> <span class="pre">codegen</span></code> command
-that contains a SOAR Function, an <a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a> will be generated
-in the package’s <code class="docutils literal notranslate"><span class="pre">components</span></code> directory</p>
-<p>Each <a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a>, gets loaded into the <code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> framework
-and listens for messages on its <code class="docutils literal notranslate"><span class="pre">Message</span> <span class="pre">Destination</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="resilient_circuits.app_function_component.AppFunctionComponent.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_app_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl>
-<dt>Sets and exposes 4 properties:</dt><dd><ol class="arabic">
-<li><p><strong>self.PACKAGE_NAME</strong>: the name of this App, the parameter passed in</p></li>
-<li><p><strong>self.app_configs</strong>: a <a class="reference external" href="https://docs.python.org/3.6/library/collections.html#collections.namedtuple">collections.namedtuple</a>
-object of all associated configurations in the <code class="docutils literal notranslate"><span class="pre">app.config</span></code> file for this. App Configurations can be accessed like:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">base_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">app_configs</span><span class="o">.</span><span class="n">base_url</span>
-</pre></div>
-</div>
-</li>
-<li><p><strong>self.rc</strong>: an instantiation of <a class="reference internal" href="../resilient-lib/resilient-lib.html#resilient_lib.components.requests_common.RequestsCommon" title="resilient_lib.components.requests_common.RequestsCommon"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient_lib.RequestsCommon</span></code></a>
-which will have access to the <code class="docutils literal notranslate"><span class="pre">execute</span></code> method for external API calls</p></li>
-<li><p><strong>self.LOG</strong>: access to a common <code class="docutils literal notranslate"><span class="pre">Logger</span></code> object. Can be used like:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Starting '</span><span class="si">%s</span><span class="s2">'"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PACKAGE_NAME</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-</ol>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>opts</strong> (<em>dict</em>) – all configurations from the <code class="docutils literal notranslate"><span class="pre">app.config</span></code> file</p></li>
-<li><p><strong>package_name</strong> (<em>str</em>) – the name of this App</p></li>
-<li><p><strong>required_app_configs</strong> (<em>[</em><em>str</em><em>, </em><em>str</em><em>, </em><em>...</em><em>]</em>) – a list of required <code class="docutils literal notranslate"><span class="pre">app.config</span></code> configurations
-that are required to run this App</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – if a <code class="docutils literal notranslate"><span class="pre">required_app_config</span></code> is not found in <code class="docutils literal notranslate"><span class="pre">opts</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="resilient_circuits.app_function_component.AppFunctionComponent.get_fn_msg">
-<span class="sig-name descname"><span class="pre">get_fn_msg</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent.get_fn_msg" title="Link to this definition">¶</a></dt>
-<dd><p>Get the STOMP Message that has been sent from
-SOAR as a dict. The contents of the Message
-can include:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s1">'function'</span><span class="p">:</span> <span class="p">{</span>
-    <span class="s1">'creator'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
-    <span class="s1">'description'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
-    <span class="s1">'display_name'</span><span class="p">:</span> <span class="s1">'mock_function'</span><span class="p">,</span>
-    <span class="s1">'id'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-    <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'mock_function'</span><span class="p">,</span>
-    <span class="s1">'tags'</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span>
-    <span class="s1">'uuid'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
-    <span class="s1">'version'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="s1">'view_items'</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span>
-    <span class="o">...</span>
-<span class="p">},</span>
-<span class="s1">'groups'</span><span class="p">:</span> <span class="p">[],</span>
-<span class="s1">'inputs'</span><span class="p">:</span> <span class="p">{</span>
-    <span class="s1">'mock_input_one'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="s1">'mock_input_two'</span><span class="p">:</span> <span class="s1">'abc'</span><span class="p">,</span>
-<span class="p">},</span>
-<span class="s1">'playbook_instance'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-<span class="s1">'principal'</span><span class="p">:</span> <span class="p">{</span>
-    <span class="s1">'display_name'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
-    <span class="s1">'id'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s1">'name'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
-    <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'user'</span>
-<span class="p">},</span>
-<span class="s1">'workflow'</span><span class="p">:</span> <span class="p">{</span>
-    <span class="s1">'actions'</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span>
-    <span class="s1">'description'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
-    <span class="s1">'name'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
-    <span class="s1">'object_type'</span><span class="p">:</span> <span class="p">{</span> <span class="o">...</span> <span class="p">},</span>
-    <span class="s1">'programmatic_name'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
-    <span class="s1">'tags'</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span>
-    <span class="s1">'uuid'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span>
-    <span class="s1">'workflow_id'</span><span class="p">:</span> <span class="mi">3</span>
-<span class="p">},</span>
-<span class="s1">'workflow_instance'</span><span class="p">:</span> <span class="p">{</span>
-    <span class="s1">'workflow_instance_id'</span><span class="p">:</span> <span class="mi">54</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>STOMP Message received from SOAR</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="resilient_circuits.app_function_component.AppFunctionComponent.status_message">
-<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">status_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.app_function_component.AppFunctionComponent.status_message" title="Link to this definition">¶</a></dt>
-<dd><p>Returns the message encapsulated in a
-<code class="docutils literal notranslate"><span class="pre">resilient_circuits.StatusMessage</span></code> object</p>
-<p><strong>Usage:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">status_message</span><span class="p">(</span><span class="s2">"Finished running App Function: '</span><span class="si">{0}</span><span class="s2">'"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">FN_NAME</span><span class="p">))</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>message</strong> (<em>str</em>) – Message you want to send to Action Status</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>message encapsulated as <code class="docutils literal notranslate"><span class="pre">StatusMessage</span></code></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">resilient_circuits.StatusMessage</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_circuits.actions_component.ResilientComponent.rest_client">
-<span class="sig-prename descclassname"><span class="pre">ResilientComponent.</span></span><span class="sig-name descname"><span class="pre">rest_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.actions_component.ResilientComponent.rest_client" title="Link to this definition">¶</a></dt>
-<dd><p>Return a connected instance of the <a class="reference internal" href="../resilient/resilient.html#resilient.co3.SimpleClient" title="resilient.co3.SimpleClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.SimpleClient</span></code></a>
-that can be used to access the IBM SOAR REST API.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>An <a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a> inherits a
-<code class="docutils literal notranslate"><span class="pre">ResilientComponent</span></code> so will have access to this method</p>
-</div>
-<p><strong>Example:</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_circuits</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppFunctionComponent</span><span class="p">,</span> <span class="n">FunctionResult</span><span class="p">,</span> <span class="n">app_function</span>
-
-<span class="n">PACKAGE_NAME</span> <span class="o">=</span> <span class="s2">"fn_mock_app"</span>
-<span class="n">FN_NAME</span> <span class="o">=</span> <span class="s2">"mock_function"</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">FunctionComponent</span><span class="p">(</span><span class="n">AppFunctionComponent</span><span class="p">):</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">FunctionComponent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">opts</span><span class="p">,</span> <span class="n">PACKAGE_NAME</span><span class="p">)</span>
-
-    <span class="nd">@app_function</span><span class="p">(</span><span class="n">FN_NAME</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_app_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn_inputs</span><span class="p">):</span>
-
-        <span class="n">res_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rest_client</span><span class="p">()</span>
-        <span class="n">inc</span> <span class="o">=</span> <span class="n">res_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/incidents/</span><span class="si">{0}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">"1001"</span><span class="p">))</span>
-        <span class="n">inc_name</span> <span class="o">=</span> <span class="n">inc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span>
-
-        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">"inc"</span><span class="p">:</span> <span class="n">inc</span><span class="p">,</span>
-            <span class="s2">"inc_name"</span><span class="p">:</span> <span class="n">inc_name</span>
-        <span class="p">}</span>
-
-        <span class="k">yield</span> <span class="n">FunctionResult</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>a connected instance of <a class="reference internal" href="../resilient/resilient.html#resilient.co3.SimpleClient" title="resilient.co3.SimpleClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.SimpleClient</span></code></a></p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="../resilient/resilient.html#resilient.co3.SimpleClient" title="resilient.co3.SimpleClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">resilient.SimpleClient</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 <section id="decorators">
 <h2>Decorators<a class="headerlink" href="#decorators" title="Link to this heading">¶</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_circuits.decorators.app_function">
-<span class="sig-prename descclassname"><span class="pre">&#64;</span></span><span class="sig-name descname"><span class="pre">app_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.decorators.app_function" title="Link to this definition">¶</a></dt>
-<dd><p>Creates a new <a class="reference internal" href="#resilient_circuits.decorators.app_function" title="resilient_circuits.decorators.app_function"><code class="xref py py-class docutils literal notranslate"><span class="pre">&#64;app_function</span></code></a> decorator.</p>
-<p>This decorator can be applied to methods of the <a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent" title="resilient_circuits.app_function_component.AppFunctionComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a> class.</p>
-<p>It marks the method as a handler for the events passed as arguments to the decorator.</p>
-<p>Specify the function’s API name as parameter to the decorator. <strong>It only accepts 1</strong> <code class="docutils literal notranslate"><span class="pre">api_name</span></code> <strong>as an argument.</strong></p>
-<p>The function handler will automatically be subscribed to the function’s <code class="docutils literal notranslate"><span class="pre">message</span> <span class="pre">destination</span></code>.</p>
-</dd></dl>
-
 </section>
 <section id="helpers">
 <h2>Helpers<a class="headerlink" href="#helpers" title="Link to this heading">¶</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="resilient_circuits.helpers.is_this_a_selftest">
-<span class="sig-name descname"><span class="pre">is_this_a_selftest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">component</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#resilient_circuits.helpers.is_this_a_selftest" title="Link to this definition">¶</a></dt>
-<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code> if this instantiation of
-<code class="docutils literal notranslate"><span class="pre">resilient-circuits</span></code> is from selftest or not.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>component</strong> (<em>circuits.Component</em>) – the current component that is calling this method (usually <code class="docutils literal notranslate"><span class="pre">self</span></code>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
 </section>
 <section id="change-log">
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">¶</a></h2>
+<p><strong>2026-07: version 51.0.9.0</strong>
+* Added explicit compatibility with Python versions 3.13 and 3.14
+* Migrated packaging from <cite>setup.cfg</cite>/<cite>setup.py</cite> to <cite>pyproject.toml</cite> (PEP 621)</p>
 <p><strong>2026-07: version 51.0.8.3</strong>
 * Bumped <cite>filelock</cite> dependency to <cite>~= 3.29</cite></p>
 <p><strong>2026-06: version 51.0.8.2</strong>
@@ -605,7 +414,7 @@ python<span class="w"> </span>-m<span class="w"> </span>build
 <li><p>The <code class="docutils literal notranslate"><span class="pre">FunctionResult</span></code> in an <code class="docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code> now supports a <code class="docutils literal notranslate"><span class="pre">custom_results</span></code> kwarg. If set to <code class="docutils literal notranslate"><span class="pre">True</span></code> the
 dictionary of results sent to SOAR will be exactly as passed and not contain our default payload. We <strong>do not recommend this</strong>
 however in some cases it may be necessary</p></li>
-<li><p>Enhanced the <a class="reference internal" href="#resilient_circuits.helpers.is_this_a_selftest" title="resilient_circuits.helpers.is_this_a_selftest"><code class="xref py py-func docutils literal notranslate"><span class="pre">resilient_circuits.is_this_a_selftest()</span></code></a> method
+<li><p>Enhanced the <code class="xref py py-func docutils literal notranslate"><span class="pre">resilient_circuits.is_this_a_selftest()</span></code> method
 to check if a Component has been instantiated in a resilient-circuits instance running <code class="docutils literal notranslate"><span class="pre">selftest</span></code>. Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">resilient_circuits.helpers</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_this_a_selftest</span>
 
@@ -946,24 +755,9 @@ components are instead sent a ‘reload’ event.</p></li>
 <li><a class="reference internal" href="#config">config</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#components">Components</a><ul>
-<li><a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent"><code class="docutils literal notranslate"><span class="pre">AppFunctionComponent</span></code></a><ul>
-<li><a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent.__init__"><code class="docutils literal notranslate"><span class="pre">AppFunctionComponent.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent.get_fn_msg"><code class="docutils literal notranslate"><span class="pre">AppFunctionComponent.get_fn_msg()</span></code></a></li>
-<li><a class="reference internal" href="#resilient_circuits.app_function_component.AppFunctionComponent.status_message"><code class="docutils literal notranslate"><span class="pre">AppFunctionComponent.status_message()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#resilient_circuits.actions_component.ResilientComponent.rest_client"><code class="docutils literal notranslate"><span class="pre">ResilientComponent.rest_client()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#decorators">Decorators</a><ul>
-<li><a class="reference internal" href="#resilient_circuits.decorators.app_function"><code class="docutils literal notranslate"><span class="pre">app_function()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#helpers">Helpers</a><ul>
-<li><a class="reference internal" href="#resilient_circuits.helpers.is_this_a_selftest"><code class="docutils literal notranslate"><span class="pre">is_this_a_selftest()</span></code></a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#components">Components</a></li>
+<li><a class="reference internal" href="#decorators">Decorators</a></li>
+<li><a class="reference internal" href="#helpers">Helpers</a></li>
 <li><a class="reference internal" href="#change-log">Change Log</a></li>
 </ul>
 </li>
@@ -976,7 +770,7 @@ components are instead sent a ‘reload’ event.</p></li>
       
     </aside>
   </div>
-</div><script src="../../_static/documentation_options.js?v=6b5d6712"></script>
+</div><script src="../../_static/documentation_options.js?v=2d70a721"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
