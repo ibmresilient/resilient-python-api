@@ -674,6 +674,7 @@ def get_from_export(export,
                     scripts=[],
                     playbooks=[],
                     apps=[],
+                    workspaces=[],
                     get_related_objects=True):
     """
     Return a Dictionary of Resilient Objects that are found in the Export.
@@ -692,6 +693,7 @@ def get_from_export(export,
     :param tasks: List of Custom Task API Names
     :param scripts: List of Script Display Names
     :param playbooks: List of Playbook API Names
+    :param workspaces: List of Workspace Names
     :param get_related_objects: Whether or not to hunt for related action objects, defaults to True
     :return: Return a Dictionary of Resilient Objects
     :rtype: Dict
@@ -712,6 +714,7 @@ def get_from_export(export,
     tasks = tasks if tasks else []
     scripts = scripts if scripts else []
     playbooks = playbooks if playbooks else []
+    workspaces = workspaces if workspaces else []
 
     # Dict to return
     return_dict = {
@@ -824,6 +827,9 @@ def get_from_export(export,
     # Get Scripts
     return_dict["scripts"] = get_res_obj("scripts", ResilientObjMap.SCRIPTS, "Script", scripts, export)
 
+    # Get Workspaces
+    return_dict["workspaces"] = get_res_obj("workspaces", ResilientObjMap.WORKSPACES, "Workspace", workspaces, export)
+
     # Get Apps
     return_dict["apps"] = get_res_obj("apps", ResilientObjMap.APPS, "Apps", apps, export)
 
@@ -903,7 +909,8 @@ def minify_export(export,
                   phases=[],
                   scripts=[],
                   incident_types=[],
-                  playbooks=[]):
+                  playbooks=[],
+                  workspaces=[]):
     """
     Return a 'minified' version of the export.
     All parameters are a list of api_names of objects to include in the export.
@@ -925,6 +932,7 @@ def minify_export(export,
     :param scripts: List of Script Display Names
     :param incident_types: List of Custom Incident Type Names
     :param playbooks: List of Playbook API Names
+    :param workspaces: List of Workspace Names
     :return: Return a Dictionary of Resilient Objects
     :rtype: Dict
     """
@@ -965,7 +973,8 @@ def minify_export(export,
         "phases": {ResilientObjMap.PHASES: phases},
         "scripts": {ResilientObjMap.SCRIPTS: scripts},
         "incident_types": {ResilientObjMap.INCIDENT_TYPES: parent_child_incident_types},
-        "playbooks": {ResilientObjMap.PLAYBOOKS: playbooks}
+        "playbooks": {ResilientObjMap.PLAYBOOKS: playbooks},
+        "workspaces": {ResilientObjMap.WORKSPACES: workspaces}
     }
 
     for key in minified_export.keys():

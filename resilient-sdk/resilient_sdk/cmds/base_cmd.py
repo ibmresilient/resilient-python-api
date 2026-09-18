@@ -139,6 +139,11 @@ class BaseCmd(object):
                                     type=ensure_unicode,
                                     help="API names of workflows to include",
                                     nargs="*")
+        
+        res_obj_parser.add_argument("-ws", "--workspace",
+                                    type=ensure_unicode,
+                                    help="Names of workspaces to include",
+                                    nargs="*")
 
         return res_obj_parser
 

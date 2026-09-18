@@ -88,7 +88,8 @@ class CmdExtract(BaseCmd):
                                                    tasks=args.task,
                                                    scripts=args.script,
                                                    incident_types=args.incidenttype,
-                                                   playbooks=args.playbook)
+                                                   playbooks=args.playbook,
+                                                   workspaces=args.workspace)
 
         # Get 'minified' version of the export. This is used in to create export.res
         min_extract_data = sdk_helpers.minify_export(org_export,
@@ -103,7 +104,8 @@ class CmdExtract(BaseCmd):
                                                      phases=sdk_helpers.get_object_api_names(ResilientObjMap.PHASES, extract_data.get("phases")),
                                                      scripts=sdk_helpers.get_object_api_names(ResilientObjMap.SCRIPTS, extract_data.get("scripts")),
                                                      incident_types=sdk_helpers.get_object_api_names(ResilientObjMap.INCIDENT_TYPES, extract_data.get("incident_types")),
-                                                     playbooks=sdk_helpers.get_object_api_names(ResilientObjMap.PLAYBOOKS, extract_data.get(constants.CUST_PLAYBOOKS)))
+                                                     playbooks=sdk_helpers.get_object_api_names(ResilientObjMap.PLAYBOOKS, extract_data.get(constants.CUST_PLAYBOOKS)),
+                                                     workspaces=sdk_helpers.get_object_api_names(ResilientObjMap.WORKSPACES, extract_data.get("workspaces")))
 
         # Convert dict to JSON string
         if sys.version_info.major >= 3:
