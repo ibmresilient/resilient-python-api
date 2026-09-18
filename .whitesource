@@ -1,3 +1,14 @@
 {
-  "settingsInheritedFrom": "whitesource-config/whitesource-config@python3.9"
+  "scanSettings": {
+    "baseBranches": [],
+    "configMode": "LOCAL",
+    "excludes": ["resilient-circuits-performance-testing/**", "**/resilient-circuits-performance-testing/**"]
+  },
+  "remediateSettings": {
+    "workflowRules": {
+      "enabled": true
+    },
+    "enableRenovate": true,
+    "extends": ["config:base"]
+  }
 }

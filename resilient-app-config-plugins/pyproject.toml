@@ -9,7 +9,6 @@ name = "resilient_app_config_plugins"
 version = "1.1.0"
 description = "Python base package for IBM SOAR apps App Config Plugins"
 readme = "README.md"
-license = "MIT"
 license-files = ["LICENSE"]
 authors = [{name = "IBM SOAR"}]
 requires-python = ">=3.11"

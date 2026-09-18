@@ -51,7 +51,8 @@ fi
 find /usr/local/lib/python3.*/site-packages -name "sphinxcontrib_jsmath*nspkg.pth" -delete 2>/dev/null || true
 
 print_msg "Installing app config plugins package"
-pip install $app_repo_dir/resilient-app-config-plugins
+python3 -m pip install --no-build-isolation wheel setuptools
+python3 -m pip install --no-build-isolation $app_repo_dir/resilient-app-config-plugins
 
 
 print_msg "Writing .pypirc file"
@@ -92,8 +93,8 @@ for p in "${package_names[@]}"; do
     fi
 
     if [ "$deploy_docs" = true ] ; then
-        print_msg "Docs are required so pip installing '$p' with version $SETUPTOOLS_SCM_PRETEND_VERSION"
-        pip install .
+        print_msg "Docs are required so python3 -m pip installing '$p' with version $SETUPTOOLS_SCM_PRETEND_VERSION"
+        python3 -m pip install .
     fi
 
     # Append path to sdist to paths_all_dists array

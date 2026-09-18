@@ -22,6 +22,7 @@ resilient_circuits_lockfile
 *.log
 *.log*
 *.config
+!whitesource.config
 *~
 *.egg-info
 build

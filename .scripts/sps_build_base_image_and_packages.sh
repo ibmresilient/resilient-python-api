@@ -59,15 +59,15 @@ RESILIENT_ARTIFACTORY_DOCKER_REPO_NAME="$(get_env RESILIENT_ARTIFACTORY_DOCKER_R
 ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME="$(get_env ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME)"
 RESILIENT_ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME="$(get_env RESILIENT_ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME)"
 QUAY_USERNAME="ibmresilient"
-QUAY_PASSWORD="$(get_env QUAY_PASSWORD)"
+QUAY_PASSWORD="$(get_secret QUAY_PASSWORD)"
 QUAY_DOCKER_REGISTRY_BASE_NAME="$(get_env QUAY_DOCKER_REGISTRY_BASE_NAME)"
 
 # artifactory & pypi config
 ARTIFACTORY_USERNAME="$(get_env ARTIFACTORY_USERNAME)"
-ARTIFACTORY_API_TOKEN="$(get_env ARTIFACTORY_API_TOKEN)"
+ARTIFACTORY_API_TOKEN="$(get_secret ARTIFACTORY_API_TOKEN)"
 ARTIFACTORY_PYPI_REPO_URL="$(get_env ARTIFACTORY_PYPI_REPO_URL)"
 ARTIFACTORY_REPO_URL=https://na.artifactory.swg-devops.com/artifactory/sec-resilient-team-integrations-generic-local/resilient-python-api
-PYPI_API_KEY="$(get_env PYPI_API_KEY)"
+PYPI_API_KEY="$(get_secret PYPI_API_KEY)"
 
 # git variables
 GIT_MASTER_BRANCH="master"
@@ -85,9 +85,9 @@ SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
 DEBUG_PYTHON_ENVIRONMENT="$(get_env debug_python_environment)"
 
 # auth
-GITHUB_AUTH_TOKEN="$(get_env GITHUB_AUTH_TOKEN)"                    # FID for github.ibm.com
-GITHUB_AUTH_TOKEN_PUBLIC="$(get_env GITHUB_AUTH_TOKEN_PUBLIC)"      # FID for github.com
-NOTIFICATION_HOOK="$(get_env NOTIFICATION_HOOK)"
+GITHUB_AUTH_TOKEN="$(get_secret GITHUB_AUTH_TOKEN)"                    # FID for github.ibm.com
+GITHUB_AUTH_TOKEN_PUBLIC="$(get_secret GITHUB_AUTH_TOKEN_PUBLIC)"      # FID for github.com
+NOTIFICATION_HOOK="$(get_secret NOTIFICATION_HOOK)"
 
 export app_repo_dir
 export ARTIFACTORY_API_TOKEN
@@ -119,6 +119,7 @@ debug_python_environment "3.11"
 find /usr/local/lib/python3.*/site-packages -name "sphinxcontrib_jsmath*nspkg.pth" -delete 2>/dev/null || true
 
 # required python packages
+pip install -U setuptools
 pip install requests retry2 twine build jinja2 sphinx furo sphinx-copybutton
 
 # configure GitHub user
