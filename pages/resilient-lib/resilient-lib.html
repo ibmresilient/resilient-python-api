@@ -2282,8 +2282,10 @@ identifying the type of error</p>
 <h2>Change Log<a class="headerlink" href="#change-log" title="Link to this heading">¶</a></h2>
 <p><strong>2026-07: version 51.0.9.0</strong>
 * Added explicit compatibility with Python versions 3.13 and 3.14
-* Replace legacy pytz with native zoneinfo
-* Migrated packaging from <cite>setup.cfg</cite>/<cite>setup.py</cite> to <cite>pyproject.toml</cite> (PEP 621)</p>
+* Migrated packaging from <cite>setup.cfg</cite>/<cite>setup.py</cite> to <cite>pyproject.toml</cite> (PEP 621)
+* Replace legacy <cite>pytz</cite> with native <cite>zoneinfo</cite> (<cite>templates_common.py</cite>)
+* Fixed <cite>readable_datetime</cite> to always return UTC rather than local time
+* Fixed <cite>timestamp</cite> Jinja filter to use <cite>datetime.timestamp()</cite> instead of <cite>calendar.timegm(utctimetuple())</cite>, correcting offset-aware timezone conversions</p>
 <p><strong>2026-07: version 51.0.8.3</strong>
 * No changes, bumping to align with other packages</p>
 <p><strong>2026-06: version 51.0.8.2</strong>

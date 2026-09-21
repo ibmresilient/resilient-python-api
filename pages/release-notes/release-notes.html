@@ -256,12 +256,14 @@ Running mismatched versions is unsupported and may cause unexpected behaviour.</
 <hr class="docutils" />
 <section id="version-51-0-9-0">
 <span id="rn-51-0-9-0"></span><h2>Version 51.0.9.0<a class="headerlink" href="#version-51-0-9-0" title="Link to this heading">¶</a></h2>
-<p><em>Released July–August 2026</em></p>
+<p><em>Released October 2026</em></p>
 <p>This release adds official support for Python 3.13 and 3.14 across all four
 libraries, removes the <code class="docutils literal notranslate"><span class="pre">pytz</span></code> dependency in <code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code> in favour of
-the standard library <code class="docutils literal notranslate"><span class="pre">zoneinfo</span></code> module, migrates all package metadata to
-<code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> (PEP 621), and updates the <code class="docutils literal notranslate"><span class="pre">soarapps-base-docker-image</span></code>
-to UBI9-minimal with a new UBI10-minimal opt-in build target.</p>
+the standard library <code class="docutils literal notranslate"><span class="pre">zoneinfo</span></code> module, fixes timezone handling in
+<code class="docutils literal notranslate"><span class="pre">resilient-lib</span></code>, adds workspace export support to <code class="docutils literal notranslate"><span class="pre">resilient-sdk</span></code>,
+migrates all package metadata to <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> (PEP 621), and updates
+the <code class="docutils literal notranslate"><span class="pre">soarapps-base-docker-image</span></code> to UBI9-minimal with a new UBI10-minimal
+opt-in build target.</p>
 <p><strong>Package versions</strong></p>
 <div class="table-wrapper docutils container">
 <table class="docutils align-default">
@@ -308,6 +310,29 @@ installation experience is identical.</p>
 <code class="docutils literal notranslate"><span class="pre">zoneinfo</span></code> module. <code class="docutils literal notranslate"><span class="pre">pytz</span></code> is no longer maintained and has been superseded
 by <code class="docutils literal notranslate"><span class="pre">zoneinfo</span></code> (PEP 615) since Python 3.9. This change removes an external
 dependency and aligns timezone handling with the Python standard library.</p>
+<p><em>resilient-lib</em> — <code class="docutils literal notranslate"><span class="pre">readable_datetime</span></code> now always returns a UTC timestamp
+regardless of the server’s local timezone. Previously, <code class="docutils literal notranslate"><span class="pre">fromtimestamp()</span></code> was
+called without a timezone, which produced local-time output on servers not set
+to UTC.</p>
+<p><em>resilient-lib</em> — The <code class="docutils literal notranslate"><span class="pre">timestamp</span></code> Jinja filter now uses
+<code class="docutils literal notranslate"><span class="pre">datetime.timestamp()</span></code> instead of <code class="docutils literal notranslate"><span class="pre">calendar.timegm(utctimetuple())</span></code>. This
+correctly handles offset-aware timezones (e.g. <code class="docutils literal notranslate"><span class="pre">CET</span></code>) and fixes a
+one-hour-off result that was present in previous releases.</p>
+<p><em>resilient-sdk</em> — Added <code class="docutils literal notranslate"><span class="pre">-ws</span></code> / <code class="docutils literal notranslate"><span class="pre">--workspace</span></code> option to the <code class="docutils literal notranslate"><span class="pre">extract</span></code>
+command, allowing workspace objects to be included in the generated
+<code class="docutils literal notranslate"><span class="pre">export.res</span></code> file.</p>
+<p><em>resilient-sdk</em> — The <code class="docutils literal notranslate"><span class="pre">package</span></code> command now invokes <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">build</span>
+<span class="pre">--sdist</span></code> instead of calling <code class="docutils literal notranslate"><span class="pre">setup.py</span> <span class="pre">sdist</span></code> directly. This is required
+now that <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> has been removed from all packages.</p>
+<p><em>resilient-sdk</em> — The <code class="docutils literal notranslate"><span class="pre">codegen</span> <span class="pre">--reload</span></code> log notice has been updated to
+reference the current Dockerfile template version (v51.0.8.3).</p>
+<p><em>pytest-resilient-circuits</em> — Replaced deprecated <code class="docutils literal notranslate"><span class="pre">pkg_resources</span></code> with
+<code class="docutils literal notranslate"><span class="pre">importlib.resources</span></code> for loading test data files. This removes the runtime
+dependency on <code class="docutils literal notranslate"><span class="pre">setuptools</span></code> and is compatible with Python 3.9+.</p>
+<p><em>pytest-resilient-circuits</em> — Fixed invalid escape sequences in <code class="docutils literal notranslate"><span class="pre">&#64;resilient_endpoint</span></code>
+regex strings in <code class="docutils literal notranslate"><span class="pre">mocks.py</span></code> (converted to raw strings). These raised
+<code class="docutils literal notranslate"><span class="pre">DeprecationWarning</span></code> in Python 3.6–3.11 and become <code class="docutils literal notranslate"><span class="pre">SyntaxWarning</span></code> /
+errors in Python 3.12+.</p>
 <p><em>resilient-app-config-plugins</em> — Fixed an incorrect <code class="docutils literal notranslate"><span class="pre">cachetools</span></code> dependency
 marker (<code class="docutils literal notranslate"><span class="pre">python_version</span> <span class="pre">&gt;</span> <span class="pre">&quot;3.11&quot;</span></code> corrected to <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">&quot;3.11&quot;</span></code>).</p>
 <p><em>soarapps-base-docker-image</em> — The base image has been migrated from

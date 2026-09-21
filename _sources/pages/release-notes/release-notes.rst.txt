@@ -29,13 +29,15 @@ each library's individual page.
 Version 51.0.9.0
 -----------------
 
-*Released July–August 2026*
+*Released October 2026*
 
 This release adds official support for Python 3.13 and 3.14 across all four
 libraries, removes the ``pytz`` dependency in ``resilient-lib`` in favour of
-the standard library ``zoneinfo`` module, migrates all package metadata to
-``pyproject.toml`` (PEP 621), and updates the ``soarapps-base-docker-image``
-to UBI9-minimal with a new UBI10-minimal opt-in build target.
+the standard library ``zoneinfo`` module, fixes timezone handling in
+``resilient-lib``, adds workspace export support to ``resilient-sdk``,
+migrates all package metadata to ``pyproject.toml`` (PEP 621), and updates
+the ``soarapps-base-docker-image`` to UBI9-minimal with a new UBI10-minimal
+opt-in build target.
 
 **Package versions**
 
@@ -74,6 +76,36 @@ installation experience is identical.
 ``zoneinfo`` module. ``pytz`` is no longer maintained and has been superseded
 by ``zoneinfo`` (PEP 615) since Python 3.9. This change removes an external
 dependency and aligns timezone handling with the Python standard library.
+
+*resilient-lib* — ``readable_datetime`` now always returns a UTC timestamp
+regardless of the server's local timezone. Previously, ``fromtimestamp()`` was
+called without a timezone, which produced local-time output on servers not set
+to UTC.
+
+*resilient-lib* — The ``timestamp`` Jinja filter now uses
+``datetime.timestamp()`` instead of ``calendar.timegm(utctimetuple())``. This
+correctly handles offset-aware timezones (e.g. ``CET``) and fixes a
+one-hour-off result that was present in previous releases.
+
+*resilient-sdk* — Added ``-ws`` / ``--workspace`` option to the ``extract``
+command, allowing workspace objects to be included in the generated
+``export.res`` file.
+
+*resilient-sdk* — The ``package`` command now invokes ``python -m build
+--sdist`` instead of calling ``setup.py sdist`` directly. This is required
+now that ``setup.py`` has been removed from all packages.
+
+*resilient-sdk* — The ``codegen --reload`` log notice has been updated to
+reference the current Dockerfile template version (v51.0.8.3).
+
+*pytest-resilient-circuits* — Replaced deprecated ``pkg_resources`` with
+``importlib.resources`` for loading test data files. This removes the runtime
+dependency on ``setuptools`` and is compatible with Python 3.9+.
+
+*pytest-resilient-circuits* — Fixed invalid escape sequences in ``@resilient_endpoint``
+regex strings in ``mocks.py`` (converted to raw strings). These raised
+``DeprecationWarning`` in Python 3.6–3.11 and become ``SyntaxWarning`` /
+errors in Python 3.12+.
 
 *resilient-app-config-plugins* — Fixed an incorrect ``cachetools`` dependency
 marker (``python_version > "3.11"`` corrected to ``>= "3.11"``).
