@@ -1,7 +1,9 @@
 **2026-09: version 51.0.9.0**
 * Added explicit compatibility with Python versions 3.13 and 3.14
 * Migrated packaging from `setup.cfg`/`setup.py` to `pyproject.toml` (PEP 621)
-* Added -ws/--workspace option in resilient-sdk extract method for exporting workspace info into export.res
+* Added `-ws`/`--workspace` option to `resilient-sdk extract` for exporting workspace info into `export.res`
+* `ext_package.py` now uses `python -m build --sdist` instead of invoking `setup.py sdist` directly
+* Updated `codegen --reload` notice to reference the latest Dockerfile template (v51.0.8.3)
 
 **2026-07: version 51.0.8.3**
 * Updated `Dockerfile` template to use `python3 -m ensurepip` and remove `pip` and `setuptools` after installation.

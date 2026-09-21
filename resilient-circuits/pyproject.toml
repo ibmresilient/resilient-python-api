@@ -21,8 +21,8 @@ classifiers = [
 ]
 dependencies = [
     # Our libraries
-    "resilient     >= 51.0.8.0",
-    "resilient-lib >= 51.0.8.0",
+    "resilient     >= 51.0.9.0",
+    "resilient-lib >= 51.0.9.0",
 
     # 3rd party dependencies
     "stomp-py  ~= 8.2",

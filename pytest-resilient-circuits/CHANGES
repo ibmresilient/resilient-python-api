@@ -2,6 +2,8 @@
 * Added explicit compatibility with Python versions 3.13 and 3.14
 * Migrated packaging from `setup.cfg`/`setup.py` to `pyproject.toml` (PEP 621)
 * Fixed incorrect package URL (was `resilient-resilient-circuits`, now `pytest-resilient-circuits`)
+* Replaced deprecated `pkg_resources` with `importlib.resources` in `mocks.py`
+* Fixed invalid escape sequences in regex strings in `mocks.py` (converted to raw strings)
 
 **2026-07: version 51.0.8.3**
 * No changes, bumping to align with other packages
