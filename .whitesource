@@ -1,8 +1,7 @@
 {
   "scanSettings": {
     "baseBranches": [],
-    "configMode": "LOCAL",
-    "excludes": ["resilient-circuits-performance-testing/**", "**/resilient-circuits-performance-testing/**"]
+    "configMode": "LOCAL"
   },
   "remediateSettings": {
     "workflowRules": {
