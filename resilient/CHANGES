@@ -1,6 +1,7 @@
 **2026-07: version 51.0.9.0**
 * Added explicit compatibility with Python versions 3.13 and 3.14
 * Migrated packaging from `setup.cfg`/`setup.py` to `pyproject.toml` (PEP 621)
+* Added explicit `urllib3 >= 2.8.0, < 3.0.0` dependency requirement
 
 **2026-07: version 51.0.8.3**
 * Bumped `requests` dependency to `~= 2.34`

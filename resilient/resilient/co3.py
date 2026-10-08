@@ -119,7 +119,8 @@ def get_client(opts, custom_headers=None, **kwargs):
     verify = opts.get("cafile")
     if str(verify).lower() == "false":
         LOG.warning("Unverified HTTPS requests (cafile=false).")
-        requests.packages.urllib3.disable_warnings()  # otherwise things get very noisy
+        import urllib3
+        urllib3.disable_warnings()  # otherwise things get very noisy
         verify = False
 
     # Enable client certificate authentication

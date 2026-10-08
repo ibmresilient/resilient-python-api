@@ -119,7 +119,9 @@ debug_python_environment "3.11"
 find /usr/local/lib/python3.*/site-packages -name "sphinxcontrib_jsmath*nspkg.pth" -delete 2>/dev/null || true
 
 # required python packages
-pip install -U setuptools
+# --ignore-installed is required because python3.11-setuptools is installed by
+# RPM and has no pip RECORD file; without it pip fails trying to uninstall it.
+pip install -U --ignore-installed setuptools
 pip install requests retry2 twine build jinja2 sphinx furo sphinx-copybutton
 
 # configure GitHub user

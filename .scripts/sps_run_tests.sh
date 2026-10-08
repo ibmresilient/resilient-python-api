@@ -49,11 +49,11 @@ export SETUPTOOLS_SCM_PRETEND_VERSION=$NEW_VERSION
 # Full patch versions matching the tarballs uploaded to Artifactory.
 # Update these when new patch tarballs are uploaded.
 # See: build_docker_base_image.sh PYTHON_312_VERSION / PYTHON_313_VERSION / PYTHON_314_VERSION
-PYTHON_312_VERSION="3.12.14"
-PYTHON_313_VERSION="3.13.15"
-PYTHON_314_VERSION="3.14.7"
-# UBI flavour used to select the correct tarball filename (must match the SPS RHEL 8 environment)
-PYTHON_TARBALL_UBI_VERSION="ubi8-minimal"
+PYTHON_312_VERSION="3.12.15"
+PYTHON_313_VERSION="3.13.16"
+PYTHON_314_VERSION="3.14.8"
+# UBI flavour used to select the correct tarball filename (must match the SPS RHEL 9 environment)
+PYTHON_TARBALL_UBI_VERSION="ubi9-minimal"
 ARTIFACTORY_PYTHON_TARBALLS_URL="$ARTIFACTORY_BASE_URL/sec-resilient-team-integrations-generic-local/python_tarballs"
 
 function print_msg () {
@@ -75,6 +75,10 @@ function install_python_from_artifactory(){
         -H "Authorization: Bearer ${ARTIFACTORY_API_TOKEN}" \
         -o /tmp/python.tar.gz \
         "$url"
+
+    # Ensure runtime shared libraries required by the tarball's ssl and lzma
+    # modules are present on the host before extracting.
+    sudo yum install -y openssl-libs xz-libs 2>/dev/null || true
 
     tar xzf /tmp/python.tar.gz -C /usr/local
     rm /tmp/python.tar.gz
@@ -131,12 +135,12 @@ function set_up_environment(){
 
     pip install requests retry2
     print_msg "Downloading hydra-common-scripts with parameters"
-    
+
     "$PATH_SCRIPTS_DIR/download_common_scripts.sh" \
         "$PATH_COMMON_SCRIPTS_DIR" \
         "$GH_PATH_COMMON_SCRIPTS_REPO" \
         "$PATH_DOWNLOAD_SCRIPT_SAVE_LOC" \
-        "$branch_hydra_common_scripts" 
+        "$branch_hydra_common_scripts"
 
     export TEST_RESILIENT_ORG="Resilient PS - Test2"
 }
