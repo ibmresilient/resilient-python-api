@@ -26,7 +26,7 @@ dependencies = [
 
     # 3rd party dependencies
     "stomp-py  ~= 8.2",
-    "circuits  ~= 3.2.3",
+    "circuits  ~= 3.2.5",
     "pysocks   ~= 1.6",
     "filelock  ~= 3.29",
     "watchdog  ~= 2.1",
