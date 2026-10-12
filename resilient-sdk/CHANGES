@@ -1,4 +1,4 @@
-**2026-09: version 51.0.9.0**
+**2026-10: version 51.0.9.0**
 * Added explicit compatibility with Python versions 3.13 and 3.14
 * Migrated packaging from `setup.cfg`/`setup.py` to `pyproject.toml` (PEP 621)
 * Added `-ws`/`--workspace` option to `resilient-sdk extract` for exporting workspace info into `export.res`
