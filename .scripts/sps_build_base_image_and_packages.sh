@@ -161,6 +161,9 @@ deploy_internall_documentation(){
 
 release_to_pypi(){
     print_msg "Releasing to PYPI for GitHub branch $BRANCH, trigger $TRIGGER_TYPE"
+    # the docs step pip installs resilient-sdk, which pins packaging~=25.0 and downgrades
+    # the packaging version twine needs (twine>=7 requires packaging>=26.1 for packaging.errors)
+    pip install -U twine
     "$PATH_SCRIPTS_DIR"/build_and_deploy_packages.sh no_deploy do_release
 
     print_msg "Sending notification to Slack"
