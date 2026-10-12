@@ -72,6 +72,23 @@ runtime for deployed apps.
 tooling change only; published packages on PyPI are unaffected and the
 installation experience is identical.
 
+*resilient* — Deprecated ``requests.packages.urllib3`` import paths in
+``co3.py`` and ``co3base.py`` have been replaced with standard
+``import urllib3``. This avoids ``AttributeError`` on recent versions of
+``requests`` that removed the re-export.
+
+*resilient* — The ``urllib3`` dependency is now pinned to
+``>= 2.8.0, < 3.0.0`` to address CVE findings in earlier ``urllib3`` versions.
+
+*resilient* — ``jwcrypto`` has been bumped to ``~= 1.6`` to address
+**CVE-2026-84185**.
+
+*resilient* — ``pytest`` has been bumped to ``>= 9.0.3`` as a development
+dependency to address **CVE-2025-71176**.
+
+*resilient-circuits* — The ``circuits`` dependency has been tightened to
+``~= 3.2.5`` to pick up stability fixes in the underlying event framework.
+
 *resilient-lib* — The ``pytz`` dependency has been replaced with the built-in
 ``zoneinfo`` module. ``pytz`` is no longer maintained and has been superseded
 by ``zoneinfo`` (PEP 615) since Python 3.9. This change removes an external
