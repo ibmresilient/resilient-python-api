@@ -9,7 +9,16 @@
 - [License and Terms](#license-and-terms)
 
 ## Release Notes
-* **v1.0.0** introduced `resilient-app-config-plugins`. This release included the built-in plugins for HashiCorp Vault, Cyberark, and Keyring.
+| Version | Date | Notes |
+| ------- | ---- | ----- |
+| v1.1.0 | 2026-07 | Added explicit compatibility with Python versions 3.13 and 3.14 |
+| v1.0.6 | 2026-07 | No changes, bumping to align with other packages |
+| v1.0.5 | 2026-06 | Updated cachetools to align with resilient library |
+| v1.0.4 | 2026-04 | Updated minimum python version to 3.11+ |
+| v1.0.3 | 2025-10 | Updated requests-pkcs12 dependency to 1.27 for py3.6+ |
+| v1.0.2 | 2025-07 | Updated requests-pkcs12 dependency to 1.25 for py3.6 |
+| v1.0.1 | 2025-07 | convert datetime.utcfromtimestamp to datetime.fromtimestamp |
+| v1.0.0 | 2023-05 | introduced `resilient-app-config-plugins`. This release included the built-in plugins for HashiCorp Vault, Cyberark, and Keyring. |
 
 ## Overview
 This package (`resilient-app-config-plugins`) is a Python package for the base classes for App Config plugins. This package exposes built-in plugins, as well as the interface class that outlines how to implement custom plugins. App Config plugins allow you to use external credential providers (sometimes referred to here as PAMs) manage secrets. With App Config plugins, your secrets are managed by your provider and loaded only into memory on an as-need basis for your SOAR apps. Credentials are kept out of logs and never saved to disk.
@@ -113,7 +122,7 @@ Deploying an app with a custom App Config plugin requires a custom Docker regist
 
 ## License and Terms
 
-Copyright © IBM Corporation 2023
+Copyright © IBM Corporation 2026
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to

@@ -23,19 +23,19 @@ print_msg () {
 ##################
 ## Check params ##
 ##################
-if [ $1 == "do_deploy" ]; then
+if [ "${1:-}" == "do_deploy" ]; then
     deploy=true
 else
     deploy=false
 fi
 
-if [ $2 == "do_release" ]; then
+if [ "${2:-}" == "do_release" ]; then
     do_release=true
 else
     do_release=false
 fi
 
-if [ $3 == "deploy_docs" ]; then
+if [ "${3:-}" == "deploy_docs" ]; then
     deploy_docs=true
 else
     deploy_docs=false
@@ -44,6 +44,11 @@ fi
 ###########
 ## Start ##
 ###########
+
+# sphinxcontrib_jsmath installs a legacy py3.7 namespace-package .pth file that crashes
+# the PEP 517 isolated build subprocess before stdlib is ready. Safe to remove on Python 3.3+
+# which has native namespace package support (PEP 420).
+find /usr/local/lib/python3.*/site-packages -name "sphinxcontrib_jsmath*nspkg.pth" -delete 2>/dev/null || true
 
 print_msg "Installing app config plugins package"
 python3 -m pip install --no-build-isolation wheel setuptools

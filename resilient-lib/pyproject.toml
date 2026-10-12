@@ -1,11 +1,48 @@
-# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2026. All Rights Reserved.
 
 [build-system]
-requires = [
-    "setuptools ~= 81.0;  python_version >= '3.11'",
-    "setuptools_scm[toml] >= 6.0; python_version>='3.0'"
-]
+requires = ["setuptools ~= 81.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools_scm]
-root = "../"
+[project]
+name = "resilient_lib"
+version = "51.0.9.0"
+description = "Python module with library calls which facilitate the development of Apps for IBM SOAR"
+readme = "README.md"
+license-files = ["LICENSE"]
+authors = [{name = "IBM SOAR"}]
+requires-python = ">=3.11"
+keywords = ["ibm", "soar", "resilient", "resilient-circuits", "circuits", "resilient-lib", "common"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    # Our libraries
+    "resilient >= 51.0.9.0",
+
+    # 3rd party dependencies
+    "deprecated     ~= 1.2",
+    "beautifulsoup4 ~= 4.9",
+    "jinja2         ~= 3.1",
+    "retry2         ~= 0.9",
+]
+
+[project.urls]
+Homepage = "https://github.com/ibmresilient/resilient-python-api/tree/main/resilient-lib"
+Documentation = "https://ibm.biz/soar-docs"
+"API Docs" = "https://ibm.biz/soar-python-docs"
+"IBM Community" = "https://ibm.biz/soarcommunity"
+"Change Log" = "https://ibm.biz/resilient-lib-changes"
+
+[project.entry-points."resilient.lib.configsection"]
+gen_config = "resilient_lib.util.config:config_section_data"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*"]
+
+[tool.setuptools]
+include-package-data = true
+

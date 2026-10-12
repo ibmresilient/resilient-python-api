@@ -183,6 +183,7 @@ class CmdExtPackage(BaseCmd):
 def run_setup_script(path_setup_py_file):
     # Ensure the directory of the setup.py is the working directory
     dir_setup_py_file = os.path.dirname(path_setup_py_file)
-    command = [sys.executable, path_setup_py_file, "sdist", "--formats=gztar"]
+    dist_dir = os.path.join(dir_setup_py_file, "dist")
+    command = [sys.executable, "-m", "build", "--sdist", "--outdir", dist_dir]
 
     subprocess.run(command, cwd=dir_setup_py_file, check=True)

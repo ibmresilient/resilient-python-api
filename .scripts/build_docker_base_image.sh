@@ -5,7 +5,9 @@ set -euo pipefail
 ## build_docker_base_image.sh
 ## ----------------------------------------------------------------------------
 ## Description:
-##   Builds the Python 3.11 and 3.12 "soarapps-base-docker-image" base images.
+##   Builds the "soarapps-base-docker-image" base images:
+##     UBI9-minimal  (default): Python 3.12
+##     UBI10-minimal (opt-in):  Python 3.12, 3.13, 3.14
 ##   The script tags, retags, and optionally pushes these images to the
 ##   appropriate repositories. It also creates "Dev" tags for CVE scanning and
 ##   saves them as build artifacts.
@@ -24,14 +26,23 @@ set -euo pipefail
 ##   - docker-na-public.artifactory.swg-devops.com/sec-isc-team-isc-icp-docker-local/soarapps-base-docker-image (CVE scanning only)
 ##
 ## Tags Created (example: CIRCUITS_VERSION=v51.0.0.0.1234):
+##   UBI9-minimal (default):
 ##   - latest
 ##   - v51.0.0.0.1234
-##   - python-311
-##   - v51.0.0.0.1234-python-311
 ##   - python-312
 ##   - v51.0.0.0.1234-python-312
-##   - Dev_v51.0.0.0.1234-python-311 (CVE scanning only)
 ##   - Dev_v51.0.0.0.1234-python-312 (CVE scanning only)
+##
+##   UBI10-minimal (opt-in):
+##   - ubi10-min-py312
+##   - v51.0.0.0.1234-ubi10-min-py312
+##   - ubi10-min-py313
+##   - v51.0.0.0.1234-ubi10-min-py313
+##   - ubi10-min-py314
+##   - v51.0.0.0.1234-ubi10-min-py314
+##   - Dev_v51.0.0.0.1234-ubi10-min-py312 (CVE scanning only)
+##   - Dev_v51.0.0.0.1234-ubi10-min-py313 (CVE scanning only)
+##   - Dev_v51.0.0.0.1234-ubi10-min-py314 (CVE scanning only)
 ##
 ## Prerequisites:
 ##   - Logged into Artifactory and Quay registries.
@@ -54,7 +65,9 @@ readonly QUAY_REPOSITORY="${QUAY_DOCKER_REGISTRY_BASE_NAME}/ibmresilient/${DOCKE
 readonly ARTIFACTORY_REPOSITORY="${ARTIFACTORY_DOCKER_REGISTRY_BASE_NAME}/${ARTIFACTORY_DOCKER_REPO_NAME}/${DOCKER_IMAGE_NAME}"  # only used for CVE scanning
 
 build_and_tag_docker_image() {
-    local python_version="$1"; shift
+    local python_version="${1:-3.12}"           # full patch version, e.g. 3.12.0 or 3.13.5; defaults to 3.12
+    local ubi_version="${2:-ubi9-minimal}"      # UBI base image version; defaults to ubi9-minimal
+    shift 2
     local tag_variants=("$@")
     local tags=()
 
@@ -65,13 +78,14 @@ build_and_tag_docker_image() {
     done
 
     # retag the images so they can be scanned for CVEs
-    tags+=(-t "${ARTIFACTORY_REPOSITORY}:Dev_${CIRCUITS_VERSION}-${python_version}")
+    tags+=(-t "${ARTIFACTORY_REPOSITORY}:Dev_${CIRCUITS_VERSION}-${ubi_version}-${python_version}")
 
     docker build \
         "${tags[@]}" \
-        --quiet \
         --build-arg "RESILIENT_CIRCUITS_VERSION=${CIRCUITS_VERSION}" \
         --build-arg "PYTHON_VERSION=${python_version}" \
+        --build-arg "UBI_VERSION=${ubi_version}" \
+        --build-arg "ARTIFACTORY_API_TOKEN=${ARTIFACTORY_API_TOKEN}" \
         "${app_repo_dir}"
 }
 
@@ -94,24 +108,43 @@ repositories=(
     "$QUAY_REPOSITORY"
 )
 
-# Todo: remove this when we have a Python 3.13 images and UBI10 base
-# python311_tags=(
-#     "${CIRCUITS_VERSION}"
-#     "${CIRCUITS_VERSION}-python-311"
-#     "python-311"
-#     "latest"
-# )
-
-python312_tags=(
+# UBI9-minimal tags (Python 3.12 only)
+ubi9_min_python312_tags=(
     "${CIRCUITS_VERSION}"
-    "${CIRCUITS_VERSION}-python-312"
-    "python-312"
+    "${CIRCUITS_VERSION}-ubi9-min-py312"
+    "ubi9-min-py312"
     "latest"
 )
 
-# Todo: remove this when we have a Python 3.13 images and UBI10 base
-# python311_digest=$(build_and_tag_docker_image "python-311" "${python311_tags[@]}")
-python312_digest=$(build_and_tag_docker_image "python-312" "${python312_tags[@]}")
+# UBI10-minimal tags (Python 3.12, 3.13, 3.14)
+ubi10_min_python312_tags=(
+    "${CIRCUITS_VERSION}-ubi10-min-py312"
+    "ubi10-min-py312"
+)
+
+ubi10_min_python313_tags=(
+    "${CIRCUITS_VERSION}-ubi10-min-py313"
+    "ubi10-min-py313"
+)
+
+ubi10_min_python314_tags=(
+    "${CIRCUITS_VERSION}-ubi10-min-py314"
+    "ubi10-min-py314"
+)
+
+# All PYTHON_VERSION values are full patch versions — Python is installed from UBI-specific Artifactory tarballs.
+# Update these when new patch tarballs are uploaded to Artifactory.
+PYTHON_312_VERSION="3.12.14"
+PYTHON_313_VERSION="3.13.15"
+PYTHON_314_VERSION="3.14.7"
+
+# Build UBI9-minimal images
+ubi9_min_python312_digest=$(build_and_tag_docker_image "${PYTHON_312_VERSION}" "ubi9-minimal" "${ubi9_min_python312_tags[@]}")
+
+# Build UBI10-minimal images
+ubi10_min_python312_digest=$(build_and_tag_docker_image "${PYTHON_312_VERSION}" "ubi10-minimal" "${ubi10_min_python312_tags[@]}")
+ubi10_min_python313_digest=$(build_and_tag_docker_image "${PYTHON_313_VERSION}" "ubi10-minimal" "${ubi10_min_python313_tags[@]}")
+ubi10_min_python314_digest=$(build_and_tag_docker_image "${PYTHON_314_VERSION}" "ubi10-minimal" "${ubi10_min_python314_tags[@]}")
 
 print_msg "Docker images built..."
 docker images
@@ -120,15 +153,11 @@ tags_to_push=()
 
 echo "TRIGGER_TYPE: ${TRIGGER_TYPE}"
 if [[ "${TRIGGER_TYPE}" == "timer" ]]; then
-    # when running on a timed build, only push the latest, and two Python versions
-    # Todo: remove this when we have a Python 3.13 images and UBI10 base
-    #tags_to_push=("latest" "python-311" "python-312")
-    tags_to_push=("latest" "python-312")
+    # when running on a timed build, only push the unversioned tags
+    tags_to_push=("latest" "ubi9-min-py312" "ubi10-min-py312" "ubi10-min-py313" "ubi10-min-py314")
 else
     # push all versions to their tagged location
-    # Todo: remove this when we have a Python 3.13 images and UBI10 base
-    # tags_to_push=("${python311_tags[@]}" "${python312_tags[@]}")
-    tags_to_push=("${python312_tags[@]}")
+    tags_to_push=("${ubi9_min_python312_tags[@]}" "${ubi10_min_python312_tags[@]}" "${ubi10_min_python313_tags[@]}" "${ubi10_min_python314_tags[@]}")
 fi
 
 if [[ "$SHOULD_DEPLOY_ARTIFACTORY" -eq 0 ]]; then
@@ -140,11 +169,17 @@ if [[ "$SHOULD_RELEASE_QUAY" -eq 0 ]]; then
 fi
 
 # TODO: Uncomment the below chunk when we are ready to start saving artifacts for CVE scanning
-# python_311_tag_to_scan="${ARTIFACTORY_REPOSITORY}:Dev_${CIRCUITS_VERSION}-python-311"
-# python_312_tag_to_scan="${ARTIFACTORY_REPOSITORY}:Dev_${CIRCUITS_VERSION}-python-312"
+# ubi9_min_python_312_tag_to_scan="${ARTIFACTORY_REPOSITORY}:Dev_${CIRCUITS_VERSION}-python-312"
+# ubi10_min_python_312_tag_to_scan="${ARTIFACTORY_REPOSITORY}:Dev_${CIRCUITS_VERSION}-ubi10-py312"
+# ubi10_min_python_313_tag_to_scan="${ARTIFACTORY_REPOSITORY}:Dev_${CIRCUITS_VERSION}-ubi10-py313"
+# ubi10_min_python_314_tag_to_scan="${ARTIFACTORY_REPOSITORY}:Dev_${CIRCUITS_VERSION}-ubi10-py314"
 
-# docker push "${python_311_tag_to_scan}"
-# docker push "${python_312_tag_to_scan}"
+# docker push "${ubi9_min_python_312_tag_to_scan}"
+# docker push "${ubi10_min_python_312_tag_to_scan}"
+# docker push "${ubi10_min_python_313_tag_to_scan}"
+# docker push "${ubi10_min_python_314_tag_to_scan}"
 
-# save_artifact "${python_311_tag_to_scan}" type=image "name=${python_311_tag_to_scan}" "digest=${python311_digest}" "${CIRCUITS_VERSION}-python-311"
-# save_artifact "${python_312_tag_to_scan}" type=image "name=${python_312_tag_to_scan}" "digest=${python312_digest}" "${CIRCUITS_VERSION}-python-312"
+# save_artifact "${ubi9_min_python_312_tag_to_scan}" type=image "name=${ubi9_min_python_312_tag_to_scan}" "digest=${python312_digest}" "${CIRCUITS_VERSION}-python-312"
+# save_artifact "${ubi10_min_python_312_tag_to_scan}" type=image "name=${ubi10_min_python_312_tag_to_scan}" "digest=${ubi10_min_python312_digest}" "${CIRCUITS_VERSION}-ubi10-py312"
+# save_artifact "${ubi10_min_python_313_tag_to_scan}" type=image "name=${ubi10_min_python_313_tag_to_scan}" "digest=${ubi10_min_python313_digest}" "${CIRCUITS_VERSION}-ubi10-py313"
+# save_artifact "${ubi10_min_python_314_tag_to_scan}" type=image "name=${ubi10_min_python_314_tag_to_scan}" "digest=${ubi10_min_python314_digest}" "${CIRCUITS_VERSION}-ubi10-py314"

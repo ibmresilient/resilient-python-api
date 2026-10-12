@@ -2,18 +2,17 @@
 
 import logging
 import json
-import io
 import requests
 import requests_mock
-import pkg_resources
+from importlib.resources import files
 from resilient.resilient_rest_mock import ResilientMock, resilient_endpoint
 LOG = logging.getLogger(__name__)
 
 
 def test_data(filename):
     """Read a test JSON data file"""
-    template_file_path = pkg_resources.resource_filename("pytest_resilient_circuits", "data/{}".format(filename))
-    with io.open(template_file_path, 'r', encoding="utf-8") as template_file:
+    template_file_path = files("pytest_resilient_circuits").joinpath("data/{}".format(filename))
+    with template_file_path.open('r', encoding="utf-8") as template_file:
         return json.load(template_file)
 
 
@@ -107,7 +106,7 @@ class BasicResilientMock(ResilientMock):
                                              cookies=requests.cookies.cookiejar_from_dict(cookies),
                                              json=session_data)
 
-    @resilient_endpoint("GET", "/incidents/[0-9]+(\?.*)*$")
+    @resilient_endpoint("GET", r"/incidents/[0-9]+(\?.*)*$")
     def incident_get(self, request):
         """ Callback for GET to /orgs/<org_id>/incidents/<inc_id> """
         LOG.debug("incident_get")
@@ -174,7 +173,7 @@ class BasicResilientMock(ResilientMock):
                                              status_code=200,
                                              json=self.incident)
 
-    @resilient_endpoint("POST", "/incidents/query\?.*")
+    @resilient_endpoint("POST", r"/incidents/query\?.*")
     def incident_post_with_query(self, request):
         """ Callback for POST to /orgs/<org_id>/incidents """
         LOG.debug("incident_post with query")
@@ -261,7 +260,7 @@ class BasicResilientMock(ResilientMock):
         field_data = test_data("200_JSON_GET__types_function_fields.json")
         return requests_mock.create_response(request, status_code=200, json=field_data)
 
-    @resilient_endpoint("GET", "/types/[\w_]+$")
+    @resilient_endpoint("GET", r"/types/[\w_]+$")
     def type_get(self, request):
         """ Callback for GET to /orgs/<org_id>/types/<some_type> """
         LOG.debug("function_fields_get")
@@ -307,7 +306,7 @@ class BasicResilientMock(ResilientMock):
                                              status_code=200,
                                              json='"abcdef"')
 
-    @resilient_endpoint("GET", "/incidents/[0-9]+/attachments(\?.*)*$")
+    @resilient_endpoint("GET", r"/incidents/[0-9]+/attachments(\?.*)*$")
     def attachments_get(self, request):
         """ Callback for GET to attachment list """
         LOG.debug("attachments_get")
@@ -341,7 +340,7 @@ class BasicResilientMock(ResilientMock):
                                              json=data)
 
 
-    @resilient_endpoint("POST", "/incidents/[0-9]+/table_data/[\w\d]+/row_data$")
+    @resilient_endpoint("POST", r"/incidents/[0-9]+/table_data/[\w\d]+/row_data$")
     def datatable_cells_post(self, request):
         """ Callback for POST to table_data """
         LOG.debug("datatable_cells_post")

@@ -17,7 +17,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError
-from requests.packages.urllib3.poolmanager import PoolManager
+from urllib3.poolmanager import PoolManager
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 from retry.api import retry_call
 

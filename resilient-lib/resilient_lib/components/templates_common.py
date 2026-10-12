@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # pragma pylint: disable=unused-argument, no-self-use
-# (c) Copyright IBM Corp. 2010, 2022. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2026. All Rights Reserved.
 
 """
 Common methods and filters used to process 
@@ -108,8 +108,8 @@ import random
 import re
 import sys
 import time
+import zoneinfo
 
-import pytz
 from jinja2 import Undefined, select_autoescape
 from jinja2.sandbox import SandboxedEnvironment as Environment
 from jinja2.exceptions import TemplateError, TemplateSyntaxError
@@ -628,8 +628,7 @@ def iso8601(val):
     :return: ISO8601 datetime
     :rtype: str
     """
-    dt = datetime.datetime.fromtimestamp(int(int(val)/1000))
-    return pytz.UTC.localize(dt).isoformat()
+    return datetime.datetime.fromtimestamp(int(int(val)/1000), tz=datetime.timezone.utc).isoformat()
 
 
 def timestamp(val):
@@ -646,7 +645,7 @@ def timestamp(val):
     .. code-block::
 
         >>> timestamp({"year": 2018, "month": 8, "day": 1, "timezoneID": "CET"})
-        1533078000000
+        1533074400000
 
         >>> timestamp(Undefined())
         'null'
@@ -665,9 +664,9 @@ def timestamp(val):
         n = val.get("minute", 0)
         s = val.get("second", 0)
         u = val.get("milliSecond", 0)
-        z = pytz.timezone(val.get("timezoneID", "UTC"))
+        z = zoneinfo.ZoneInfo(val.get("timezoneID", "UTC"))
         dt = datetime.datetime(y, m, d, h, n, s, u, z)
-        return int(calendar.timegm(dt.utctimetuple()) * 1000)
+        return int(dt.timestamp() * 1000)
     if isinstance(val, Undefined):
         return "null"
     if isinstance(val, datetime.datetime):

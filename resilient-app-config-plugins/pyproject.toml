@@ -1,5 +1,40 @@
+# (c) Copyright IBM Corp. 2026. All Rights Reserved.
+
 [build-system]
-requires = [
-    "setuptools ~= 81.0;  python_version >= '3.11'"
-]
+requires = ["setuptools ~= 81.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "resilient_app_config_plugins"
+version = "1.1.0"
+description = "Python base package for IBM SOAR apps App Config Plugins"
+readme = "README.md"
+license-files = ["LICENSE"]
+authors = [{name = "IBM SOAR"}]
+requires-python = ">=3.11"
+keywords = ["ibm", "soar", "resilient", "resilient-circuits", "circuits", "resilient-sdk", "sdk", "plugins", "resilient-plugins", "app-config-plugins"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "requests          ~= 2.27",
+    "six               ~= 1.16",
+
+    "requests-pkcs12   == 1.27;   python_version >= \"3.11\"",
+
+    "keyring           ~= 23.5;   python_version >= \"3.11\"",
+
+    "cachetools        ~= 7.0;    python_version >= \"3.11\"",
+]
+
+[project.urls]
+Homepage = "https://github.com/ibmresilient/resilient-python-api/tree/main/resilient-app-config-plugins"
+Documentation = "https://ibm.biz/soar-docs"
+"API Docs" = "https://ibm.biz/soar-python-docs"
+"IBM Community" = "https://ibm.biz/soarcommunity"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*"]

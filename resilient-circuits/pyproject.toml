@@ -1,11 +1,58 @@
-# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2026. All Rights Reserved.
 
 [build-system]
-requires = [
-    "setuptools ~= 81.0;  python_version >= '3.11'",
-    "setuptools_scm[toml] >= 6.0; python_version>='3.0'"
-]
+requires = ["setuptools ~= 81.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools_scm]
-root = "../"
+[project]
+name = "resilient_circuits"
+version = "51.0.9.0"
+description = "Framework used to run IBM SOAR Apps and Integrations"
+readme = "README.md"
+license-files = ["LICENSE"]
+authors = [{name = "IBM SOAR"}]
+requires-python = ">=3.11"
+keywords = ["ibm", "soar", "resilient", "resilient-circuits", "circuits", "resilient-sdk", "sdk"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    # Our libraries
+    "resilient     >= 51.0.9.0",
+    "resilient-lib >= 51.0.9.0",
+
+    # 3rd party dependencies
+    "stomp-py  ~= 8.2",
+    "circuits  ~= 3.2.5",
+    "pysocks   ~= 1.6",
+    "filelock  ~= 3.29",
+    "watchdog  ~= 2.1",
+    "six       ~= 1.17.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ibmresilient/resilient-python-api/tree/main/resilient-circuits"
+Documentation = "https://ibm.biz/soar-python-docs"
+"API Docs" = "https://ibm.biz/soar-python-docs"
+"IBM Community" = "https://ibm.biz/soarcommunity"
+"Change Log" = "https://ibm.biz/resilient-circuits-changes"
+
+[project.scripts]
+res-action-test = "resilient_circuits.bin.res_action_test:main"
+resilient-circuits = "resilient_circuits.bin.resilient_circuits_cmd:main"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+resilient_circuits = ["data/*"]
+
+[tool.pytest.ini_options]
+pep8maxlinelength = 120
+

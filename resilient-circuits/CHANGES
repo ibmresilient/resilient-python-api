@@ -1,3 +1,8 @@
+**2026-10: version 51.0.9.0**
+* Added explicit compatibility with Python versions 3.13 and 3.14
+* Migrated packaging from `setup.cfg`/`setup.py` to `pyproject.toml` (PEP 621)
+* Bumped `circuits` dependency to `~= 3.2.5`
+
 **2026-07: version 51.0.8.3**
 * Bumped `filelock` dependency to `~= 3.29`
 

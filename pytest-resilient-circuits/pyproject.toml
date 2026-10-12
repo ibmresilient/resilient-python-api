@@ -1,11 +1,45 @@
-# (c) Copyright IBM Corp. 2010, 2023. All Rights Reserved.
+# (c) Copyright IBM Corp. 2010, 2026. All Rights Reserved.
 
 [build-system]
-requires = [
-    "setuptools ~= 81.0;  python_version >= '3.11'",
-    "setuptools_scm[toml] >= 6.0; python_version>='3.0'"
-]
+requires = ["setuptools ~= 81.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools_scm]
-root = "../"
+[project]
+name = "pytest_resilient_circuits"
+version = "51.0.9.0"
+description = "Resilient Circuits fixtures for PyTest"
+readme = "README.md"
+license-files = ["LICENSE"]
+authors = [{name = "IBM SOAR"}]
+requires-python = ">=3.11"
+keywords = ["ibm", "soar", "pytest", "resilient", "resilient-circuits", "circuits"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    # Our libraries
+    "resilient-circuits >= 51.0.9.0",
+
+    # 3rd party dependencies
+    "requests-mock     ~= 1.12",
+    "configparser       ~= 5.2",
+    "pytest             >= 9.0.3",
+]
+
+[project.urls]
+Homepage = "https://github.com/ibmresilient/resilient-python-api/tree/main/pytest-resilient-circuits"
+Documentation = "https://ibm.biz/soar-docs"
+"API Docs" = "https://ibm.biz/soar-python-docs"
+"IBM Community" = "https://ibm.biz/soarcommunity"
+
+[project.entry-points.pytest11]
+pytest_resilient_circuits = "pytest_resilient_circuits.plugin"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+pytest_resilient_circuits = ["data/*"]

@@ -70,18 +70,18 @@ Branch names must follow the format: `type/TICKET-####/package_name/description`
 
 ### pre-push
 
-**Purpose:** Automatically creates version tags based on `resilient/setup.cfg` before pushing to remote.
+**Purpose:** Automatically creates version tags based on `resilient/pyproject.toml` before pushing to remote.
 
 **What it does:**
 - Runs before every `git push`
 - Calls `.scripts/create_version_tag.sh` to check/create version tag
-- Reads version from `resilient/setup.cfg`
-- Creates tag in format `v{version}` (e.g., `v51.0.8.2`)
+- Reads version from `resilient/pyproject.toml`
+- Creates tag in format `v{version}` (e.g., `v51.0.9.0`)
 - Only creates tag if it doesn't already exist (safe to run multiple times)
 - Won't block push if tag creation fails (just warns)
 
 **Benefits:**
-- Ensures version tags stay synchronized with setup.cfg versions
+- Ensures version tags stay synchronized with pyproject.toml versions
 - Prevents version mismatches between git tags and PyPI releases
 - No manual tag management required
 
