@@ -306,6 +306,18 @@ runtime for deployed apps.</p>
 <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> to <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> (PEP 621). This is an internal build
 tooling change only; published packages on PyPI are unaffected and the
 installation experience is identical.</p>
+<p><em>resilient</em> — Deprecated <code class="docutils literal notranslate"><span class="pre">requests.packages.urllib3</span></code> import paths in
+<code class="docutils literal notranslate"><span class="pre">co3.py</span></code> and <code class="docutils literal notranslate"><span class="pre">co3base.py</span></code> have been replaced with standard
+<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">urllib3</span></code>. This avoids <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> on recent versions of
+<code class="docutils literal notranslate"><span class="pre">requests</span></code> that removed the re-export.</p>
+<p><em>resilient</em> — The <code class="docutils literal notranslate"><span class="pre">urllib3</span></code> dependency is now pinned to
+<code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">2.8.0,</span> <span class="pre">&lt;</span> <span class="pre">3.0.0</span></code> to address CVE findings in earlier <code class="docutils literal notranslate"><span class="pre">urllib3</span></code> versions.</p>
+<p><em>resilient</em> — <code class="docutils literal notranslate"><span class="pre">jwcrypto</span></code> has been bumped to <code class="docutils literal notranslate"><span class="pre">~=</span> <span class="pre">1.6</span></code> to address
+<strong>CVE-2026-84185</strong>.</p>
+<p><em>resilient</em> — <code class="docutils literal notranslate"><span class="pre">pytest</span></code> has been bumped to <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">9.0.3</span></code> as a development
+dependency to address <strong>CVE-2025-71176</strong>.</p>
+<p><em>resilient-circuits</em> — The <code class="docutils literal notranslate"><span class="pre">circuits</span></code> dependency has been tightened to
+<code class="docutils literal notranslate"><span class="pre">~=</span> <span class="pre">3.2.5</span></code> to pick up stability fixes in the underlying event framework.</p>
 <p><em>resilient-lib</em> — The <code class="docutils literal notranslate"><span class="pre">pytz</span></code> dependency has been replaced with the built-in
 <code class="docutils literal notranslate"><span class="pre">zoneinfo</span></code> module. <code class="docutils literal notranslate"><span class="pre">pytz</span></code> is no longer maintained and has been superseded
 by <code class="docutils literal notranslate"><span class="pre">zoneinfo</span></code> (PEP 615) since Python 3.9. This change removes an external
