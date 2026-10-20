@@ -24,6 +24,46 @@ each library's individual page.
 
 ----
 
+.. _rn-51.0.9.1:
+
+Version 51.0.9.1
+-----------------
+
+*Released October 2026*
+
+This is a patch release that fixes a regression in the
+``soarapps-base-docker-image`` introduced in 51.0.9.0. No library code has
+changed.
+
+**Package versions**
+
++------------------------------+-----------+
+| Package                      | Version   |
++==============================+===========+
+| resilient                    | 51.0.9.1  |
++------------------------------+-----------+
+| resilient-circuits           | 51.0.9.1  |
++------------------------------+-----------+
+| resilient-lib                | 51.0.9.1  |
++------------------------------+-----------+
+| resilient-sdk                | 51.0.9.1  |
++------------------------------+-----------+
+| pytest-resilient-circuits    | 51.0.9.1  |
++------------------------------+-----------+
+| resilient-app-config-plugins | 1.1.0     |
++------------------------------+-----------+
+
+**What changed**
+
+*soarapps-base-docker-image* — Fixed apps failing silently on App Host.
+The ``ubi9-minimal`` base image does not provide a home directory for the
+non-root user (uid 1001), so ``resilient-circuits`` crashed on startup with
+``PermissionError: [Errno 13] Permission denied: '/home/default'`` while the
+pod still reported ``Ready``. The image now creates ``/home/default``
+(``useradd -m``). Rebuild app images on the new base image to pick up the fix.
+
+----
+
 .. _rn-51.0.9.0:
 
 Version 51.0.9.0

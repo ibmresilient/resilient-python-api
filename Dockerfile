@@ -99,8 +99,9 @@ RUN microdnf install -y shadow-utils procps-ng && \
     ln -s /usr/bin/microdnf /usr/bin/yum
 
 # create arbitrary group and user 1001 (ubi9-minimal has no 'default' user pre-created)
+# -m creates /home/default; resilient-circuits needs a writable ~ to create ~/.resilient
 RUN groupadd -g 1001 default && \
-    (id 1001 &>/dev/null && usermod -g 1001 $(id -nu 1001) || useradd -u 1001 -g 1001 -M -s /sbin/nologin default)
+    (id 1001 &>/dev/null && usermod -g 1001 $(id -nu 1001) || useradd -u 1001 -g 1001 -m -s /sbin/nologin default)
 
 # set up configuration and log locations using /etc and /var/log, the conventional locations for config and logs
 RUN mkdir /etc/${PATH_RESILIENT_CIRCUITS} && \
@@ -138,6 +139,13 @@ RUN PYMINOR=$(echo ${PYTHON_VERSION} | cut -d. -f1,2) && \
            /usr/local/lib/python${PYMINOR}/site-packages/pip-*.dist-info \
            /usr/local/lib/python${PYMINOR}/site-packages/pip-*.egg-info \
            /usr/bin/pip /usr/bin/pip3
+
+# Compatibility symlink: AppHost selftest Job hardcodes /opt/app-root/bin/resilient-circuits
+# This path came from the original ubi9/python-311 SCL Application Image and was preserved by
+# the python3.12-pip RPM shim. The tarball-based Python install (SOARAPPS-9602) removed it.
+# Without this symlink "Test Configuration" in SOAR UI fails with exit_code: 128.
+RUN mkdir -p /opt/app-root/bin && \
+    ln -s /usr/local/bin/resilient-circuits /opt/app-root/bin/resilient-circuits
 
 # copy over and set the entrypoint
 COPY docker_template_entrypoint.sh /opt/${PATH_RESILIENT_CIRCUITS}/entrypoint.sh

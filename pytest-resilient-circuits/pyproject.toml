@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytest_resilient_circuits"
-version = "51.0.9.0"
+version = "51.0.9.1"
 description = "Resilient Circuits fixtures for PyTest"
 readme = "README.md"
 license-files = ["LICENSE"]
