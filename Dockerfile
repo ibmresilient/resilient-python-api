@@ -140,6 +140,13 @@ RUN PYMINOR=$(echo ${PYTHON_VERSION} | cut -d. -f1,2) && \
            /usr/local/lib/python${PYMINOR}/site-packages/pip-*.egg-info \
            /usr/bin/pip /usr/bin/pip3
 
+# Compatibility symlink: AppHost selftest Job hardcodes /opt/app-root/bin/resilient-circuits
+# This path came from the original ubi9/python-311 SCL Application Image and was preserved by
+# the python3.12-pip RPM shim. The tarball-based Python install (SOARAPPS-9602) removed it.
+# Without this symlink "Test Configuration" in SOAR UI fails with exit_code: 128.
+RUN mkdir -p /opt/app-root/bin && \
+    ln -s /usr/local/bin/resilient-circuits /opt/app-root/bin/resilient-circuits
+
 # copy over and set the entrypoint
 COPY docker_template_entrypoint.sh /opt/${PATH_RESILIENT_CIRCUITS}/entrypoint.sh
 ENTRYPOINT [ "sh", "/opt/rescircuits/entrypoint.sh" ]
