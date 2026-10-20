@@ -99,8 +99,9 @@ RUN microdnf install -y shadow-utils procps-ng && \
     ln -s /usr/bin/microdnf /usr/bin/yum
 
 # create arbitrary group and user 1001 (ubi9-minimal has no 'default' user pre-created)
+# -m creates /home/default; resilient-circuits needs a writable ~ to create ~/.resilient
 RUN groupadd -g 1001 default && \
-    (id 1001 &>/dev/null && usermod -g 1001 $(id -nu 1001) || useradd -u 1001 -g 1001 -M -s /sbin/nologin default)
+    (id 1001 &>/dev/null && usermod -g 1001 $(id -nu 1001) || useradd -u 1001 -g 1001 -m -s /sbin/nologin default)
 
 # set up configuration and log locations using /etc and /var/log, the conventional locations for config and logs
 RUN mkdir /etc/${PATH_RESILIENT_CIRCUITS} && \
