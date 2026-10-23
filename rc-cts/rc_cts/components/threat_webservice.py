@@ -36,6 +36,7 @@ Searchers register to a single path, e.g. '/cts/gsb' for the Google Safe Browsin
 import json
 import logging
 import base64
+import secrets
 from collections import namedtuple
 from distutils.util import strtobool
 from uuid import UUID, uuid4, uuid5
@@ -422,7 +423,7 @@ class CustomThreatService(BaseController):
 
     def _is_authenticated(self, user_password_list):
         """[check if a user/password pair matches values set in app.config]"""
-        return self.auth_user == user_password_list[0] and self.auth_password == user_password_list[1]
+        return secrets.compare_digest(self.auth_user, user_password_list[0]) and secrets.compare_digest(self.auth_password, user_password_list[1])
 
     def check_authentication(self, request):
         """[check if the headers contain user/password information and they match the settings in app.config]"""
